@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: monew
+
+  # http://localhost:8080/h2-console 에서 현재 연결된 DB 조회 (참고용)
+  h2:
+    console:
+      enabled: true
