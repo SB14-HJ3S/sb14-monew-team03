@@ -82,3 +82,4 @@ open build/reports/jacoco/test/html/index.html   # 브라우저로 보기 (Windo
 
 브랜치 이름이 규칙과 다르면 커밋에 이슈 번호가 안 붙고, 일정 관리의 시작일도 안 잡혀요.
 자세한 내용은 [커밋 이슈번호 자동화 안내](https://app.notion.com/p/3f99e310974381709046cd9a0c771a62) 참고.
+
