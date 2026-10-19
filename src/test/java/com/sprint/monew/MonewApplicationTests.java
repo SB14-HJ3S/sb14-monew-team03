@@ -1,13 +1,11 @@
 package com.sprint.monew;
 
+import com.sprint.monew.support.IntegrationTest;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
+@IntegrationTest
 class MonewApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
-
+    @Test
+    void contextLoads() {}
 }
