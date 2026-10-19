@@ -1,0 +1,70 @@
+name: Fix Issue/PR → Notion Troubleshooting Sync
+# fix:수정 라벨이 붙은 이슈가 해결돼 닫히거나 PR이 머지되면 노션 "트래블 슈팅" DB에 카드를 만든다
+# - 이슈와 그 이슈를 고친 PR은 카드 하나로 묶고, 노션 "GitHub 링크" 속성으로 중복을 막는다
+# - 양식의 글 부분은 GitHub 연동이 작성하고(실패하면 이슈·PR 원문으로 대신 채움), 날짜·에러 로그 원문·링크는 코드가 채운다
+# - 내용을 고친 뒤 이슈·PR에 resync:재연동 라벨을 붙이면 GitHub 내용 기준으로 카드를 다시 쓴다
+on:
+  issues:
+    types: [ closed, labeled ]
+  pull_request:
+    types: [ closed, labeled ]
+
+permissions:
+  contents: read
+  issues: write # resync 라벨 떼기
+  pull-requests: write
+  id-token: write # 글 작성 액션이 사용
+
+# 이슈 닫힘과 PR 머지가 동시에 와도 하나씩 돌려 카드가 두 장 생기지 않게 한다
+# 3건 이상 몰리면 일부가 취소돼 카드가 빠질 수 있음 → "Troubleshooting Notion Audit"을 "빠진 것 만들기"로 돌려 채운다
+concurrency:
+  group: troubleshooting-notion-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: >-
+      (github.event_name == 'issues' && contains(github.event.issue.labels.*.name, 'fix:수정')
+        && ((github.event.action == 'closed' && github.event.issue.state_reason != 'not_planned')
+          || (github.event.action == 'labeled' && github.event.label.name == 'resync:재연동')))
+      || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'fix:수정')
+        && ((github.event.action == 'closed' && github.event.pull_request.merged == true)
+          || (github.event.action == 'labeled' && github.event.label.name == 'resync:재연동')))
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          sparse-checkout: .github/scripts
+          sparse-checkout-cone-mode: false
+
+      - name: 이슈·PR 내용 모으기, 노션에 이미 있는지 확인
+        id: prepare
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_USER_MAP: ${{ vars.NOTION_USER_MAP }}
+        with:
+          script: |
+            const { prepare } = require('./.github/scripts/troubleshooting-notion.js');
+            await prepare({ github, context, core });
+
+      - name: GitHub 연동으로 트러블슈팅 기록 작성
+        id: write_a
+        if: steps.prepare.outputs.need_write == 'true'
+        continue-on-error: true # 실패하면 다음 단계가 이슈·PR 원문으로 카드를 만든다
+        uses: anthropics/claude-code-action@f27be6b65a4652f08a2ba3cff79114829b588967 # v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN_B }}
+          prompt: 저장소 루트의 ts-context.md를 읽고, 그 안의 안내대로 ts-written.json 파일 하나만 작성해 주세요.
+          claude_args: '--allowedTools "Read,Write"'
+
+      - name: 노션 트래블 슈팅 카드 쓰기
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_USER_MAP: ${{ vars.NOTION_USER_MAP }}
+        with:
+          script: |
+            const { write } = require('./.github/scripts/troubleshooting-notion.js');
+            await write({ github, context, core });

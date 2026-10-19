@@ -1,0 +1,62 @@
+name: Issue Title Convert
+
+# 이슈 제목을 "feat: 설명"이나 단축키 "f: 설명"으로 쓰면 "[Feat] : 설명"으로 바꾼다
+# 템플릿으로 만든 이슈는 이미 "[Feat] : "로 시작해서, 템플릿 없이 만든 이슈에만 적용됨
+on:
+  issues:
+    types: [opened, edited]
+
+permissions:
+  issues: write
+
+jobs:
+  convert-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Convert issue title to [Type] format
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            const title = context.payload.issue.title;
+
+            // 전체 단어든 한 글자 단축키든 같은 [Type]으로 변환. 이슈 템플릿 9종 기준
+            // (ADR은 전부 대문자 표기가 정식 형식)
+            const map = {
+              feat: "[Feat]", f: "[Feat]",
+              fix: "[Fix]", x: "[Fix]",
+              refactor: "[Refactor]", r: "[Refactor]",
+              docs: "[Docs]", d: "[Docs]",
+              chore: "[Chore]", c: "[Chore]",
+              test: "[Test]", t: "[Test]",
+              deploy: "[Deploy]", y: "[Deploy]",
+              adr: "[ADR]", a: "[ADR]",
+              batch: "[Batch]", b: "[Batch]",
+            };
+
+            // 이미 [Type] 형태로 시작하면 그대로 통과 (재실행 시 무한 반복 방지, 템플릿으로 만든 이슈도 해당)
+            if (/^\s*\[[A-Za-z]+\]/.test(title)) {
+              console.log(`이미 변환된 제목입니다: "${title}"`);
+              return;
+            }
+
+            // 콜론(:)은 한글 키보드에서 Shift가 필요해서 세미콜론(;)도 같이 허용
+            const matched = title.match(/^(feat|fix|refactor|docs|chore|test|deploy|adr|batch|f|x|r|d|c|t|y|a|b)\s*[:;]\s*(.+)$/);
+
+            // PR과 달리 이슈는 adr/deploy 등 커밋 타입에 없는 제목도 많아서(예: "회의록", "질문")
+            // 실패 처리하지 않고 조용히 건너뜀
+            if (!matched) {
+              console.log(`타입 접두사가 없어 변환을 건너뜁니다: "${title}"`);
+              return;
+            }
+
+            const [, type, description] = matched;
+            const newTitle = `${map[type]} : ${description}`;
+
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              title: newTitle,
+            });
+
+            console.log(`제목 변환: "${title}" → "${newTitle}"`);

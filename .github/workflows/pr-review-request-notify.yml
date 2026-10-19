@@ -1,0 +1,69 @@
+name: PR Review Request Notification (DM)
+
+on:
+  pull_request:
+    types: [ review_requested ]
+    branches: [ dev, develop, main ]
+
+permissions: { }
+
+jobs:
+  notify:
+    if: github.event.requested_reviewer != null
+    runs-on: ubuntu-latest
+    steps:
+      - name: 리뷰어에게 개인 DM 전송
+        env:
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          # 팀원별 디스코드 유저 ID는 숫자 그대로 노출하지 않고 조직 시크릿으로 보관
+          DISCORD_ID_LSC0869: ${{ secrets.DISCORD_ID_LSC0869 }}
+          DISCORD_ID_SWANHW: ${{ secrets.DISCORD_ID_SWANHW }}
+          DISCORD_ID_SSOOMNI52: ${{ secrets.DISCORD_ID_SSOOMNI52 }}
+          DISCORD_ID_MJDEVKIM: ${{ secrets.DISCORD_ID_MJDEVKIM }}
+          DISCORD_ID_HANNA_LOG: ${{ secrets.DISCORD_ID_HANNA_LOG }}
+          REVIEWER: ${{ github.event.requested_reviewer.login }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          set -euo pipefail
+
+          # GitHub 아이디 -> 담당 시크릿 변수 매핑 (팀원 교체 시 이 표만 수정, 숫자 ID는 코드에 없음)
+          case "$REVIEWER" in
+            lsc0869)   TARGET_USER_ID="$DISCORD_ID_LSC0869" ;;
+            swanhw)    TARGET_USER_ID="$DISCORD_ID_SWANHW" ;;
+            ssoomni52) TARGET_USER_ID="$DISCORD_ID_SSOOMNI52" ;;
+            mjdevkim)  TARGET_USER_ID="$DISCORD_ID_MJDEVKIM" ;;
+            Hanna-log) TARGET_USER_ID="$DISCORD_ID_HANNA_LOG" ;;
+            *)
+              echo "매핑되지 않은 리뷰어: $REVIEWER"
+              exit 0
+              ;;
+          esac
+
+          if [[ -z "$TARGET_USER_ID" ]]; then
+            echo "::error::매핑된 리뷰어($REVIEWER)의 디스코드 ID 시크릿이 비어 있습니다."
+            exit 1
+          fi
+
+          CHANNEL_ID=$(curl -sS --fail --retry 3 --retry-delay 2 --max-time 15 \
+            -X POST "https://discord.com/api/v10/users/@me/channels" \
+            -H "Authorization: Bot $DISCORD_BOT_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"recipient_id\": \"$TARGET_USER_ID\"}" | jq -r '.id // empty')
+
+          if [[ -z "$CHANNEL_ID" ]]; then
+            echo "::error::DM 채널 생성에 실패했습니다. (리뷰어: $REVIEWER)"
+            exit 1
+          fi
+
+          jq -n \
+            --arg author "$PR_AUTHOR" \
+            --arg title "$PR_TITLE" \
+            --arg url "$PR_URL" \
+            '{content: "👀 \($author)님이 리뷰를 요청했어요!\n**\($title)**\n\($url)"}' \
+          | curl -sS --fail --retry 3 --retry-delay 2 --max-time 15 \
+            -X POST "https://discord.com/api/v10/channels/$CHANNEL_ID/messages" \
+            -H "Authorization: Bot $DISCORD_BOT_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d @-
