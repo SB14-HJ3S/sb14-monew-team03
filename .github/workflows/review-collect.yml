@@ -1,0 +1,81 @@
+name: Collect Review Data
+
+on:
+  pull_request_review:
+    types: [submitted]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  collect:
+    if: github.event.review.user.login != github.event.pull_request.user.login && github.event.review.user.type != 'Bot'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Collect review metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_HTML_URL: ${{ github.event.pull_request.html_url }}
+          REVIEW_ID: ${{ github.event.review.id }}
+          REVIEW_STATE: ${{ github.event.review.state }}
+          REVIEW_HTML_URL: ${{ github.event.review.html_url }}
+          REVIEWER: ${{ github.event.review.user.login }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          REPO: ${{ github.repository }}
+        run: |
+          COUNT=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}/reviews/${REVIEW_ID}/comments" \
+            --jq 'length' 2>/dev/null || echo 0)
+          COUNT=${COUNT:-0}
+
+          # "승인 완료" 알림은 지금 커밋 기준 첫 승인일 때만 보낸다 — 이미 승인된 PR에 다른 사람이
+          # 코멘트·추가 승인을 남겨도 다시 안 가고, 작성자가 새 커밋을 올린 뒤 다시 승인되면 한 번 더 감
+          # 리뷰 ID는 등록 순서대로 커지므로 "이 리뷰보다 먼저 달린 같은 커밋 승인"만 센다 — 두 사람이 거의
+          # 동시에 승인해도 먼저 단 쪽만 0건이 됨. 목록 조회에 실패하면 알림을 보내지 않는다
+          if ! EARLIER_APPROVALS=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}/reviews" \
+            --paginate 2>/dev/null \
+            | jq -s --arg sha "$PR_HEAD_SHA" --argjson rid "$REVIEW_ID" \
+              '[.[][] | select(.state == "APPROVED" and .commit_id == $sha and .id < $rid)] | length'); then
+            EARLIER_APPROVALS=1
+          fi
+          if [ "$REVIEW_STATE" = "approved" ] && [ "$EARLIER_APPROVALS" -eq 0 ]; then
+            MERGE_READY=true
+          else
+            MERGE_READY=false
+          fi
+
+          jq -n \
+            --argjson pr_number "$PR_NUMBER" \
+            --arg pr_title "$PR_TITLE" \
+            --arg pr_html_url "$PR_HTML_URL" \
+            --argjson review_id "$REVIEW_ID" \
+            --arg review_state "$REVIEW_STATE" \
+            --arg review_html_url "$REVIEW_HTML_URL" \
+            --arg reviewer "$REVIEWER" \
+            --arg pr_head_ref "$PR_HEAD_REF" \
+            --arg pr_base_ref "$PR_BASE_REF" \
+            --argjson comment_count "$COUNT" \
+            --argjson merge_ready "$MERGE_READY" \
+            '{
+              pr_number: $pr_number,
+              pr_title: $pr_title,
+              pr_html_url: $pr_html_url,
+              review_id: $review_id,
+              review_state: $review_state,
+              review_html_url: $review_html_url,
+              reviewer: $reviewer,
+              pr_head_ref: $pr_head_ref,
+              pr_base_ref: $pr_base_ref,
+              comment_count: $comment_count,
+              merge_ready: $merge_ready
+            }' > review-data.json
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: review-data
+          path: review-data.json
+          retention-days: 1

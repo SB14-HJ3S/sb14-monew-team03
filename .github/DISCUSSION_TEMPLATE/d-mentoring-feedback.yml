@@ -1,0 +1,56 @@
+# 제목을 그대로 두면 "[261019(월)] 강사님 피드백"처럼 자동 제목으로 바뀐다
+# ⚠️ 아래 title 문구를 바꾸면 워크플로의 PLACEHOLDER_TITLE도 같이 바꿀 것
+title: "제목을 수정하지 않으면 자동 제목으로 채워집니다"
+labels: ["question:질문"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 멘토링·피드백
+        작성하면 노션 "멘토링" DB에 자동으로 동기화됩니다. `question:질문`과 피드백 종류(`강사님`/`멘토님`/`etc:기타`) 라벨이 자동으로 붙고, 다른 라벨은 필요하면 직접 붙이거나 떼면 됩니다.
+  - type: dropdown
+    id: feedback_type
+    attributes:
+      label: 🧑‍🏫 피드백 종류
+      description: 강사님·멘토님 외에 AI나 다른 팀원에게 받은 조언이면 "기타"를 골라 주세요.
+      options:
+        - 강사님
+        - 멘토님
+        - 기타
+    validations:
+      required: true
+  - type: input
+    id: datetime
+    attributes:
+      label: 📆 날짜·시간
+      description: 비워두면 이 글을 올린 날짜·시간이 들어갑니다. 다르면 "261019 14:00"처럼 적어주세요. (시간은 빼도 됨)
+    validations:
+      required: false
+  - type: dropdown
+    id: participants
+    attributes:
+      label: 😄 질문자 및 참여자
+      description: 여러 명 고를 수 있어요.
+      multiple: true
+      options:
+        - 이승현
+        - 이수찬
+        - 정수환
+        - 박수민
+        - 김민재
+    validations:
+      required: false
+  - type: textarea
+    id: notes
+    attributes:
+      label: ⚠️ 특이사항
+      description: 없으면 비워두세요. (노션 "특이사항" 속성에 자동으로 들어갑니다)
+    validations:
+      required: false
+  - type: textarea
+    id: content
+    attributes:
+      label: 📝 내용
+      description: 질문, 받은 피드백, 반영할 것 등을 자유롭게 적어주세요.
+    validations:
+      required: false

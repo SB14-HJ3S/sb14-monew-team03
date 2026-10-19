@@ -1,0 +1,53 @@
+name: Issue → Notion Schedule Sync
+# 노션 "요구사항 구현 일정관리" DB의 시작일·종료일·진행상태를 자동으로 채운다
+# - 이슈 브랜치에 첫 push → 시작일(첫 커밋 날짜), "진행 중"
+# - 이슈가 완료로 닫힘(PR 머지 포함) → 종료일(닫힌 날짜), "완료" ("계획 안 함"으로 닫히면 그대로 둠)
+on:
+  push:
+    branches-ignore: [main, develop]
+  issues:
+    types: [closed]
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
+# 같은 이슈·브랜치끼리만 순서대로 돌린다 (저장소 전체로 묶으면 실행이 몰릴 때 일부가 취소됨)
+concurrency:
+  group: schedule-notion-sync-${{ github.event_name }}-${{ github.event.issue.number || github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: >-
+      (github.event_name == 'push' && !github.event.deleted)
+      || (github.event_name == 'issues' && github.event.issue.state_reason != 'not_planned')
+      || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          sparse-checkout: .github/scripts
+          sparse-checkout-cone-mode: false
+
+      - name: 첫 커밋 날짜로 시작일·진행 중 반영
+        if: github.event_name == 'push'
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            const { start } = require('./.github/scripts/schedule-notion.js');
+            await start({ github, context, core });
+
+      - name: 닫힌 날짜로 종료일·완료 반영
+        if: github.event_name != 'push'
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            const { finish } = require('./.github/scripts/schedule-notion.js');
+            await finish({ github, context, core });

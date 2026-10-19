@@ -1,0 +1,177 @@
+name: Issue Auto Setup
+
+# 이슈가 열리거나 고쳐지거나 닫히면
+# 1) 담당자를 작성자로 지정 (열릴 때)
+# 2) 제목의 타입([Feat] 또는 변환 전 feat:·f:)에 맞는 라벨을 붙임 — 템플릿 없이 만든 이슈용
+#    제목 타입을 바꾸면 타입 라벨만 교체하고, 다른 라벨(common·urgent 등)은 건드리지 않음
+# 3) Projects 보드에 추가하고 시작일을 생성일로 (열릴 때)
+# 4) 닫히면 마감일을 닫힌 날짜로 (PR 머지·수동 닫기 상관없이)
+# Projects 보드는 기본 토큰으로 못 건드려서 PROJECTS_PAT을 씀
+on:
+  issues:
+    types: [opened, edited, closed]
+
+permissions: {}   # 필요한 권한은 job 단위로만 부여
+
+jobs:
+  auto-setup:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: issue-auto-setup-${{ github.event.issue.number }}
+      cancel-in-progress: false   # opened/edited가 거의 동시에 와도 순서대로 실행 (오래된 실행이 나중에 끝나 라벨을 덮어쓰는 것 방지)
+    permissions:
+      issues: write   # 담당자 지정 + 라벨 추가/삭제에만 필요
+    steps:
+      - name: 담당자를 작성자로 지정
+        if: github.event.action == 'opened'
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            await github.rest.issues.addAssignees({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              assignees: [context.payload.issue.user.login],
+            });
+
+      - name: 제목의 [타입] 태그로 라벨 자동 설정(교체)
+        if: ${{ !cancelled() && github.event.action != 'closed' }}   # 담당자 지정이 실패해도(외부 사용자 등) 라벨은 계속 시도. closed 이벤트엔 제목 변경이 없어 불필요
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            // context.payload는 이벤트 발생 시점에 고정된 스냅샷이라, opened 직후 바로
+            // 제목을 고치면 edited 실행이 opened가 라벨을 추가하기 전의 옛날 데이터를 볼 수 있음
+            // (concurrency는 "순서"만 보장하지, "최신 데이터"는 보장 안 함) — 그래서 실행 직전에
+            // API로 최신 제목·라벨을 다시 조회함
+            const { data: issue } = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const title = issue.title || '';
+            // issue-title-convert.yml이 먼저 실행돼서 제목이 이미 "[Feat] : 설명"으로
+            // 변환돼 있을 수 있음(변환 워크플로가 GITHUB_TOKEN으로 제목을 바꾸면 그 이벤트는
+            // 새 워크플로를 재트리거하지 않아서, 지금 이 실행이 변환 전/후 어느 쪽을 볼지 알 수 없음)
+            // → 변환된 형식("[Feat] : 설명")과 원본 형식("feat: 설명" 또는 단축키 "f: 설명") 둘 다 인식
+            const bracket = title.match(/^\s*\[\s*([A-Za-z]+)\s*\]/);
+            const raw = title.match(/^\s*(\w+)\s*[:;]/);   // 세미콜론(;)도 콜론과 동일하게 인식
+            const match = bracket ? bracket[1] : raw ? raw[1] : null;
+            if (!match) return;
+
+            const tagToLabel = {
+              feat: 'feat:기능', f: 'feat:기능',
+              fix: 'fix:수정', x: 'fix:수정',
+              refactor: 'refactor:개선', r: 'refactor:개선',
+              docs: 'docs:문서', d: 'docs:문서',
+              chore: 'chore:설정', c: 'chore:설정',
+              test: 'test:테스트', t: 'test:테스트',
+              deploy: 'deploy:배포', y: 'deploy:배포',
+              adr: 'ADR:설계논의', a: 'ADR:설계논의',
+              batch: 'batch:배치', b: 'batch:배치',
+            };
+            const typeLabels = new Set(Object.values(tagToLabel));
+            const target = tagToLabel[match.toLowerCase()];
+            if (!target) return;
+
+            const current = issue.labels.map(l => l.name);
+
+            // 타입 라벨끼리만 정리 — common/urgent/level:* 등 다른 라벨은 안 건드림
+            // target이 이미 있어도 "다른" 타입 라벨이 같이 남아있으면 지워야 하므로
+            // "이미 있으면 바로 끝" 하지 않고 항상 정리부터 함
+            const stale = current.filter(l => typeLabels.has(l) && l !== target);
+            for (const name of stale) {
+              try {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  name,
+                });
+              } catch (e) {
+                if (e.status !== 404) throw e;   // 이미 다른 경로로 지워졌으면 무시
+              }
+            }
+
+            if (!current.includes(target)) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                labels: [target],
+              });
+            }
+
+      - name: Projects 보드에 추가 + 시작일(생성일) 설정
+        if: github.event.action == 'opened'
+        env:
+          GH_TOKEN: ${{ secrets.PROJECTS_PAT }}
+        run: |
+          set -e
+          PROJECT_ID="PVT_kwDOE8RtFM4BkpC5"
+          # ProjectV2Field id(PVTF_...)가 아니라 그 필드의 issueField{id}(IFD_...) — 아래 mutation 설명 참고
+          START_FIELD_ID="IFD_kgDOAtANOg"
+          CONTENT_ID="${{ github.event.issue.node_id }}"
+          # created_at은 UTC라 그냥 자르면 한국시간 0~9시 생성분이 하루 전 날짜로 찍힘 → KST 기준으로 변환
+          START_DATE=$(TZ=Asia/Seoul date -d "${{ github.event.issue.created_at }}" +%F)
+
+          # addProjectV2ItemById는 이미 추가돼 있어도(보드 자체 Auto-add 자동화로) 에러 없이
+          # 기존 아이템 id를 그대로 돌려주는 멱등 호출이라 중복 추가 걱정 없이 항상 호출함
+          ITEM_ID=$(gh api graphql -f query='
+            mutation($project: ID!, $content: ID!) {
+              addProjectV2ItemById(input: { projectId: $project, contentId: $content }) {
+                item { id }
+              }
+            }' -f project="$PROJECT_ID" -f content="$CONTENT_ID" --jq '.data.addProjectV2ItemById.item.id')
+
+          if [ -z "$ITEM_ID" ] || [ "$ITEM_ID" = "null" ]; then
+            echo "프로젝트 항목 추가 실패: $CONTENT_ID" >&2
+            exit 1
+          fi
+
+          # Start date(시작일) 필드는 GitHub Issue Fields 기능과 연동돼 있어서(ProjectV2Field.isIssueField)
+          # updateProjectV2ItemFieldValue로는 "Issue field values ... must be updated using the
+          # updateIssueFieldValue mutation" 에러가 남 — issueId(=이슈 node id) 기준으로 설정해야 함
+          gh api graphql -f query='
+            mutation($issue: ID!, $field: ID!, $date: String!) {
+              updateIssueFieldValue(input: {
+                issueId: $issue
+                issueField: { fieldId: $field, dateValue: $date }
+              }) {
+                clientMutationId
+              }
+            }' -f issue="$CONTENT_ID" -f field="$START_FIELD_ID" -f date="$START_DATE"
+
+      - name: 마감일(닫힌 날짜) 설정
+        if: github.event.action == 'closed'
+        env:
+          GH_TOKEN: ${{ secrets.PROJECTS_PAT }}
+        run: |
+          set -e
+          PROJECT_ID="PVT_kwDOE8RtFM4BkpC5"
+          TARGET_FIELD_ID="IFD_kgDOAtANOw"
+          CONTENT_ID="${{ github.event.issue.node_id }}"
+          # closed_at은 UTC라 그냥 자르면 한국시간 0~9시 종료분이 하루 전 날짜로 찍힘 → KST 기준으로 변환
+          CLOSE_DATE=$(TZ=Asia/Seoul date -d "${{ github.event.issue.closed_at }}" +%F)
+
+          # opened 때 이미 추가됐겠지만, 혹시 모르니 동일하게 멱등 호출로 보장
+          ITEM_ID=$(gh api graphql -f query='
+            mutation($project: ID!, $content: ID!) {
+              addProjectV2ItemById(input: { projectId: $project, contentId: $content }) {
+                item { id }
+              }
+            }' -f project="$PROJECT_ID" -f content="$CONTENT_ID" --jq '.data.addProjectV2ItemById.item.id')
+
+          if [ -z "$ITEM_ID" ] || [ "$ITEM_ID" = "null" ]; then
+            echo "프로젝트 항목 추가 실패: $CONTENT_ID" >&2
+            exit 1
+          fi
+
+          gh api graphql -f query='
+            mutation($issue: ID!, $field: ID!, $date: String!) {
+              updateIssueFieldValue(input: {
+                issueId: $issue
+                issueField: { fieldId: $field, dateValue: $date }
+              }) {
+                clientMutationId
+              }
+            }' -f issue="$CONTENT_ID" -f field="$TARGET_FIELD_ID" -f date="$CLOSE_DATE"
