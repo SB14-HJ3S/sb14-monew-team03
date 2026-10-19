@@ -40,6 +40,13 @@ springdoc:
     tags-sorter: alpha
     operations-sorter: method
 
+# Prometheus용 /actuator/prometheus 열기 — 외부 접근은 ActuatorAccessFilter가 막음
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+
 # 뉴스기사 RSS 수집용 피드 URL
 monew:
   news:
