@@ -1,0 +1,18 @@
+# 80%는 표시 목표이며 병합을 막는 새 기준으로 강제하지 않는다.
+coverage:
+  precision: 2
+  round: down
+  status:
+    project:
+      default:
+        target: 80%
+        informational: true
+    patch:
+      default:
+        target: 80%
+        informational: true
+comment:
+  # PR 댓글은 커버리지 요약만 짧게 보여 준다
+  layout: "condensed_header,diff,condensed_footer"
+  behavior: default
+  require_changes: false
