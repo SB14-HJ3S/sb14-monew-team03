@@ -1,8 +1,54 @@
+# ==========================================================
+# 공통 설정 — 모든 환경에서 적용됨
+# 환경별 설정: application-local.yaml (로컬 개발) / application-prod.yaml (배포) / 테스트는 src/test/resources/application-test.yaml
+# .env는 application-local.yaml에서만 읽는다 — 배포·테스트는 .env를 읽지 않음
+# 실행 프로파일: 아무것도 안 주면 local. 배포 시 환경변수 SPRING_PROFILES_ACTIVE=prod 로 덮어씀
+# ==========================================================
 spring:
   application:
     name: monew
 
-  # http://localhost:8080/h2-console 에서 현재 연결된 DB 조회 (참고용)
-  h2:
-    console:
-      enabled: true
+  profiles:
+    default: local
+
+  jpa:
+    open-in-view: false # REST API 전용이라 뷰 렌더링까지 DB 커넥션을 물고 있을 필요 없음
+    hibernate:
+      # 엔티티 어노테이션 기준으로 Hibernate가 테이블/컬럼 자동 생성·반영
+      # 엔티티가 확정되면 validate(테이블은 schema.sql로 만들고, 엔티티와 맞는지 검사만)로 바꿀 예정
+      ddl-auto: update
+
+  jackson:
+    time-zone: Asia/Seoul # 응답 날짜의 시간대 (단, Instant 타입은 항상 UTC로 나감)
+
+  batch:
+    job:
+      # Spring Batch 기본값은 "앱이 뜰 때 Job을 전부 한 번 실행"이라 꺼 둠 — 실행은 Scheduler나 수동으로만
+      enabled: false
+    jdbc:
+      # 배치 기록용 테이블(BATCH_JOB_INSTANCE 등)을 앱 기동 시 자동 생성. 기본값(embedded)은
+      # H2 같은 내장 DB에서만 만들어서, Postgres에서는 첫 Job 실행 때 테이블이 없어 실패함
+      initialize-schema: always
+
+# 로드밸런서(ALB) 뒤에서도 실제 사용자 IP를 얻는 설정 (사용자가 헤더를 위조해도 무시됨)
+server:
+  forward-headers-strategy: native
+
+# Swagger UI 목록 정렬: 태그(사용자 관리, 관심사 관리 …)는 이름순, 태그 안의 API는 HTTP 메서드별로 모아서 보여 준다
+springdoc:
+  swagger-ui:
+    tags-sorter: alpha
+    operations-sorter: method
+
+# 뉴스기사 RSS 수집용 피드 URL
+monew:
+  news:
+    rss:
+      hankyung: https://www.hankyung.com/feed/all-news
+      chosun: https://www.chosun.com/arc/outboundfeeds/rss/?outputType=xml
+      yonhap: https://www.yna.co.kr/rss/news.xml
+
+  # 뉴스기사 수집용 네이버 뉴스 API 키 — .env의 NAVER_API_CLIENT_ID/SECRET을 읽음. 수집 코드는 이 이름으로 읽기
+  naver:
+    client-id: ${NAVER_API_CLIENT_ID:}
+    client-secret: ${NAVER_API_CLIENT_SECRET:}

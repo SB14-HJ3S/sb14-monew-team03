@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Spring Boot 기본 로그 형식은 그대로 두고, 로그 레벨 뒤에 요청 ID, 클라이언트 IP, 사용자 ID(MDC)만 추가한다.
+  콘솔에서는 로그 레벨만 레벨별 색으로 칠한다(LogLevelHighlightConverter).
+  예) INFO [3f2a…] [203.0.113.7] [9b1c…] … : 댓글 등록 완료
+  요청 밖(서버 시작·배치)이나 사용자 ID 헤더가 없는 요청은 해당 칸이 "-"로 표시된다.
+-->
+<configuration>
+    <property name="MDC_PATTERN" value="[%X{requestId:--}] [%X{clientIp:--}] [%X{userId:--}]"/>
+    <property name="LOG_LEVEL_PATTERN" value="%5p ${MDC_PATTERN}"/>
+    <conversionRule conversionWord="levelColor" class="com.sprint.monew.global.logging.LogLevelHighlightConverter"/>
+    <property name="CONSOLE_LOG_PATTERN" value="%clr(%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd'T'HH:mm:ss.SSSXXX}}){faint} %levelColor(%5p) ${MDC_PATTERN} %clr(${PID:-}){magenta} %clr(--- %esb(){APPLICATION_NAME}%esb{APPLICATION_GROUP}[%15.15t] ${LOG_CORRELATION_PATTERN:-}){faint}%clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</configuration>

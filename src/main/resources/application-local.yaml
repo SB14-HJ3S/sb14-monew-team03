@@ -1,0 +1,30 @@
+# ==========================================================
+# 로컬 개발 환경 (기본 프로파일)
+# - DB: Docker Compose로 뜨는 Postgres / MongoDB (compose.yaml)
+# ==========================================================
+spring:
+  # .env 파일을 읽어 옴 (로컬 전용, 파일 없으면 무시)
+  config:
+    import: optional:file:.env[.properties]
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/monew
+    username: monew_user
+    password: secret
+    driver-class-name: org.postgresql.Driver
+
+  data:
+    mongodb:
+      uri: mongodb://root:secret@localhost:27017/monew?authSource=admin
+
+  jpa:
+    show-sql: true # 개발 중엔 실행되는 SQL을 눈으로 확인
+    hibernate:
+      ddl-auto: update # 엔티티가 크게 바뀌어 꼬이면 docker compose down -v 로 DB를 새로 띄우기
+    properties:
+      hibernate:
+        format_sql: true
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
