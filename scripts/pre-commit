@@ -1,0 +1,58 @@
+#!/bin/sh
+
+# Spotless를 돌리기 전에 스테이징 상태를 기록해 둔다
+# - STAGED: 이번 커밋에 들어갈 파일 (삭제된 파일 제외 — 디스크에 없어서 다시 add할 수 없음)
+# - PARTIAL: 스테이징 안 한 수정이 남아 있는 파일. git add -p로 일부만 골라 올린 파일이 여기 해당하는데,
+#   정리 후 통째로 다시 add하면 고르지 않은 수정까지 커밋에 섞이므로 다시 add하지 않는다
+# core.quotePath=false: 한글 파일명이 "\355\225..."처럼 이스케이프되면 git add가 실패하므로 그대로 받는다
+STAGED=$(git -c core.quotePath=false diff --cached --name-only --diff-filter=ACMR)
+PARTIAL=$(git -c core.quotePath=false diff --name-only)
+
+# 일부만 스테이징한 파일은 Spotless 전 내용을 기억해 두고, 정리로 바뀌었는지 나중에 비교한다
+BEFORE=$(mktemp)
+trap 'rm -f "$BEFORE"' EXIT
+while IFS= read -r f; do
+  [ -n "$f" ] || continue
+  if printf '%s\n' "$PARTIAL" | grep -Fxq -- "$f"; then
+    printf '%s\t%s\n' "$(git hash-object -- "$f")" "$f" >> "$BEFORE"
+  fi
+done <<LIST
+$STAGED
+LIST
+
+echo "Spotless로 코드 스타일 정리 중..."
+# MONEW_GIT_HOOK=1: build.gradle이 이 Gradle 실행 중에는 훅 파일을 .git/hooks에 다시 복사하지 않게 한다.
+# 복사하면 지금 실행 중인 이 훅 파일이 도중에 바뀌어, 훅을 고친 직후 첫 커밋이 syntax error로 막힌다
+MONEW_GIT_HOOK=1 ./gradlew spotlessApply
+
+if [ $? -ne 0 ]; then
+  echo "Spotless 적용 실패. 커밋이 중단됩니다."
+  exit 1
+fi
+
+NEEDS_RESTAGE=""
+while IFS= read -r f; do
+  [ -n "$f" ] || continue
+  if printf '%s\n' "$PARTIAL" | grep -Fxq -- "$f"; then
+    if [ "$(awk -F '\t' -v f="$f" '$2 == f { print $1; exit }' "$BEFORE")" != "$(git hash-object -- "$f")" ]; then
+      NEEDS_RESTAGE="$NEEDS_RESTAGE  $f
+"
+    fi
+    continue
+  fi
+  git add -- "$f"
+done <<LIST
+$STAGED
+LIST
+
+# 일부만 스테이징한 파일이 정리로 바뀌었으면, 그대로 커밋하면 정리 안 된 내용이 들어가므로 멈춘다
+if [ -n "$NEEDS_RESTAGE" ]; then
+  echo ""
+  echo "일부만 스테이징한 파일의 코드 스타일이 정리됐습니다. 정리된 내용을 다시 골라 올린 뒤 커밋해 주세요:"
+  printf '%s' "$NEEDS_RESTAGE"
+  echo "  예: git add -p <파일>"
+  echo "  (스테이징 안 한 부분만 정리된 경우에도 멈춥니다. 그때는 다시 올릴 것 없이 같은 커밋을 다시 실행하면 됩니다)"
+  exit 1
+fi
+
+echo "코드 스타일 정리 완료, 커밋을 진행합니다."
