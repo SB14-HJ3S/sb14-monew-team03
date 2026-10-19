@@ -1,0 +1,195 @@
+name: Deploy to ECS
+
+on:
+  # develop에 머지되자마자가 아니라, 머지 후 CI(테스트)가 통과한 뒤에만 배포되도록 CI 완료를 트리거로 씀
+  workflow_run:
+    workflows: [ "CI" ]
+    types: [ completed ]
+    branches: [ develop ]
+  workflow_dispatch: # 필요할 때 수동으로도 재배포 가능하도록 유지
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+  ECS_CLUSTER: ${{ vars.ECS_CLUSTER }}
+  ECS_SERVICE: ${{ vars.ECS_SERVICE }}
+  ECS_TASK_DEFINITION: ${{ vars.ECS_TASK_DEFINITION }}
+
+jobs:
+  # 먼저 push된 커밋의 CI가 더 늦게 끝나면, 그 배포가 최신 코드를 옛 코드로 덮어쓸 수 있음
+  # → 배포 전에 develop의 최신 커밋인지 확인하고, 아니면 배포를 건너뜀
+  check-latest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push') }}
+    outputs:
+      sha: ${{ steps.resolve.outputs.sha }}
+      is_latest: ${{ steps.resolve.outputs.is_latest }}
+    steps:
+      - name: 배포 대상 커밋이 develop 최신 커밋인지 확인
+        id: resolve
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # 대상 커밋 뒤에 문서(*.md, docs/**)만 바뀐 커밋이 이어졌으면 코드는 대상 커밋과 같으므로 최신으로 본다.
+          # 문서만 바뀐 push는 CI(paths-ignore)도 배포도 안 돌아서, 이걸 안 보면 앞선 코드 커밋이 배포에서 빠짐
+          only_docs_after() {
+            CMP=$(gh api "repos/${{ github.repository }}/compare/$1...$2" \
+              --jq '[.status, (.files[]?.filename)] | .[]') || return 1
+            [ "$(printf '%s\n' "$CMP" | head -n 1)" = "ahead" ] || return 1
+            # compare API는 변경 파일을 최대 300개까지만 주므로, 300개면 목록이 잘렸을 수 있어 문서 전용으로 보지 않는다
+            [ "$(printf '%s\n' "$CMP" | tail -n +2 | grep -c .)" -lt 300 ] || return 1
+            ! printf '%s\n' "$CMP" | tail -n +2 | grep -vqE '\.md$|^docs/'
+          }
+          TARGET_SHA="${{ github.event.workflow_run.head_sha || github.sha }}"
+          echo "sha=$TARGET_SHA" >> "$GITHUB_OUTPUT"
+
+          # workflow_dispatch(수동 배포)는 develop에서만 허용 — 실수로 자기 브랜치를 골라 실행하면
+          # 리뷰 안 된 코드가 서버에 올라가므로 막는다. 롤백은 되돌리는 PR(revert)을 develop에 머지해서 한다
+          # develop에서 실행한 수동 배포는 사람이 직접 고른 것이라 최신 커밋 검사 없이 그대로 진행
+          if [ "${{ github.event_name }}" != "workflow_run" ]; then
+            if [ "${{ github.ref }}" != "refs/heads/develop" ]; then
+              echo "::error::수동 배포는 develop 브랜치에서만 실행할 수 있습니다. (선택한 브랜치: ${{ github.ref_name }})"
+              exit 1
+            fi
+            echo "is_latest=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # 배지는 develop이 아니라 codecov-badge 브랜치에 커밋되므로 develop 최신 커밋과만 비교하면 됨
+          LATEST_SHA=$(gh api "repos/${{ github.repository }}/branches/develop" --jq .commit.sha)
+          if [ "$TARGET_SHA" = "$LATEST_SHA" ] || only_docs_after "$TARGET_SHA" "$LATEST_SHA"; then
+            echo "is_latest=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_latest=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::배포 대상($TARGET_SHA)이 develop 최신 커밋($LATEST_SHA)이 아니라 배포를 건너뜁니다. (더 늦게 push된 커밋이 이미 배포됐거나 배포 중)"
+          fi
+
+  deploy:
+    needs: check-latest
+    if: needs.check-latest.outputs.is_latest == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40 # ECS 서비스 안정화 대기(기본 최대 30분)보다 길게
+    # 배포가 겹쳐 돌지 않게 막고, 새 배포가 오면 진행 중이던 옛 배포는 취소함
+    # - 그룹은 브랜치가 아니라 ECS 서비스 기준 (수동 배포를 다른 브랜치에서 해도 같이 막히게)
+    # - 워크플로가 아니라 job에 둔 이유: 건너뛸 실행까지 그룹에 들어가 정상 배포를 취소하는 걸 막으려고
+    concurrency:
+      group: deploy-ecs-${{ vars.ECS_SERVICE }}
+      cancel-in-progress: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ needs.check-latest.outputs.sha }}
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2
+
+      - name: Build and push image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ needs.check-latest.outputs.sha }}
+        run: |
+          # ECR 태그가 불변(IMMUTABLE)이라 같은 커밋 이미지를 다시 push하면 실패한다 — ECS 단계만 실패해서
+          # "Re-run"한 경우에도 재배포되도록, 이미 있는 태그면 빌드·push를 건너뛰고 그 이미지를 그대로 쓴다
+          if aws ecr describe-images --repository-name "$ECR_REPOSITORY" \
+              --image-ids imageTag="$IMAGE_TAG" > /dev/null 2>&1; then
+            echo "이미지 $IMAGE_TAG 가 ECR에 이미 있어서 빌드·push를 건너뜁니다."
+            exit 0
+          fi
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          # latest 태그는 push하지 않음: monew-app ECR 저장소가 태그 불변(IMMUTABLE)이라
+          # latest처럼 재사용하는 태그를 두 번째로 push하면 "tag is immutable" 에러로 실패함
+
+      - name: Download current task definition
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition $ECS_TASK_DEFINITION \
+            --query taskDefinition \
+            > task-definition.json
+
+      - name: Fill in new image in task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@8d79160660ad39c402a16e5fc7cd2a32e8f7d6b7 # v1
+        with:
+          task-definition: task-definition.json
+          container-name: monew-app
+          image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ needs.check-latest.outputs.sha }}
+
+      - name: 배포 직전 재확인 (이미지 빌드하는 동안 더 최신 커밋이 먼저 배포됐을 수 있음)
+        if: ${{ github.event_name == 'workflow_run' }} # workflow_dispatch(수동 배포)는 최신 커밋 검사 대상이 아님
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_SHA: ${{ needs.check-latest.outputs.sha }}
+        run: |
+          # check-latest와 같은 기준: 대상 뒤에 문서만 바뀐 커밋이 이어진 경우는 배포를 계속한다
+          only_docs_after() {
+            CMP=$(gh api "repos/${{ github.repository }}/compare/$1...$2" \
+              --jq '[.status, (.files[]?.filename)] | .[]') || return 1
+            [ "$(printf '%s\n' "$CMP" | head -n 1)" = "ahead" ] || return 1
+            # compare API는 변경 파일을 최대 300개까지만 주므로, 300개면 목록이 잘렸을 수 있어 문서 전용으로 보지 않는다
+            [ "$(printf '%s\n' "$CMP" | tail -n +2 | grep -c .)" -lt 300 ] || return 1
+            ! printf '%s\n' "$CMP" | tail -n +2 | grep -vqE '\.md$|^docs/'
+          }
+          LATEST_SHA=$(gh api "repos/${{ github.repository }}/branches/develop" --jq .commit.sha)
+          if [ "$TARGET_SHA" != "$LATEST_SHA" ] && ! only_docs_after "$TARGET_SHA" "$LATEST_SHA"; then
+            echo "::error::배포 대상($TARGET_SHA)이 더 이상 develop 최신 커밋($LATEST_SHA)이 아니라 배포를 중단합니다."
+            exit 1
+          fi
+
+      - name: Deploy to ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@a00d4d57ac0de1a99b39fe469f3d898d38717c2b # v2
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
+
+      - name: 오래된 ECR 이미지 정리 (최신 2개만 보존)
+        # 배포 성공(wait-for-service-stability) 이후에만 실행. 배포 전에 지우면, 배포가
+        # 연속으로 실패했을 때 아직 운영 중인 이미지가 삭제되어 태스크 재시작 시 pull이 실패할 수 있음
+        shell: bash   # pipefail 활성화: describe-images가 실패해도 조용히 넘어가지 않도록 함
+        run: |
+          IMAGES=$(aws ecr describe-images \
+            --repository-name "$ECR_REPOSITORY" \
+            --region "$AWS_REGION" \
+            --output json \
+            | jq '[.imageDetails[]
+                   | select(.imageTags != null)
+                   | {imageDigest, imagePushedAt}]
+                  | sort_by(.imagePushedAt)
+                  | map(.imageDigest)')
+
+          TOTAL=$(echo "$IMAGES" | jq 'length')
+          KEEP=2
+          DELETE_COUNT=$((TOTAL - KEEP))
+
+          if [ "$DELETE_COUNT" -gt 0 ]; then
+            DELETE_DIGESTS=$(echo "$IMAGES" | jq -c ".[0:$DELETE_COUNT]")
+            # batch-delete-image는 요청당 이미지 ID 100개까지만 받아서 100개씩 나눠서 삭제
+            echo "$DELETE_DIGESTS" | jq -c '[range(0; length; 100) as $i | .[$i:$i+100]][]' \
+              | while read -r BATCH; do
+                  IMAGE_IDS=$(echo "$BATCH" | jq -c '[.[] | {imageDigest: .}]')
+                  RESULT=$(aws ecr batch-delete-image \
+                    --repository-name "$ECR_REPOSITORY" \
+                    --region "$AWS_REGION" \
+                    --image-ids "$IMAGE_IDS")
+                  FAILURE_COUNT=$(echo "$RESULT" | jq '.failures | length')
+                  if [ "$FAILURE_COUNT" -gt 0 ]; then
+                    echo "::error::ECR 이미지 삭제 실패: $(echo "$RESULT" | jq -c '.failures')"
+                    exit 1
+                  fi
+                done
+          fi
