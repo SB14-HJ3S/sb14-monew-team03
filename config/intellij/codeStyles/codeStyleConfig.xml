@@ -1,0 +1,8 @@
+<component name="ProjectCodeStyleConfiguration">
+  <state>
+    <option name="USE_PER_PROJECT_SETTINGS" value="true" />
+    <!-- 같은 폴더의 Project.xml(들여쓰기 4칸, Spotless와 맞춤)을 쓰라는 뜻
+         세부 줄바꿈은 Spotless와 조금 다를 수 있지만, 커밋할 때 Spotless가 최종 정리함 -->
+    <option name="PREFERRED_PROJECT_CODE_STYLE" value="Project" />
+  </state>
+</component>
