@@ -1,0 +1,17 @@
+# ==========================================================
+# 배포 환경 (AWS)
+# 실제 접속 정보는 서버 환경변수로 주입 (여기엔 값을 직접 적지 않음)
+# ==========================================================
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  data:
+    mongodb:
+      uri: ${MONGODB_URI}
+
+  jpa:
+    show-sql: false
