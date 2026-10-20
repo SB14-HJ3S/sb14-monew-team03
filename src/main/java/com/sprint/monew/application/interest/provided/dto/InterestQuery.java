@@ -1,8 +1,12 @@
 package com.sprint.monew.application.interest.provided.dto;
 
 import com.sprint.monew.global.pagination.SortDirection;
+import com.sprint.monew.global.pagination.SortedPageQuery;
 import jakarta.validation.constraints.NotNull;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Objects;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -14,9 +18,10 @@ public record InterestQuery(
         @NotNull InterestQuery.SortOrder orderBy,
         @NotNull SortDirection direction,
         String cursor,
-        LocalDateTime after,
-        @NotNull Integer limit,
-        @NotNull UUID requestId) {
+        Instant after,
+        @NotNull int limit,
+        @NotNull UUID requestId)
+        implements SortedPageQuery<InterestQuery.SortOrder> {
     public static InterestQuery of(
             String keyword,
             InterestQuery.SortOrder orderBy,
@@ -25,13 +30,20 @@ public record InterestQuery(
             LocalDateTime after,
             int limit,
             UUID requestId) {
-        return new InterestQuery(keyword, orderBy, direction, cursor, after, limit, requestId);
+        return new InterestQuery(
+                keyword,
+                orderBy,
+                direction,
+                cursor,
+                Objects.nonNull(after) ? after.atZone(ZoneId.systemDefault()).toInstant() : null,
+                limit,
+                requestId);
     }
 
     @Getter
     @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
     @RequiredArgsConstructor
-    public enum SortOrder {
+    public enum SortOrder implements com.sprint.monew.global.pagination.SortOrder {
         NAME("name"),
         SUBSCRIBER_COUNT("subscriberCount"),
         ;

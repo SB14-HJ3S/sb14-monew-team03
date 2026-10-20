@@ -1,9 +1,13 @@
 package com.sprint.monew.application.article.provided.dto;
 
 import com.sprint.monew.global.pagination.SortDirection;
+import com.sprint.monew.global.pagination.SortedPageQuery;
 import jakarta.validation.constraints.NotNull;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -19,9 +23,10 @@ public record ArticleQuery(
         @NotNull ArticleQuery.SortOrder orderBy,
         @NotNull SortDirection direction,
         String cursor,
-        LocalDateTime after,
-        @NotNull Integer limit,
-        @NotNull UUID requestId) {
+        Instant after,
+        @NotNull int limit,
+        @NotNull UUID requestId)
+        implements SortedPageQuery<ArticleQuery.SortOrder> {
     public static ArticleQuery of(
             String keyword,
             UUID interestId,
@@ -43,7 +48,7 @@ public record ArticleQuery(
                 orderBy,
                 direction,
                 cursor,
-                after,
+                Objects.nonNull(after) ? after.atZone(ZoneId.systemDefault()).toInstant() : null,
                 limit,
                 requestId);
     }
@@ -51,7 +56,7 @@ public record ArticleQuery(
     @Getter
     @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
     @RequiredArgsConstructor
-    public enum SortOrder {
+    public enum SortOrder implements com.sprint.monew.global.pagination.SortOrder {
         PUBLISH_DATE("publishDate"),
         COMMENT_COUNT("commentCount"),
         VIEW_COUNT("viewCount"),
