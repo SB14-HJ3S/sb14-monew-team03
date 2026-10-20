@@ -43,7 +43,7 @@ public class ArticleApplication implements ArticleUseCase {
     }
 
     @Override
-    public ArticleViewStatus register(UUID requestId, UUID articleId) {
+    public ArticleViewStatus register(UUID articleId, UUID requestId) {
         return null;
     }
 }

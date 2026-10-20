@@ -22,5 +22,5 @@ public interface ArticleUseCase {
 
     List<Article> restoreArticles(LocalDateTime from, LocalDateTime to);
 
-    ArticleViewStatus register(UUID requestId, UUID articleId);
+    ArticleViewStatus register(UUID articleId, UUID requestId);
 }

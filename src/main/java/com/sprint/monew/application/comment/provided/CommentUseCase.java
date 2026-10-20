@@ -14,9 +14,9 @@ public interface CommentUseCase {
 
     Comment like(UUID commentId, UUID requestId);
 
-    void unlike(UUID requestId, UUID commentId);
+    void unlike(UUID commentId, UUID requestId);
 
-    Comment changeContent(UUID requestId, UUID commentId, String content);
+    Comment changeContent(UUID commentId, UUID requestId, String content);
 
     void softDeleteComment(UUID commentId);
 
