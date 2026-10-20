@@ -35,6 +35,9 @@ jobs:
         uses: anthropics/claude-code-action@f27be6b65a4652f08a2ba3cff79114829b588967 # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN_B }}
+          # Claude 앱 토큰(contents: write) 대신 위 permissions(contents: read) 토큰을 쓰게 해서 커밋·푸시를 토큰 단계에서 막음
+          # (앱 토큰을 쓰면 contents: read 설정과 상관없이 @claude가 PR 브랜치에 커밋할 수 있었음)
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
           # This is an optional setting that allows Claude to read CI results on PRs
           additional_permissions: |
@@ -46,6 +49,8 @@ jobs:
           # Optional: Add claude_args to customize behavior and configuration
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://code.claude.com/docs/en/cli-reference for available options
-          # 코드 수정 도구(Edit/Write/git commit·push 등)는 목록에 없어서 자동으로 거부됨.
-          # 이슈/PR 본문·댓글을 읽고 답변 댓글을 다는 것까지만 허용.
-          claude_args: '--allowedTools "Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(gh api:*)"'
+          # 이슈/PR 본문·댓글을 읽고 답변 댓글을 다는 것까지만 허용. 푸시는 위 github_token(contents: read)에서 막힘
+          # --append-system-prompt: 고칠 수 없다는 걸 알려 "제가 수정하겠습니다" 같은 제안을 막고, 리뷰 요약 형식을 자동 리뷰와 맞춤
+          claude_args: |
+            --allowedTools "Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(gh api:*)"
+            --append-system-prompt "너는 이 저장소의 코드를 수정하거나 커밋할 수 없다. 수정해 주겠다고 제안하지 말고, 무엇을 고쳐야 하는지만 알려줘. 리뷰나 수정 우선순위를 요청받으면 맨 위에 등급별 개수(🔴 심각 · 🟠 중간 · 🟡 참고)와 '- [ ] 🔴 `파일명:줄` 문제 한 줄' 형식의 체크리스트를 쓰고, 그 아래에 항목마다 '### 🔴 심각 — 제목', '**파일**: 경로 (줄)', 필요한 몇 줄의 코드 블록, 짧은 설명 bullet(결과는 굵게), '**제안**: 고칠 방향' 순서로 써줘. 모든 답변은 한국어로 써."
