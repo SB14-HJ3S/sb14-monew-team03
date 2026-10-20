@@ -34,7 +34,6 @@
 
 **확정된 것:**
 - 네이밍: 변수·함수 `camelCase`, 클래스 `PascalCase`, 패키지 소문자, 테이블 `snake_case`·소문자·복수형, 컬럼 `snake_case`
-- 클래스 이름: 구현체 `~Impl`, 그 외 `~Controller` / `~Service` / `~Repository`
 - Lombok: `@Getter` 필수, `@Setter` 금지
 - 객체 생성: 정적 팩토리 메서드, 이름은 `create`
 - 로그: 로거(`log.info` 등) 사용
