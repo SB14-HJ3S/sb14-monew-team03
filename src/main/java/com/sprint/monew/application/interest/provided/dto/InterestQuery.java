@@ -12,7 +12,7 @@ import lombok.experimental.FieldDefaults;
 public record InterestQuery(
         String keyword,
         @NotNull InterestQuery.SortOrder orderBy,
-        @NotNull SortDirection sortDirection,
+        @NotNull SortDirection direction,
         String cursor,
         LocalDateTime after,
         @NotNull Integer limit,

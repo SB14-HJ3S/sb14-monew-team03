@@ -17,7 +17,7 @@ public record ArticleQuery(
         LocalDateTime publishDateFrom,
         LocalDateTime publishDateTo,
         @NotNull ArticleQuery.SortOrder orderBy,
-        @NotNull SortDirection sortDirection,
+        @NotNull SortDirection direction,
         String cursor,
         LocalDateTime after,
         @NotNull Integer limit,

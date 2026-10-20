@@ -33,7 +33,7 @@ public record CommentQuery(
     @RequiredArgsConstructor
     public enum SortOrder {
         CREATED_AT("createdAt"),
-        DIRECTION("direction"),
+        LIKE_COUNT("likeCount"),
         ;
         String value;
     }

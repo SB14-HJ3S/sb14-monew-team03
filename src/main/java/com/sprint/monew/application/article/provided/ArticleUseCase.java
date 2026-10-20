@@ -12,7 +12,7 @@ import java.util.UUID;
 public interface ArticleUseCase {
     PageResult<Article> findByQuery(ArticleQuery query);
 
-    Article findById(UUID requestId, UUID articleId);
+    Article findById(UUID articleId, UUID requestId);
 
     List<ArticleSourceType> findSourceTypes();
 

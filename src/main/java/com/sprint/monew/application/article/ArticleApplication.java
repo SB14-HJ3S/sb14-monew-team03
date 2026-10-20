@@ -22,7 +22,7 @@ public class ArticleApplication implements ArticleUseCase {
     }
 
     @Override
-    public Article findById(UUID requestId, UUID articleId) {
+    public Article findById(UUID articleId, UUID requestId) {
         return null;
     }
 

@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Objects;
 
 public record PageResult<T>(
         List<T> content, // 페이지 내용
@@ -23,7 +24,9 @@ public record PageResult<T>(
         return new PageResult<>(
                 content,
                 nextCursor,
-                nextAfter.atZone(ZoneId.systemDefault()).toInstant(),
+                Objects.nonNull(nextAfter)
+                        ? nextAfter.atZone(ZoneId.systemDefault()).toInstant()
+                        : null,
                 size,
                 totalElements,
                 hasNext);
