@@ -6,6 +6,7 @@ import com.sprint.monew.application.article.provided.ArticleRestorer;
 import com.sprint.monew.application.article.provided.ArticleViewStatusRegister;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.article.entity.ArticleViewStatus;
+import com.sprint.monew.global.pagination.PageResult;
 import com.sprint.monew.global.type.ArticleSourceType;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,8 +16,8 @@ public class ArticleService
         implements ArticleFinder, ArticleRemover, ArticleRestorer, ArticleViewStatusRegister {
 
     @Override
-    public List<Article> findAll() {
-        return List.of();
+    public PageResult<Article> findQuery() {
+        return null;
     }
 
     @Override

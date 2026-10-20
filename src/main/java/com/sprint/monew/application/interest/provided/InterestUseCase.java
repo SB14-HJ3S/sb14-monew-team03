@@ -2,11 +2,12 @@ package com.sprint.monew.application.interest.provided;
 
 import com.sprint.monew.application.interest.provided.dto.InterestQuery;
 import com.sprint.monew.domain.interest.entity.Interest;
+import com.sprint.monew.global.pagination.PageResult;
 import java.util.List;
 import java.util.UUID;
 
 public interface InterestUseCase {
-    Interest findByQuery(InterestQuery query);
+    PageResult<Interest> findByQuery(InterestQuery query);
 
     Interest register(String name, List<String> keywords);
 
