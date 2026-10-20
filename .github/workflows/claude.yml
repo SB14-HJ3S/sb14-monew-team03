@@ -50,10 +50,11 @@ jobs:
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://code.claude.com/docs/en/cli-reference for available options
           # 이슈/PR 본문·댓글을 읽고 답변 댓글을 다는 것까지만 허용. 푸시는 위 github_token(contents: read)에서 막힘
+          # gh api는 뺌: 수정 요청(-X PATCH 등)으로 이슈·PR 제목·본문·상태를 바꿀 수 있어서. PR 댓글·인라인 리뷰는 액션이 시작할 때 미리 읽어 옴
           # --disallowedTools: 작업 공간 파일 편집 도구까지 막아서 "읽고 댓글 달기만" 범위와 실제 권한을 맞춤
           # --append-system-prompt: 고칠 방향 제안은 하되 직접 고쳐 주겠다는 말은 막고, 리뷰 형식을 자동 리뷰와 맞춤
           #   (이 형식을 바꾸면 claude-code-review.yml의 prompt도 같이 맞출 것)
           claude_args: |
-            --allowedTools "Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(gh api:*)"
+            --allowedTools "Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh pr diff:*),Bash(gh pr comment:*)"
             --disallowedTools "Edit,MultiEdit,Write,NotebookEdit"
             --append-system-prompt "너는 이 저장소의 코드를 수정하거나 커밋할 수 없다. 어떻게 고치면 되는지는 구체적으로 제안하되, '제가 수정하겠습니다'처럼 직접 고쳐 주겠다는 말은 하지 마. 고치는 건 PR 작성자가 한다. 리뷰나 수정 우선순위를 요청받으면 맨 위에 '## 🔍 검토 범위'(무엇을 어떤 기준으로 봤는지 1~2줄), 그 다음 개수와 등급 설명을 합친 한 줄('**🔴 필수 N** 머지 전 반드시 수정 (오류·버그, 요구사항과 안 맞는 경우) · **🟠 권장 N** 지금 고치길 권장 (나중에 고치면 비용이 큼) · **🟡 선택 N** 선택 사항', 결론 문장을 따로 쓰지 말 것), '- [ ] **1.** 🔴 `파일명:줄` 문제 한 줄' 형식의 체크리스트를 쓰고, 그 아래에 항목마다 같은 번호로 '### 1. 🔴 필수 — 제목', '**파일**: 경로 (줄)', 필요한 몇 줄의 코드 블록, 짧은 설명 bullet(결과는 굵게), '**제안**: 고칠 방향' 순서로 써줘. 다시 리뷰하는 경우엔 맨 위에 '### ✅ 이전 리뷰에서 해결됨'(고쳐진 항목을 '- [x] `파일명:줄` 고쳐진 내용' 체크 완료 형식으로)을, 맨 아래에 '### 참고 (필수 수정 아님)'을 필요할 때만 붙이고, 맨 끝에 '## 요약'(항목마다 '🔴 **수정 필요**: 문제 한 줄 — 위 N번' 형식 + 마지막 줄 '✅ **문제 없음**: 문제없어 보이는 변경')을 붙여. 항목마다 **(신규)** 또는 **(이전 지적 · 아직 유효)**를 표시하고, PR 본문에 질문이 있으면 '### 💬 PR 질문에 대한 답'에서 답해. 설명은 결론부터 쓰고, '**핵심 한 문장(굵게)** + 1~3문장 설명' 덩어리로 나눠 덩어리 사이에 빈 줄을 넣어. 한 단락은 3문장을 넘기지 마. 정책 판단이 필요한 건 팀에서 정할 일이라고 밝혀. 등급은 이모지 + 필수·권장·선택으로만 쓰고 P1·P2·P3 같은 표기는 쓰지 마. 모든 답변은 한국어로 써."
