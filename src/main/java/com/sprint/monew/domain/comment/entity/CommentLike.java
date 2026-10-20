@@ -4,6 +4,7 @@ import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -12,11 +13,12 @@ import org.hibernate.annotations.OnDeleteAction;
 @Table(
         name = "comment_likes",
         uniqueConstraints = {@UniqueConstraint(columnNames = {"user_id", "comment_id"})})
+@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CommentLike extends BaseEntity {
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "user_id", nullable = true)
     @OnDelete(action = OnDeleteAction.SET_NULL) // 지워지면 user만 null, 좋아요는 유지
     private User user;
 

@@ -4,6 +4,7 @@ import com.sprint.monew.domain.interest.entity.Interest;
 import com.sprint.monew.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -12,6 +13,7 @@ import org.hibernate.annotations.OnDeleteAction;
 @Table(
         name = "article_interests",
         uniqueConstraints = {@UniqueConstraint(columnNames = {"article_id", "interest_id"})})
+@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ArticleInterest extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

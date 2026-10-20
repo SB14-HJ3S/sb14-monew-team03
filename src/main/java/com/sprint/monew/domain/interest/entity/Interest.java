@@ -3,12 +3,14 @@ package com.sprint.monew.domain.interest.entity;
 import com.sprint.monew.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Table(
         name = "interests",
         uniqueConstraints = {@UniqueConstraint(columnNames = {"name"})})
+@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Interest extends BaseEntity {
     @Column(name = "name", nullable = false)

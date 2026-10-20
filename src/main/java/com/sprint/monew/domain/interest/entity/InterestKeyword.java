@@ -3,15 +3,20 @@ package com.sprint.monew.domain.interest.entity;
 import com.sprint.monew.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name = "interest_keywords")
+@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class InterestKeyword extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "interest_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Interest interest;
 
     @Column(name = "keyword", nullable = false)
