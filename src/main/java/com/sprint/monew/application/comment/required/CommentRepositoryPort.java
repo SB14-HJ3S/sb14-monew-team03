@@ -14,6 +14,4 @@ public interface CommentRepositoryPort {
     List<Comment> findAll();
 
     void deleteById(UUID id);
-
-    // 본인 쓸 거
 }

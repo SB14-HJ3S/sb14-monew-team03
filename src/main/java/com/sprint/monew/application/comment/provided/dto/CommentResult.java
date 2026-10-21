@@ -1,5 +1,6 @@
 package com.sprint.monew.application.comment.provided.dto;
 
+import com.sprint.monew.domain.comment.entity.Comment;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -12,4 +13,18 @@ public record CommentResult(
         String content,
         long likeCount,
         boolean likedByMe,
-        Instant createdAt) {}
+        Instant createdAt) {
+
+    // 작성자·기사를 지연 로딩으로 읽으므로 트랜잭션 안에서 호출해야 한다
+    public static CommentResult create(Comment comment, boolean likedByMe) {
+        return new CommentResult(
+                comment.getId(),
+                comment.getArticle().getId(),
+                comment.getUser().getId(),
+                comment.getUser().getNickname(),
+                comment.getContent(),
+                comment.getLikeCount(),
+                likedByMe,
+                comment.getCreatedAt());
+    }
+}

@@ -53,15 +53,7 @@ public class CommentApplication implements CommentUseCase {
 
         boolean likedByMe = commentLikeRepository.existsByCommentIdAndUserId(commentId, requestId);
 
-        return new CommentResult(
-                comment.getId(),
-                comment.getArticle().getId(),
-                comment.getUser().getId(),
-                comment.getUser().getNickname(),
-                comment.getContent(),
-                comment.getLikeCount(),
-                likedByMe,
-                comment.getCreatedAt());
+        return CommentResult.create(comment, likedByMe);
     }
 
     @Override

@@ -15,6 +15,6 @@ public interface CommentLikeRepositoryPort {
 
     void deleteById(UUID id);
 
-    // 본인 쓸 거
+    // 요청자의 좋아요 여부 조회용
     boolean existsByCommentIdAndUserId(UUID commentId, UUID userId);
 }
