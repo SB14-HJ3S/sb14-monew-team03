@@ -17,6 +17,8 @@ const CARDS_FILE = 'ts-cards.json';
 const CONTEXT_FILE = 'ts-context.md';
 const WRITTEN_FILE = 'ts-written.json';
 const DIFF_LIMIT = 12000;
+// 스크린샷이 없는 카드 맨 위에 넣는 기본 이미지 (갤러리 썸네일용, #123). 저장소가 공개라 develop의 파일 주소를 그대로 쓴다
+const DEFAULT_THUMBNAIL = `https://raw.githubusercontent.com/${process.env.GITHUB_REPOSITORY || 'SB14-HJ3S/sb14-monew-team03'}/develop/.github/assets/troubleshooting-cover.png`;
 
 // 이슈 템플릿(🛠️-fix.md)에 미리 적힌 안내 문구. 작성자가 안 지우고 둔 경우 내용에서 뺀다
 const PLACEHOLDERS = [
@@ -175,6 +177,19 @@ function solvers(prs, userMap) {
 // userMap: GitHub 아이디 → 노션 사용자 ID. "해결한 사람"을 노션 사람 멘션으로 보여 줄 때 쓴다
 function buildBlocks({ issue, prs, closedAt }, written, historyLine = '', images = {}, userMap = {}) {
   const screenshots = (title, list) => (list?.length ? [heading(3, title), ...list] : []);
+  // 갤러리 썸네일은 페이지 맨 위 블록을 보여 준다 → 첫 스크린샷(이슈 먼저, 없으면 PR)을 맨 위로 올리고, 없으면 기본 이미지 (#123)
+  // 맨 위로 올린 스크린샷은 아래 "스크린샷" 칸에서 빼서 두 번 나오지 않게 한다. 업로드 실패로 링크가 된 것은 썸네일로 쓰지 않는다
+  const isImage = (b) => b.type === 'image';
+  const issueImages = [...(images.issue || [])];
+  const prImages = [...(images.prs || [])];
+  const fromIssue = issueImages.findIndex(isImage);
+  const fromPr = fromIssue < 0 ? prImages.findIndex(isImage) : -1;
+  const thumbnail =
+    fromIssue >= 0
+      ? issueImages.splice(fromIssue, 1)[0]
+      : fromPr >= 0
+        ? prImages.splice(fromPr, 1)[0]
+        : { object: 'block', type: 'image', image: { type: 'external', external: { url: DEFAULT_THUMBNAIL } } };
   const base = issue || prs[0];
   const s = issue ? sections(issue.body) : {};
   const summary = inline(s['버그 요약']) || cleanTitle(base.title);
@@ -198,6 +213,7 @@ function buildBlocks({ issue, prs, closedAt }, written, historyLine = '', images
     : [block('paragraph', '(연결된 PR 없음)')];
 
   return [
+    thumbnail,
     heading(1, '🔧 트러블슈팅 기록'),
     ...(historyLine ? [block('paragraph', historyLine)] : []),
     heading(2, '개요'),
@@ -212,7 +228,7 @@ function buildBlocks({ issue, prs, closedAt }, written, historyLine = '', images
     heading(2, '문제 상황'),
     heading(3, '증상'),
     ...markdownBlocks(written?.symptom || rawSymptom),
-    ...screenshots('스크린샷', images.issue),
+    ...screenshots('스크린샷', issueImages),
     heading(3, '재현 방법'),
     ...markdownBlocks(written?.reproduce || s['재현 방법']),
     heading(3, '에러 메시지 / 로그'),
@@ -227,7 +243,7 @@ function buildBlocks({ issue, prs, closedAt }, written, historyLine = '', images
     divider(),
     heading(2, '해결 방법'),
     ...(written?.solution ? markdownBlocks(written.solution) : rawSolution),
-    ...screenshots('스크린샷 (PR)', images.prs),
+    ...screenshots('스크린샷 (PR)', prImages),
     divider(),
     heading(2, '배운 점 및 개선 사항'),
     ...list(written?.lessons, 'bulleted_list_item'),
