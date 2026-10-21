@@ -37,11 +37,11 @@ class CommentControllerTest {
     @MockitoBean private CommentUseCase commentUseCase;
 
     private final UUID commentId = UUID.randomUUID();
-    private final UUID requesterId = UUID.randomUUID();
+    private final UUID requestId = UUID.randomUUID();
 
     private MockHttpServletRequestBuilder changeContentRequest(String content) throws Exception {
         return patch("/api/comments/{commentId}", commentId)
-                .header(USER_ID_HEADER, requesterId)
+                .header(USER_ID_HEADER, requestId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(new CommentUpdateRequest(content)));
     }
@@ -58,19 +58,19 @@ class CommentControllerTest {
                     new CommentResult(
                             commentId,
                             articleId,
-                            requesterId,
+                            requestId,
                             "작성자",
                             "수정 후",
                             3L,
                             true,
                             Instant.parse("2026-10-21T00:00:00Z"));
-            given(commentUseCase.changeContent(commentId, requesterId, "수정 후")).willReturn(result);
+            given(commentUseCase.changeContent(commentId, requestId, "수정 후")).willReturn(result);
 
             mockMvc.perform(changeContentRequest("수정 후"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(commentId.toString()))
                     .andExpect(jsonPath("$.articleId").value(articleId.toString()))
-                    .andExpect(jsonPath("$.userId").value(requesterId.toString()))
+                    .andExpect(jsonPath("$.userId").value(requestId.toString()))
                     .andExpect(jsonPath("$.userNickname").value("작성자"))
                     .andExpect(jsonPath("$.content").value("수정 후"))
                     .andExpect(jsonPath("$.likeCount").value(3))

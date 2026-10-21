@@ -46,11 +46,11 @@ public class Comment extends BaseSoftDeletableEntity {
     }
 
     // 본인이 작성한 댓글만 수정할 수 있다
-    public void changeContent(UUID requesterId, String content) {
+    public void changeContent(UUID requestId, String content) {
         if (isDeleted()) {
             throw new MonewException(CommentErrorType.COMMENT_NOT_FOUND);
         }
-        if (!isAuthor(requesterId)) {
+        if (!isAuthor(requestId)) {
             throw new MonewException(CommentErrorType.COMMENT_NOT_OWNER);
         }
         this.content = content;
