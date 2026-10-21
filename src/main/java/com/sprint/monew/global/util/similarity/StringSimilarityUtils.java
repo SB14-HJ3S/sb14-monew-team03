@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.text.similarity.LevenshteinDistance;
 
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public class LevenshteinDistanceUtils {
+public class StringSimilarityUtils {
 
     public static double calculateSimilarity(String str1, String str2) {
         String str1Normalized = normalize(str1);

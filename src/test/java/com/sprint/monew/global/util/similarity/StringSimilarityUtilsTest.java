@@ -7,7 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @Slf4j
-class LevenshteinDistanceUtilsTest {
+class StringSimilarityUtilsTest {
 
     @Test
     @DisplayName("완전히 같은 문자열의 유사도는 1")
@@ -15,7 +15,7 @@ class LevenshteinDistanceUtilsTest {
         String s1 = "문자열1";
         String s2 = "문자열1";
 
-        double result = LevenshteinDistanceUtils.calculateSimilarity(s1, s2);
+        double result = StringSimilarityUtils.calculateSimilarity(s1, s2);
 
         assertThat(result).isEqualTo(1);
     }
@@ -26,7 +26,7 @@ class LevenshteinDistanceUtilsTest {
         String s1 = "문 자 열 1";
         String s2 = "문자열1";
 
-        double result = LevenshteinDistanceUtils.calculateSimilarity(s1, s2);
+        double result = StringSimilarityUtils.calculateSimilarity(s1, s2);
 
         assertThat(result).isEqualTo(1);
     }
@@ -37,7 +37,7 @@ class LevenshteinDistanceUtilsTest {
         String nullStr = null;
         String str = "str";
 
-        double result = LevenshteinDistanceUtils.calculateSimilarity(nullStr, str);
+        double result = StringSimilarityUtils.calculateSimilarity(nullStr, str);
 
         assertThat(result).isZero();
     }
@@ -48,7 +48,7 @@ class LevenshteinDistanceUtilsTest {
         String emptyStr = "";
         String nullStr = null;
 
-        assertThatThrownBy(() -> LevenshteinDistanceUtils.calculateSimilarity(emptyStr, nullStr))
+        assertThatThrownBy(() -> StringSimilarityUtils.calculateSimilarity(emptyStr, nullStr))
                 .isInstanceOf(Exception.class);
     }
 
@@ -58,7 +58,7 @@ class LevenshteinDistanceUtilsTest {
         String str1 = "박수민";
         String str2 = "박쑤믜";
 
-        double result = LevenshteinDistanceUtils.calculateSimilarity(str1, str2);
+        double result = StringSimilarityUtils.calculateSimilarity(str1, str2);
 
         // 2번째 음절의 초성(치환), 3번째 음절의 중성(치환), 3번째 음절의 종성(삭제) 3개가 다르므로 편집거리는 3
         assertThat(result).isEqualTo(1 - 3.0 / 8);
