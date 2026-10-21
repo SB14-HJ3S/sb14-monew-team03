@@ -1,8 +1,7 @@
 package com.sprint.monew.global.util.similarity;
 
-import static org.assertj.core.api.Assertions.*;
-
 import lombok.extern.slf4j.Slf4j;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -17,7 +16,7 @@ class StringSimilarityUtilsTest {
 
         double result = StringSimilarityUtils.calculateSimilarity(s1, s2);
 
-        assertThat(result).isEqualTo(1);
+        Assertions.assertThat(result).isEqualTo(1);
     }
 
     @Test
@@ -28,7 +27,7 @@ class StringSimilarityUtilsTest {
 
         double result = StringSimilarityUtils.calculateSimilarity(s1, s2);
 
-        assertThat(result).isEqualTo(1);
+        Assertions.assertThat(result).isEqualTo(1);
     }
 
     @Test
@@ -39,7 +38,7 @@ class StringSimilarityUtilsTest {
 
         double result = StringSimilarityUtils.calculateSimilarity(nullStr, str);
 
-        assertThat(result).isZero();
+        Assertions.assertThat(result).isZero();
     }
 
     @Test
@@ -48,7 +47,8 @@ class StringSimilarityUtilsTest {
         String emptyStr = "";
         String nullStr = null;
 
-        assertThatThrownBy(() -> StringSimilarityUtils.calculateSimilarity(emptyStr, nullStr))
+        Assertions.assertThatThrownBy(
+                        () -> StringSimilarityUtils.calculateSimilarity(emptyStr, nullStr))
                 .isInstanceOf(Exception.class);
     }
 
@@ -61,6 +61,7 @@ class StringSimilarityUtilsTest {
         double result = StringSimilarityUtils.calculateSimilarity(str1, str2);
 
         // 2번째 음절의 초성(치환), 3번째 음절의 중성(치환), 3번째 음절의 종성(삭제) 3개가 다르므로 편집거리는 3
-        assertThat(result).isEqualTo(1 - 3.0 / 8);
+        final double expected = 1 - 3.0 / 8;
+        Assertions.assertThat(result).isEqualTo(expected);
     }
 }
