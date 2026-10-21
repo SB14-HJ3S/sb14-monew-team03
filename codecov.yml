@@ -12,7 +12,8 @@ coverage:
         target: 80%
         informational: true
 comment:
-  # PR 댓글은 커버리지 요약만 짧게 보여 준다
-  layout: "condensed_header,diff,condensed_footer"
+  # PR 댓글은 커버리지가 몇 %인지 한 줄만 보여 준다
+  layout: "condensed_header"
   behavior: default
-  require_changes: false
+  # 커버리지가 바뀐 PR에만 댓글을 단다 — 워크플로·문서·설정만 바꾼 PR에는 달지 않음 (#113)
+  require_changes: true
