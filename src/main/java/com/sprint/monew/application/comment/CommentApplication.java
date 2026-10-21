@@ -6,10 +6,13 @@ import com.sprint.monew.application.comment.provided.dto.CommentResult;
 import com.sprint.monew.application.comment.required.CommentLikeRepositoryPort;
 import com.sprint.monew.application.comment.required.CommentRepositoryPort;
 import com.sprint.monew.domain.comment.entity.Comment;
+import com.sprint.monew.global.exception.MonewException;
+import com.sprint.monew.global.exception.errortype.CommentErrorType;
 import com.sprint.monew.global.pagination.PageResult;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -42,8 +45,26 @@ public class CommentApplication implements CommentUseCase {
     public void unlike(UUID commentId, UUID requestId) {}
 
     @Override
+    @Transactional
     public CommentResult changeContent(UUID commentId, UUID requestId, String content) {
-        return null;
+        Comment comment =
+                commentRepository
+                        .findById(commentId)
+                        .orElseThrow(() -> new MonewException(CommentErrorType.COMMENT_NOT_FOUND));
+
+        comment.changeContent(requestId, content);
+
+        boolean likedByMe = commentLikeRepository.existsByCommentIdAndUserId(commentId, requestId);
+
+        return new CommentResult(
+                comment.getId(),
+                comment.getArticle().getId(),
+                comment.getUser().getId(),
+                comment.getUser().getNickname(),
+                comment.getContent(),
+                comment.getLikeCount(),
+                likedByMe,
+                comment.getCreatedAt());
     }
 
     @Override
