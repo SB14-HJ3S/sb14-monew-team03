@@ -82,7 +82,8 @@
 - 로그: 요청별 ID·IP를 MDC에 넣어 로그와 응답 헤더에 남긴다
 - 엔티티 변경: 운영 DB는 `ddl-auto: update`라, 이미 데이터가 있는 테이블에 `nullable = false` 컬럼을 추가하거나 타입을 바꾸면 운영에서만 반영이 실패한다(CI는 빈 DB라 못 잡음). 새 컬럼은 nullable로 두거나 기본값을 준다
 - 테스트: 통합 테스트는 `@IntegrationTest`, MongoDB가 필요한 테스트만 `@MongoIntegrationTest`를 쓴다
-  - `@MockBean`·`@TestPropertySource`는 꼭 필요할 때만 쓴다. 설정이 다른 테스트마다 스프링 컨텍스트와 컨테이너가 새로 떠서 CI가 느려진다
+  - 컨트롤러 테스트는 `@WebMvcTest(XxxController.class)` + `@MockitoBean`으로 UseCase를 가짜로 바꿔서 쓴다 (`@MockBean` 말고 `@MockitoBean`)
+  - 통합 테스트(`@IntegrationTest`)에서는 `@MockitoBean`·`@TestPropertySource`를 꼭 필요할 때만 쓴다. 설정이 다른 테스트마다 스프링 컨텍스트와 컨테이너가 새로 떠서 CI가 느려진다
   - 외부 서비스를 실제로 부르는 테스트는 `@Tag("external-api")`를 붙인다
 
 ### 요청 검증(Bean Validation) 컨벤션

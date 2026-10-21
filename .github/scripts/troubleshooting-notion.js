@@ -8,6 +8,7 @@
 // 실행 순서: prepare(데이터 모으기, 작성용 자료 만들기) → 글 작성 → write(노션에 쓰기)
 
 const fs = require('fs');
+const { extractImages, stripImages, imageBlocks } = require('./notion-images.js');
 
 const NOTION_DB_ID = 'fd09e310-9743-8397-95d6-0177da00be8c';
 const LINK_PROPERTY = 'GitHub 링크';
@@ -109,7 +110,9 @@ function chunks(text) {
 }
 
 // 마크다운 → 노션 블록 (문단, 글머리 기호, 번호 목록, 코드 블록 정도만)
-function markdownBlocks(text) {
+// 이미지 태그는 글자로 보이지 않게 지우고, 이미지는 buildBlocks가 "스크린샷" 칸에 따로 넣는다
+function markdownBlocks(rawText) {
+  const text = stripImages(rawText).trim();
   if (!text) return [block('paragraph', '-')];
   const blocks = [];
   const fence = /```[^\n]*\n([\s\S]*?)```/g;
@@ -138,7 +141,8 @@ function markdownBlocks(text) {
 }
 
 function overviewTable(rows) {
-  const cell = (t, bold) => richMarkdown(t, { bold });
+  // 값이 배열이면 이미 만든 rich_text(예: 사람 멘션)라 그대로 쓴다
+  const cell = (t, bold) => (Array.isArray(t) ? t : richMarkdown(t, { bold }));
   return {
     object: 'block',
     type: 'table',
@@ -155,9 +159,22 @@ function overviewTable(rows) {
   };
 }
 
+// 해결한 사람 = 머지된 PR을 올린 사람(여러 명이면 쉼표로). 노션 대응표에 있으면 사람 멘션(@이름), 없으면 GitHub 아이디
+function solvers(prs, userMap) {
+  const logins = [...new Set(prs.map((pr) => pr.author?.login).filter(Boolean))];
+  if (logins.length === 0) return '-';
+  return logins.flatMap((login, i) => [
+    ...(i > 0 ? [{ type: 'text', text: { content: ', ' } }] : []),
+    userMap[login] ? { type: 'mention', mention: { user: { id: userMap[login] } } } : { type: 'text', text: { content: `@${login}` } },
+  ]);
+}
+
 // written: 연동이 쓴 내용(없으면 null → 이슈·PR 원문으로 채움)
 //   { environment, tech, symptom, reproduce, attempts: [..], root_cause, solution, lessons: [..], summary }
-function buildBlocks({ issue, prs, closedAt }, written, historyLine = '') {
+// images: 이슈·PR 본문에 붙인 이미지를 노션 블록으로 바꾼 것 { issue: [..], prs: [..] } (#119)
+// userMap: GitHub 아이디 → 노션 사용자 ID. "해결한 사람"을 노션 사람 멘션으로 보여 줄 때 쓴다
+function buildBlocks({ issue, prs, closedAt }, written, historyLine = '', images = {}, userMap = {}) {
+  const screenshots = (title, list) => (list?.length ? [heading(3, title), ...list] : []);
   const base = issue || prs[0];
   const s = issue ? sections(issue.body) : {};
   const summary = inline(s['버그 요약']) || cleanTitle(base.title);
@@ -188,12 +205,14 @@ function buildBlocks({ issue, prs, closedAt }, written, historyLine = '') {
       ['발생일', kstDate(base.createdAt)],
       ['환경', written?.environment || '-'],
       ['관련 기술', written?.tech || '-'],
+      ['해결한 사람', solvers(prs, userMap)],
       ['해결 소요 시간', duration(base.createdAt, closedAt)],
     ]),
     divider(),
     heading(2, '문제 상황'),
     heading(3, '증상'),
     ...markdownBlocks(written?.symptom || rawSymptom),
+    ...screenshots('스크린샷', images.issue),
     heading(3, '재현 방법'),
     ...markdownBlocks(written?.reproduce || s['재현 방법']),
     heading(3, '에러 메시지 / 로그'),
@@ -208,6 +227,7 @@ function buildBlocks({ issue, prs, closedAt }, written, historyLine = '') {
     divider(),
     heading(2, '해결 방법'),
     ...(written?.solution ? markdownBlocks(written.solution) : rawSolution),
+    ...screenshots('스크린샷 (PR)', images.prs),
     divider(),
     heading(2, '배운 점 및 개선 사항'),
     ...list(written?.lessons, 'bulleted_list_item'),
@@ -503,11 +523,24 @@ async function write({ github, context, core }) {
       continue;
     }
 
+    // rewrite: 글 작성에 실패했으면 잘 써진 기존 본문을 원문 대체본으로 덮지 않고 건너뛴다(라벨을 남겨 다시 시도할 수 있게)
+    if (card.action === 'rewrite' && !written[card.key]) {
+      core.warning(`글 작성에 실패해 기존 카드 본문을 그대로 둡니다. resync:재연동 라벨을 뗐다가 다시 붙여 재시도하세요: ${card.key}`);
+      rewriteSkipped = true;
+      continue;
+    }
+
     // 재연동이면 라벨을 붙인 이슈·PR의 연동 댓글에서 최초 연동 시각·횟수를 이어받는다
     const target = context.payload.issue || context.payload.pull_request;
     const oldComment = card.action === 'rewrite' && target ? await findSyncComment(github, context, core, target.number) : null;
     const meta = syncMeta(card.action === 'rewrite' ? oldComment || { body: '', created_at: null } : null);
-    const blocks = buildBlocks(card, written[card.key] || null, syncLine(meta));
+    // 본문에 붙인 이미지를 노션에 올려 이미지 블록으로 만든다. 실패한 이미지는 "이미지 원본 보기" 링크로 들어간다
+    const warn = (m) => core.warning(m);
+    const images = {
+      issue: await imageBlocks(extractImages(card.issue?.body), process.env.NOTION_TOKEN, warn),
+      prs: await imageBlocks(card.prs.flatMap((pr) => extractImages(pr.body)), process.env.NOTION_TOKEN, warn),
+    };
+    const blocks = buildBlocks(card, written[card.key] || null, syncLine(meta), images, userMap);
     if (card.action === 'create') {
       const page = await notion('POST', '/pages', { parent: { database_id: NOTION_DB_ID }, properties, children: blocks.slice(0, 100) });
       for (let i = 100; i < blocks.length; i += 100) {
@@ -522,12 +555,6 @@ async function write({ github, context, core }) {
       continue;
     }
 
-    // rewrite: 글 작성에 실패했으면 잘 써진 기존 본문을 원문 대체본으로 덮지 않고 건너뛴다(라벨을 남겨 다시 시도할 수 있게)
-    if (!written[card.key]) {
-      core.warning(`글 작성에 실패해 기존 카드 본문을 그대로 둡니다. resync:재연동 라벨을 뗐다가 다시 붙여 재시도하세요: ${card.key}`);
-      rewriteSkipped = true;
-      continue;
-    }
     // 새 내용을 먼저 덧붙이고, 성공하면 예전 블록을 지운다(중간에 실패해도 내용이 비지 않게)
     await notion('PATCH', `/pages/${card.pageId}`, { properties });
     const old = [];

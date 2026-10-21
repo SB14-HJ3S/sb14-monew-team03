@@ -16,19 +16,20 @@ assignees: ''
 배포 작업 내용을 한 문장으로 작성해주세요.
 
 ## 🌐 배포 환경
-- [ ] local
-- [ ] production (Railway)
+- [ ] local (Docker Compose)
+- [ ] production (AWS ECS · EC2)
 
 ## ✅ 작업 범위
 - [ ] 작업 1
 - [ ] 작업 2
 
 ## ☑️ 배포 전 체크리스트
-- [ ] 환경변수(.env / Railway 환경변수) 확인
+- [ ] 환경변수 확인 (로컬 .env / AWS SSM Parameter Store·ECS 작업 정의)
 - [ ] 관련 PR 모두 develop → main 머지 완료
 
 ## 🔙 롤백 계획
 배포 실패 시 롤백 방법을 작성해주세요.
+<!-- 기본: 배포 실패 시 ECS가 마지막 성공 버전으로 자동 롤백 -->
 
 ## 🔗 참고 사항
 - 관련 PR:
