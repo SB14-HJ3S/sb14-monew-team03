@@ -1,12 +1,15 @@
 package com.sprint.monew.domain.interest.entity;
 
+import ch.qos.logback.core.util.StringUtil;
 import com.sprint.monew.global.entity.BaseEntity;
+import com.sprint.monew.global.exception.MonewException;
+import com.sprint.monew.global.exception.errortype.InterestErrorType;
 import jakarta.persistence.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.util.CollectionUtils;
 
 @Entity
 @Table(
@@ -29,11 +32,22 @@ public class Interest extends BaseEntity {
     private final List<InterestKeyword> keywords = new ArrayList<>();
 
     private Interest(String name) {
+        if (StringUtil.isNullOrEmpty(name)) {
+            throw new MonewException(
+                    InterestErrorType.INTEREST_NAME_REQUIRED,
+                    Collections.singletonMap("name", name));
+        }
+
         this.name = name;
         this.subscriberCount = 0L;
     }
 
     public static Interest create(String name, List<String> keywords) {
+        if (CollectionUtils.isEmpty(keywords)) {
+            throw new MonewException(
+                    InterestErrorType.INTEREST_KEYWORD_REQUIRED,
+                    Collections.singletonMap("keywords", keywords));
+        }
         Interest creating = new Interest(name);
         List<InterestKeyword> interestKeywords =
                 keywords.stream()
