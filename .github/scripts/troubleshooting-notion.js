@@ -17,7 +17,8 @@ const CARDS_FILE = 'ts-cards.json';
 const CONTEXT_FILE = 'ts-context.md';
 const WRITTEN_FILE = 'ts-written.json';
 const DIFF_LIMIT = 12000;
-// 스크린샷이 없는 카드 맨 위에 넣는 기본 이미지 (갤러리 썸네일용, #123). 저장소가 공개라 develop의 파일 주소를 그대로 쓴다
+// 스크린샷이 없는 카드 맨 위에 넣는 기본 이미지 (갤러리 썸네일용, #123). 저장소가 공개라 develop의 파일 주소에서 내려받는다
+// 노션 갤러리 썸네일은 주소만 연결한 이미지를 보여 주지 않아서 스크린샷처럼 노션에 업로드한다 (#129)
 const DEFAULT_THUMBNAIL = `https://raw.githubusercontent.com/${process.env.GITHUB_REPOSITORY || 'SB14-HJ3S/sb14-monew-team03'}/develop/.github/assets/troubleshooting-cover.png`;
 
 // 이슈 템플릿(🛠️-fix.md)에 미리 적힌 안내 문구. 작성자가 안 지우고 둔 경우 내용에서 뺀다
@@ -189,7 +190,9 @@ function buildBlocks({ issue, prs, closedAt }, written, historyLine = '', images
       ? issueImages.splice(fromIssue, 1)[0]
       : fromPr >= 0
         ? prImages.splice(fromPr, 1)[0]
-        : { object: 'block', type: 'image', image: { type: 'external', external: { url: DEFAULT_THUMBNAIL } } };
+        : images.cover?.type === 'image'
+          ? images.cover
+          : { object: 'block', type: 'image', image: { type: 'external', external: { url: DEFAULT_THUMBNAIL } } };
   const base = issue || prs[0];
   const s = issue ? sections(issue.body) : {};
   const summary = inline(s['버그 요약']) || cleanTitle(base.title);
@@ -556,6 +559,10 @@ async function write({ github, context, core }) {
       issue: await imageBlocks(extractImages(card.issue?.body), process.env.NOTION_TOKEN, warn),
       prs: await imageBlocks(card.prs.flatMap((pr) => extractImages(pr.body)), process.env.NOTION_TOKEN, warn),
     };
+    // 스크린샷이 없으면 기본 이미지를 업로드한다. 실패하면 buildBlocks가 주소 연결 방식으로 넣는다
+    if (![...images.issue, ...images.prs].some((b) => b.type === 'image')) {
+      [images.cover] = await imageBlocks([{ url: DEFAULT_THUMBNAIL, alt: '' }], process.env.NOTION_TOKEN, warn);
+    }
     const blocks = buildBlocks(card, written[card.key] || null, syncLine(meta), images, userMap);
     if (card.action === 'create') {
       const page = await notion('POST', '/pages', { parent: { database_id: NOTION_DB_ID }, properties, children: blocks.slice(0, 100) });
