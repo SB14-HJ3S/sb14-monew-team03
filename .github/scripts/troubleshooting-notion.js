@@ -141,7 +141,8 @@ function markdownBlocks(rawText) {
 }
 
 function overviewTable(rows) {
-  const cell = (t, bold) => richMarkdown(t, { bold });
+  // 값이 배열이면 이미 만든 rich_text(예: 사람 멘션)라 그대로 쓴다
+  const cell = (t, bold) => (Array.isArray(t) ? t : richMarkdown(t, { bold }));
   return {
     object: 'block',
     type: 'table',
@@ -158,10 +159,21 @@ function overviewTable(rows) {
   };
 }
 
+// 해결한 사람 = 머지된 PR을 올린 사람(여러 명이면 쉼표로). 노션 대응표에 있으면 사람 멘션(@이름), 없으면 GitHub 아이디
+function solvers(prs, userMap) {
+  const logins = [...new Set(prs.map((pr) => pr.author?.login).filter(Boolean))];
+  if (logins.length === 0) return '-';
+  return logins.flatMap((login, i) => [
+    ...(i > 0 ? [{ type: 'text', text: { content: ', ' } }] : []),
+    userMap[login] ? { type: 'mention', mention: { user: { id: userMap[login] } } } : { type: 'text', text: { content: `@${login}` } },
+  ]);
+}
+
 // written: 연동이 쓴 내용(없으면 null → 이슈·PR 원문으로 채움)
 //   { environment, tech, symptom, reproduce, attempts: [..], root_cause, solution, lessons: [..], summary }
 // images: 이슈·PR 본문에 붙인 이미지를 노션 블록으로 바꾼 것 { issue: [..], prs: [..] } (#119)
-function buildBlocks({ issue, prs, closedAt }, written, historyLine = '', images = {}) {
+// userMap: GitHub 아이디 → 노션 사용자 ID. "해결한 사람"을 노션 사람 멘션으로 보여 줄 때 쓴다
+function buildBlocks({ issue, prs, closedAt }, written, historyLine = '', images = {}, userMap = {}) {
   const screenshots = (title, list) => (list?.length ? [heading(3, title), ...list] : []);
   const base = issue || prs[0];
   const s = issue ? sections(issue.body) : {};
@@ -193,6 +205,7 @@ function buildBlocks({ issue, prs, closedAt }, written, historyLine = '', images
       ['발생일', kstDate(base.createdAt)],
       ['환경', written?.environment || '-'],
       ['관련 기술', written?.tech || '-'],
+      ['해결한 사람', solvers(prs, userMap)],
       ['해결 소요 시간', duration(base.createdAt, closedAt)],
     ]),
     divider(),
@@ -527,7 +540,7 @@ async function write({ github, context, core }) {
       issue: await imageBlocks(extractImages(card.issue?.body), process.env.NOTION_TOKEN, warn),
       prs: await imageBlocks(card.prs.flatMap((pr) => extractImages(pr.body)), process.env.NOTION_TOKEN, warn),
     };
-    const blocks = buildBlocks(card, written[card.key] || null, syncLine(meta), images);
+    const blocks = buildBlocks(card, written[card.key] || null, syncLine(meta), images, userMap);
     if (card.action === 'create') {
       const page = await notion('POST', '/pages', { parent: { database_id: NOTION_DB_ID }, properties, children: blocks.slice(0, 100) });
       for (let i = 100; i < blocks.length; i += 100) {
