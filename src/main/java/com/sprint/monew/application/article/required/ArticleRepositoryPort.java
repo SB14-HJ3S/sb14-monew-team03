@@ -1,6 +1,8 @@
 package com.sprint.monew.application.article.required;
 
+import com.sprint.monew.application.article.provided.dto.ArticleQuery;
 import com.sprint.monew.domain.article.entity.Article;
+import com.sprint.monew.global.pagination.PageResult;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -16,4 +18,5 @@ public interface ArticleRepositoryPort {
     void deleteById(UUID id);
 
     // 본인 쓸 거
+    PageResult<Article> findByQuery(ArticleQuery query);
 }

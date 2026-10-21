@@ -1,7 +1,9 @@
 package com.sprint.monew.adapter.out.article;
 
+import com.sprint.monew.application.article.provided.dto.ArticleQuery;
 import com.sprint.monew.application.article.required.ArticleRepositoryPort;
 import com.sprint.monew.domain.article.entity.Article;
+import com.sprint.monew.global.pagination.PageResult;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -32,5 +34,11 @@ public class ArticleRepositoryAdapter implements ArticleRepositoryPort {
     @Override
     public void deleteById(UUID id) {
         jpaRepository.deleteById(id);
+    }
+
+    @Override
+    public PageResult<Article> findByQuery(ArticleQuery query) {
+        return null;
+        // customRepository.findByQuery(query); - 모르겠음
     }
 }
