@@ -3,6 +3,7 @@ package com.sprint.monew.adapter.in.controller.comment;
 import com.sprint.monew.adapter.in.controller.comment.dto.request.CommentUpdateRequest;
 import com.sprint.monew.adapter.in.controller.comment.dto.response.CommentDto;
 import com.sprint.monew.application.comment.provided.CommentUseCase;
+import com.sprint.monew.application.comment.provided.dto.CommentResult;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,8 @@ public class CommentController {
             @PathVariable UUID commentId,
             @RequestHeader("Monew-Request-User-ID") UUID requesterId,
             @Valid @RequestBody CommentUpdateRequest request) {
-        return null;
+        CommentResult result =
+                commentUseCase.changeContent(commentId, requesterId, request.content());
+        return ResponseEntity.ok(CommentDto.create(result));
     }
 }
