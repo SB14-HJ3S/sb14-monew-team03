@@ -3,7 +3,10 @@ package com.sprint.monew.domain.comment.entity;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.entity.BaseSoftDeletableEntity;
+import com.sprint.monew.global.exception.MonewException;
+import com.sprint.monew.global.exception.errortype.CommentErrorType;
 import jakarta.persistence.*;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -43,7 +46,28 @@ public class Comment extends BaseSoftDeletableEntity {
     }
 
     // 본인이 작성한 댓글만 수정할 수 있다
-    public void changeContent(String content) {
+    public void changeContent(UUID requesterId, String content) {
+        if (isDeleted()) {
+            throw new MonewException(CommentErrorType.COMMENT_NOT_FOUND);
+        }
+        if (!isAuthor(requesterId)) {
+            throw new MonewException(CommentErrorType.COMMENT_NOT_OWNER);
+        }
         this.content = content;
+    }
+
+    public boolean isAuthor(UUID userId) {
+        return user.getId().equals(userId);
+    }
+
+    public void increaseLikeCount() {
+        this.likeCount++;
+    }
+
+    // 좋아요 수는 0 미만으로 내려가지 않는다
+    public void decreaseLikeCount() {
+        if (this.likeCount > 0) {
+            this.likeCount--;
+        }
     }
 }
