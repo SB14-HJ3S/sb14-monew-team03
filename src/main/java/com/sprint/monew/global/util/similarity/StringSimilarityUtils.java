@@ -1,6 +1,10 @@
 package com.sprint.monew.global.util.similarity;
 
+import com.sprint.monew.global.exception.MonewException;
+import com.sprint.monew.global.exception.errortype.CommonErrorType;
 import java.text.Normalizer;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -14,8 +18,14 @@ public class StringSimilarityUtils {
         String str2Normalized = normalize(str2);
 
         if (str1Normalized.isEmpty() && str2Normalized.isEmpty()) {
-            throw new IllegalArgumentException(
-                    "비교 문자열이 전부 비어있는 경우 유사도를 계산할 수 없음. " + str1Normalized + str2Normalized);
+            Map<String, Object> details =
+                    new LinkedHashMap<>() {
+                        {
+                            put("string1", str1);
+                            put("string2", str2);
+                        }
+                    };
+            throw new MonewException(CommonErrorType.INVALID_REQUEST, details);
         }
 
         Integer distance =

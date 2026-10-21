@@ -1,5 +1,7 @@
 package com.sprint.monew.global.util.similarity;
 
+import com.sprint.monew.global.exception.MonewException;
+import com.sprint.monew.global.exception.errortype.CommonErrorType;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -47,9 +49,12 @@ class StringSimilarityUtilsTest {
         String emptyStr = "";
         String nullStr = null;
 
-        Assertions.assertThatThrownBy(
-                        () -> StringSimilarityUtils.calculateSimilarity(emptyStr, nullStr))
-                .isInstanceOf(Exception.class);
+        MonewException thrown =
+                Assertions.catchThrowableOfType(
+                        MonewException.class,
+                        () -> StringSimilarityUtils.calculateSimilarity(emptyStr, nullStr));
+
+        Assertions.assertThat(thrown.getErrorType()).isEqualTo(CommonErrorType.INVALID_REQUEST);
     }
 
     @Test
