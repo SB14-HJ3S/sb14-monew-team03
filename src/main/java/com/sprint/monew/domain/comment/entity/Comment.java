@@ -28,7 +28,7 @@ public class Comment extends BaseSoftDeletableEntity {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Article article;
 
-    @Column(name = "content", nullable = false)
+    @Column(name = "content", nullable = false, length = 500)
     private String content;
 
     @Column(name = "like_count", nullable = false)
