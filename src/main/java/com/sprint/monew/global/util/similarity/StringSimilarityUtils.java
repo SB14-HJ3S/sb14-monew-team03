@@ -7,10 +7,10 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.apache.commons.text.similarity.LevenshteinDistance;
 
-@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class StringSimilarityUtils {
 
     public static double calculateSimilarity(String str1, String str2) {
