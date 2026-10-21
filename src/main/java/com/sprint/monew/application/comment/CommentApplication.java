@@ -47,10 +47,7 @@ public class CommentApplication implements CommentUseCase {
     @Override
     @Transactional
     public CommentResult changeContent(UUID commentId, UUID requestId, String content) {
-        Comment comment =
-                commentRepository
-                        .findById(commentId)
-                        .orElseThrow(() -> new MonewException(CommentErrorType.COMMENT_NOT_FOUND));
+        Comment comment = getComment(commentId);
 
         comment.changeContent(requestId, content);
 
@@ -72,4 +69,10 @@ public class CommentApplication implements CommentUseCase {
 
     @Override
     public void hardDeleteComment(UUID commentId) {}
+
+    private Comment getComment(UUID commentId) {
+        return commentRepository
+                .findById(commentId)
+                .orElseThrow(() -> new MonewException(CommentErrorType.COMMENT_NOT_FOUND));
+    }
 }
