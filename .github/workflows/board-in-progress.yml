@@ -87,9 +87,10 @@ jobs:
               }
             }' -f item="$ITEM_ID" --jq '.data.node.fieldValueByName.name // ""')
 
-          # 상태가 비어 있으면(보드 자동화가 아직 Todo를 안 넣은 경우) Todo와 같게 봄
-          if [ -n "$CURRENT" ] && [ "$CURRENT" != "$TODO_NAME" ]; then
-            echo "#$ISSUE 보드 상태가 \"$CURRENT\"라 그대로 둡니다."
+          # 정확히 Todo일 때만 바꿈. 상태가 비어 있으면(보드 자동화가 아직 Todo를 안 넣었거나 일부러 비운 경우) 건너뛰고,
+          # 보드 자동화가 Todo를 넣은 뒤 다음 push 때 바뀜
+          if [ "$CURRENT" != "$TODO_NAME" ]; then
+            echo "#$ISSUE 보드 상태가 \"${CURRENT:-빈 값}\"라 그대로 둡니다."
             exit 0
           fi
 
