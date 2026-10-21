@@ -10,7 +10,9 @@ import org.springframework.http.HttpStatus;
 @Getter
 @RequiredArgsConstructor
 public enum InterestErrorType implements ErrorType {
-    INTEREST_NOT_FOUND(HttpStatus.NOT_FOUND, Level.WARN, "관심사 정보를 찾을 수 없습니다");
+    INTEREST_NOT_FOUND(HttpStatus.NOT_FOUND, Level.WARN, "관심사 정보를 찾을 수 없습니다"),
+    SIMILAR_NAME_CONFLICT(HttpStatus.CONFLICT, Level.INFO, "비슷한 관심사 이름이 이미 사용중입니다."),
+    ;
 
     private final HttpStatus status;
     private final Level level;
