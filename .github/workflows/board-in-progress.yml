@@ -35,7 +35,8 @@ jobs:
           fi
           ISSUE="${BASH_REMATCH[1]}"
 
-          AHEAD=$(gh api "repos/$REPO/compare/develop...$BRANCH" --jq '.ahead_by')
+          # 비교 호출이 실패하면(push 직후 브랜치 삭제, 일시적 API 오류 등) 새 커밋이 없는 것으로 보고 건너뜀
+          AHEAD=$(gh api "repos/$REPO/compare/develop...$BRANCH" --jq '.ahead_by' 2>/dev/null) || AHEAD=0
           if [ "${AHEAD:-0}" -eq 0 ]; then
             echo "$BRANCH: develop 대비 새 커밋이 없어 건너뜁니다."
             exit 0
