@@ -9,7 +9,10 @@ import re
 import xml.etree.ElementTree as ET
 
 REPORTS = ("build/reports/checkstyle/main.xml", "build/reports/checkstyle/test.xml")
-MAX_ROWS = 100  # 댓글 길이 제한(65,536자) 안에 들어가게 표마다 최대 줄 수
+# 댓글 길이 제한(65,536자) 안에 들어가게 표마다 최대 줄 수를 둔다. 한 줄이 300자 안팎이라 두 표 합쳐 150줄이면 여유 있음
+MAX_ROWS_MINE = 100
+MAX_ROWS_OLD = 50
+MAX_BODY = 60000  # 그래도 길면 기존 위반 표를 빼고 안내만 남긴다
 
 # 자주 나오는 규칙의 한글 설명. 없는 규칙은 영어 규칙 이름 그대로 보여 준다
 RULES = {
@@ -66,34 +69,41 @@ base = f"https://github.com/{os.environ['GITHUB_REPOSITORY']}/blob/{os.environ['
 
 
 def cell(text):
+    # 표 칸을 깨는 | 와 줄바꿈, HTML 태그로 읽힐 수 있는 < > (예: GenericWhitespace의 '<') 를 바꾼다
+    text = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
     return text.replace("|", "\\|").replace("\n", " ")
 
 
-def table(items):
+def table(items, max_rows):
     rows = ["| 위치 | 규칙 | 내용 |", "|---|---|---|"]
-    for v in sorted(items, key=lambda v: (v["path"], v["line"]))[:MAX_ROWS]:
+    for v in sorted(items, key=lambda v: (v["path"], v["line"]))[:max_rows]:
         name = v["path"].rsplit("/", 1)[-1]
         where = f"[{name}:{v['line']}]({base}/{v['path']}#L{v['line']})"
         rows.append(f"| {where} | {cell(RULES.get(v['rule'], v['rule']))} | {cell(v['message'])} |")
-    if len(items) > MAX_ROWS:
-        rows.append(f"\n외 {len(items) - MAX_ROWS}건은 CI 로그(빌드 및 테스트 단계)에서 `checkstyle`로 검색하세요.")
+    if len(items) > max_rows:
+        rows.append(f"\n외 {len(items) - max_rows}건은 CI 로그(빌드 및 테스트 단계)에서 `checkstyle`로 검색하세요.")
     return "\n".join(rows)
 
 
 total = len(mine) + len(old)
-parts = [f"⚠️ **이 PR에서 Checkstyle 위반 {len(mine)}건** 있어요 (전체 미해결 {total}건)", "", table(mine)]
+head = [f"⚠️ **이 PR에서 Checkstyle 위반 {len(mine)}건** 있어요 (전체 미해결 {total}건)", "", table(mine, MAX_ROWS_MINE)]
+tail = ["", "<sub>위치를 누르면 해당 줄로 이동해요. 이 PR 위반은 Checks 탭 `checkstyle-main`·`checkstyle-test`에서도 볼 수 있어요.</sub>"]
+old_part = []
 if old:
-    parts += [
+    old_part = [
         "",
         f"<details><summary>📋 기존에 쌓여 있던 위반 {len(old)}건 (이 PR과 무관 · 펼쳐 보기)</summary>",
         "",
-        table(old),
+        table(old, MAX_ROWS_OLD),
         "",
         "</details>",
     ]
-parts += ["", "<sub>위치를 누르면 해당 줄로 이동해요. 이 PR 위반은 Checks 탭 `checkstyle-main`·`checkstyle-test`에서도 볼 수 있어요.</sub>"]
+body = "\n".join(head + old_part + tail) + "\n"
+if len(body) > MAX_BODY:
+    note = f"📋 기존에 쌓여 있던 위반 {len(old)}건은 너무 많아 생략했어요. CI 로그(빌드 및 테스트 단계)에서 `checkstyle`로 검색하세요."
+    body = "\n".join(head + ["", note] + tail) + "\n"
 with open("checkstyle-comment.md", "w", encoding="utf-8") as f:
-    f.write("\n".join(parts) + "\n")
+    f.write(body)
 
 print(f"pr_count={len(mine)}")
 print(f"total={total}")
