@@ -22,19 +22,20 @@ import org.springframework.util.StringUtils;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class InterestKeyword extends BaseEntity {
+    public static final int MAX_KEYWORD_LENGTH = 255;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "interest_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Interest interest;
 
-    @Column(name = "keyword", nullable = false)
+    @Column(name = "keyword", nullable = false, length = MAX_KEYWORD_LENGTH)
     private String keyword;
 
     private InterestKeyword(Interest interest, String keyword) {
-        if (!StringUtils.hasText(keyword)) {
+        if (!StringUtils.hasText(keyword) || keyword.length() > MAX_KEYWORD_LENGTH) {
             throw new MonewException(
-                    InterestErrorType.INTEREST_KEYWORD_REQUIRED,
+                    InterestErrorType.INVALID_INTEREST_KEYWORD,
                     Collections.singletonMap("keyword", keyword));
         }
 

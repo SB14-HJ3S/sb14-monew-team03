@@ -26,7 +26,10 @@ import org.springframework.util.StringUtils;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Interest extends BaseEntity {
-    @Column(name = "name", nullable = false)
+    public static final int MAX_NAME_LENGTH = 50;
+    public static final int MAX_KEYWORDS_SIZE = 10;
+
+    @Column(name = "name", nullable = false, length = MAX_NAME_LENGTH)
     private String name;
 
     @Column(name = "subscriber_count", nullable = false)
@@ -40,9 +43,9 @@ public class Interest extends BaseEntity {
     private final List<InterestKeyword> keywords = new ArrayList<>();
 
     private Interest(String name) {
-        if (!StringUtils.hasText(name)) {
+        if (!StringUtils.hasText(name) || name.length() > MAX_NAME_LENGTH) {
             throw new MonewException(
-                    InterestErrorType.INTEREST_NAME_REQUIRED,
+                    InterestErrorType.INVALID_INTEREST_NAME,
                     Collections.singletonMap("name", name));
         }
 
@@ -51,9 +54,9 @@ public class Interest extends BaseEntity {
     }
 
     public static Interest create(String name, List<String> keywords) {
-        if (CollectionUtils.isEmpty(keywords)) {
+        if (CollectionUtils.isEmpty(keywords) || keywords.size() > MAX_KEYWORDS_SIZE) {
             throw new MonewException(
-                    InterestErrorType.INTEREST_KEYWORD_REQUIRED,
+                    InterestErrorType.INVALID_INTEREST_KEYWORD,
                     Collections.singletonMap("keywords", keywords));
         }
         Interest creating = new Interest(name);

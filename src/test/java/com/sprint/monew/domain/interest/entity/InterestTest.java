@@ -22,7 +22,7 @@ class InterestTest {
                 Assertions.catchThrowableOfType(
                         MonewException.class, () -> Interest.create(whitespace, keywords));
 
-        assertThat(thrown.getErrorType()).isEqualTo(InterestErrorType.INTEREST_NAME_REQUIRED);
+        assertThat(thrown.getErrorType()).isEqualTo(InterestErrorType.INVALID_INTEREST_NAME);
     }
 
     @Test
@@ -35,6 +35,6 @@ class InterestTest {
                 Assertions.catchThrowableOfType(
                         MonewException.class, () -> Interest.create(name, empty));
 
-        assertThat(thrown.getErrorType()).isEqualTo(InterestErrorType.INTEREST_KEYWORD_REQUIRED);
+        assertThat(thrown.getErrorType()).isEqualTo(InterestErrorType.INVALID_INTEREST_KEYWORD);
     }
 }

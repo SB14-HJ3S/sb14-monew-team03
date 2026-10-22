@@ -17,6 +17,6 @@ class InterestKeywordTest {
                 Assertions.catchThrowableOfType(
                         MonewException.class, () -> InterestKeyword.create(null, whiteSpace));
 
-        assertThat(thrown.getErrorType()).isEqualTo(InterestErrorType.INTEREST_KEYWORD_REQUIRED);
+        assertThat(thrown.getErrorType()).isEqualTo(InterestErrorType.INVALID_INTEREST_KEYWORD);
     }
 }

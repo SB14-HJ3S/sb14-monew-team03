@@ -13,9 +13,9 @@ public enum InterestErrorType implements ErrorType {
     // Interest
     INTEREST_NOT_FOUND(HttpStatus.NOT_FOUND, Level.WARN, "관심사 정보를 찾을 수 없습니다"),
     SIMILAR_NAME_CONFLICT(HttpStatus.CONFLICT, Level.INFO, "비슷한 관심사 이름이 이미 사용중입니다."),
-    INTEREST_NAME_REQUIRED(HttpStatus.BAD_REQUEST, Level.WARN, "관심사 이름은 비어있을 수 없습니다."),
+    INVALID_INTEREST_NAME(HttpStatus.BAD_REQUEST, Level.WARN, "관심사 이름은 비어있을 수 없습니다."),
 
-    INTEREST_KEYWORD_REQUIRED(HttpStatus.BAD_REQUEST, Level.WARN, "관심사 키워드는 비어있을 수 없습니다."),
+    INVALID_INTEREST_KEYWORD(HttpStatus.BAD_REQUEST, Level.WARN, "관심사 키워드는 비어있을 수 없습니다."),
     ;
     private final HttpStatus status;
     private final Level level;
