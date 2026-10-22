@@ -1,12 +1,13 @@
 package com.sprint.monew.application.user;
 
 import com.sprint.monew.application.user.provided.UserUseCase;
+import com.sprint.monew.application.user.provided.dto.UserResult;
 import com.sprint.monew.domain.user.entity.User;
+import com.sprint.monew.global.annotation.ApplicationService;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
-@Service
+@ApplicationService
 @RequiredArgsConstructor
 public class UserApplication implements UserUseCase {
 
@@ -15,5 +16,11 @@ public class UserApplication implements UserUseCase {
     @Override
     public User getActiveUser(UUID userId) {
         return userService.getActiveUser(userId);
+    }
+
+    @Override
+    public UserResult register(String email, String nickname, String password) {
+        User user = userService.register(email, nickname, password);
+        return UserResult.from(user);
     }
 }
