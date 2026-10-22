@@ -1,10 +1,12 @@
 package com.sprint.monew.application.comment;
 
 import com.sprint.monew.application.comment.provided.CommentUseCase;
+import com.sprint.monew.application.comment.provided.dto.CommentLikeResult;
 import com.sprint.monew.application.comment.provided.dto.CommentQuery;
 import com.sprint.monew.application.comment.provided.dto.CommentResult;
 import com.sprint.monew.application.comment.required.CommentLikeRepositoryPort;
 import com.sprint.monew.application.comment.required.CommentRepositoryPort;
+import com.sprint.monew.application.user.provided.UserUseCase;
 import com.sprint.monew.domain.comment.entity.Comment;
 import com.sprint.monew.domain.comment.entity.CommentLike;
 import com.sprint.monew.global.exception.MonewException;
@@ -12,6 +14,7 @@ import com.sprint.monew.global.exception.errortype.CommentErrorType;
 import com.sprint.monew.global.pagination.PageResult;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +24,8 @@ public class CommentApplication implements CommentUseCase {
 
     private final CommentRepositoryPort commentRepository;
     private final CommentLikeRepositoryPort commentLikeRepository;
+    private final UserUseCase userUseCase;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public Comment register(UUID userId, UUID articleId, String content) {
@@ -38,7 +43,7 @@ public class CommentApplication implements CommentUseCase {
     }
 
     @Override
-    public Comment like(UUID commentId, UUID requestId) {
+    public CommentLikeResult like(UUID commentId, UUID requestId) {
         return null;
     }
 
