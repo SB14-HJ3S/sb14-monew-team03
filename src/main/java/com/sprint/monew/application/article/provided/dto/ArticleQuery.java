@@ -2,6 +2,8 @@ package com.sprint.monew.application.article.provided.dto;
 
 import com.sprint.monew.global.pagination.SortDirection;
 import com.sprint.monew.global.pagination.SortedPageQuery;
+import com.sprint.monew.global.type.ArticleSourceType;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -17,20 +19,20 @@ import lombok.experimental.FieldDefaults;
 public record ArticleQuery(
         String keyword,
         UUID interestId,
-        List<String> sourceIn,
+        List<ArticleSourceType> sourceIn,
         LocalDateTime publishDateFrom,
         LocalDateTime publishDateTo,
         @NotNull ArticleQuery.SortOrder orderBy,
         @NotNull SortDirection direction,
         String cursor,
         Instant after,
-        @NotNull int limit,
+        @Min(1) int limit,
         @NotNull UUID requestId)
         implements SortedPageQuery<ArticleQuery.SortOrder> {
     public static ArticleQuery of(
             String keyword,
             UUID interestId,
-            List<String> sourceIn,
+            List<ArticleSourceType> sourceIn,
             LocalDateTime publishDateFrom,
             LocalDateTime publishDateTo,
             ArticleQuery.SortOrder orderBy,

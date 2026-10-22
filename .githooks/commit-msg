@@ -3,11 +3,74 @@
 COMMIT_MSG_FILE="$1"
 TYPES='feat|fix|refactor|docs|chore|test|batch'
 
-# Git이 자동으로 만드는 병합·되돌리기·fixup 커밋은 형식 검사 없이 통과
 FIRST_LINE=$(awk '/^[[:space:]]*#/{next} NF{print; exit}' "$COMMIT_MSG_FILE")
+
+# rebase 때 합쳐져 사라지는 임시 커밋은 형식 검사 없이 통과
 case "$FIRST_LINE" in
-  "Merge "*|"Revert "*|"fixup! "*|"squash! "*|"amend! "*) exit 0 ;;
+  "fixup! "*|"squash! "*|"amend! "*) exit 0 ;;
 esac
+
+# 글자 수 (한글도 1자로 셈)
+char_len() {
+  printf '%s' "$1" | LC_ALL=C tr -d '\200-\277' | wc -c | tr -d ' '
+}
+
+# $2자를 넘으면 뒤를 잘라 …을 붙임
+cut_chars() {
+  CUT_TEXT="$1"
+  if [ "$(char_len "$CUT_TEXT")" -le "$2" ]; then
+    printf '%s' "$CUT_TEXT"
+    return
+  fi
+  CONT="$(printf '\200')-$(printf '\277')"
+  while [ "$(char_len "$CUT_TEXT")" -gt $(($2 - 1)) ]; do
+    CUT_TEXT=$(printf '%s' "$CUT_TEXT" | LC_ALL=C sed -E "s/[^$CONT][$CONT]*\$//")
+  done
+  printf '%s…' "$CUT_TEXT"
+}
+
+# Git이 영어로 만드는 머지·되돌리기 커밋 제목을 팀 형식으로 바꿈 (이슈 번호는 아래에서 붙음)
+#   Merge branch 'develop' of https://… into feat/47-…  → chore : develop 최신 내용 반영
+#   Merge origin/develop into feat/33-… (인텔리제이)     → chore : develop 최신 내용 반영
+#   Revert "feat : 관심사 등록 [#30]"                    → chore : 관심사 등록 되돌리기
+NEW_TITLE=""
+SRC=""
+case "$FIRST_LINE" in
+  "Merge commit '"*|"Merge branches "*)
+    NEW_TITLE="chore : 브랜치 병합" ;;
+  "Merge branch '"*|"Merge remote-tracking branch '"*|"Merge tag '"*)
+    SRC=$(printf '%s' "$FIRST_LINE" | sed -E "s/^Merge [a-z -]+'([^']+)'.*/\1/") ;;
+  "Merge "*" into "*)
+    SRC=$(printf '%s' "$FIRST_LINE" | awk '{print $2}') ;;
+  "Merge "*)
+    NEW_TITLE="chore : 브랜치 병합" ;;
+  "Revert "*)
+    INNER=$(printf '%s' "$FIRST_LINE" | sed -E \
+      -e 's/^Revert "(.*)"$/\1/' \
+      -e "s/^($TYPES)(\((red|green|blue)\))?[[:space:]]*:[[:space:]]*//" \
+      -e 's/^\[[A-Za-z]+\][[:space:]]*:[[:space:]]*//' \
+      -e 's/[[:space:]]*(\[#[0-9]+\]|\(#[0-9]+\))[[:space:]]*$//')
+    # 되돌린 걸 다시 되돌리면 "다시 적용", 그걸 또 되돌리면 다시 "되돌리기"
+    case "$INNER" in
+      *" 되돌리기")
+        NEW_TITLE="chore : $(cut_chars "${INNER% 되돌리기}" 46) 다시 적용" ;;
+      *" 다시 적용")
+        NEW_TITLE="chore : $(cut_chars "${INNER% 다시 적용}" 47) 되돌리기" ;;
+      "")
+        NEW_TITLE="chore : 커밋 되돌리기" ;;
+      *)
+        NEW_TITLE="chore : $(cut_chars "$INNER" 47) 되돌리기" ;;
+    esac ;;
+esac
+if [ -n "$SRC" ]; then
+  NEW_TITLE="chore : $(cut_chars "${SRC#origin/}" 43) 최신 내용 반영"
+fi
+if [ -n "$NEW_TITLE" ]; then
+  NEW_TITLE="$NEW_TITLE" awk '
+    !done && !/^[[:space:]]*#/ && NF { print ENVIRON["NEW_TITLE"]; done = 1; next }
+    { print }
+  ' "$COMMIT_MSG_FILE" > "${COMMIT_MSG_FILE}.tmp" && mv "${COMMIT_MSG_FILE}.tmp" "$COMMIT_MSG_FILE"
+fi
 
 # 제목(첫 번째 주석 아닌 비어있지 않은 줄) 줄 번호를 먼저 구함
 TITLE_LINE=$(awk '/^[[:space:]]*#/{next} NF{print NR; exit}' "$COMMIT_MSG_FILE")

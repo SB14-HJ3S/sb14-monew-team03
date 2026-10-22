@@ -18,6 +18,14 @@ reviews:
     # 어떤 브랜치로 가는 PR이든 다 자동 리뷰 대상에 포함되도록 전체 브랜치 대상으로 열어둠
     base_branches:
       - ".*"
+    # 저장소가 공개 + 별 10개 미만이라 CodeRabbit을 연결한 계정 외의 PR은 자동 리뷰 대신
+    # "fewer than 10 stars" 안내 댓글만 달림 → 팀원 PR은 조용히 건너뛰게 함 (#141)
+    # 팀원 PR도 리뷰가 필요하면 PR에 `@coderabbitai review` 댓글을 직접 달면 됨 (아이디는 대소문자까지 정확히)
+    ignore_usernames:
+      - mjdevkim
+      - ssoomni52
+      - lsc0869
+      - swanhw
 
   # PR 요약(Walkthrough) 자동 생성 — 실제 리뷰(라인별 지적사항)랑 별개 기능이라 끔.
   # claude-review/CodeRabbit 둘 다 리뷰 자체는 이 설정이랑 무관하게 그대로 동작함
@@ -28,7 +36,7 @@ reviews:
     - "!**/build/**"
     - "!**/.gradle/**"
     - "!**/*.class"
-    - "!**/out/**"
+    - "!out/**"   # 맨 위 out/(빌드 결과물)만 제외 — "**/out/**"로 쓰면 헥사고날 adapter/out/ 코드까지 빠짐
     - "!**/node_modules/**"
 
   # 특정 경로에 대한 리뷰 가이드 (Java/Spring Boot 컨벤션에 맞춘 예시, 필요에 맞게 수정하세요)

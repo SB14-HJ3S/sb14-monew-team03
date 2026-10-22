@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# git revert는 commit-msg 훅을 거치지 않아서, 머지·되돌리기 커밋 제목은 여기서 commit-msg로 미리 바꿈
+# 변환 규칙은 commit-msg 한 곳에만 둠. 이 훅은 커밋을 막지 않음
+FIRST_LINE=$(awk '/^[[:space:]]*#/{next} NF{print; exit}' "$1")
+case "$FIRST_LINE" in
+  "Merge "*|"Revert "*) sh "$(dirname "$0")/commit-msg" "$1" >/dev/null 2>&1 ;;
+esac
+exit 0

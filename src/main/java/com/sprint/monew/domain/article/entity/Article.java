@@ -2,7 +2,12 @@ package com.sprint.monew.domain.article.entity;
 
 import com.sprint.monew.global.entity.BaseSoftDeletableEntity;
 import com.sprint.monew.global.type.ArticleSourceType;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
