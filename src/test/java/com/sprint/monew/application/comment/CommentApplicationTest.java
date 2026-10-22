@@ -9,15 +9,19 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
+import com.sprint.monew.application.comment.provided.dto.CommentLikeResult;
 import com.sprint.monew.application.comment.provided.dto.CommentResult;
 import com.sprint.monew.application.comment.required.CommentLikeRepositoryPort;
 import com.sprint.monew.application.comment.required.CommentRepositoryPort;
+import com.sprint.monew.application.user.provided.UserUseCase;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.comment.entity.Comment;
 import com.sprint.monew.domain.comment.entity.CommentLike;
+import com.sprint.monew.domain.comment.event.CommentLikedEvent;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.CommentErrorType;
+import com.sprint.monew.global.exception.errortype.UserErrorType;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -28,6 +32,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,6 +40,8 @@ class CommentApplicationTest {
 
     @Mock private CommentRepositoryPort commentRepository;
     @Mock private CommentLikeRepositoryPort commentLikeRepository;
+    @Mock private UserUseCase userUseCase;
+    @Mock private ApplicationEventPublisher eventPublisher;
     @InjectMocks private CommentApplication commentApplication;
 
     private final UUID commentId = UUID.randomUUID();
@@ -190,6 +197,106 @@ class CommentApplicationTest {
                     .extracting("errorType")
                     .isEqualTo(CommentErrorType.COMMENT_NOT_FOUND);
             verifyNoInteractions(commentLikeRepository);
+        }
+    }
+
+    @Nested
+    @DisplayName("댓글 좋아요")
+    class Like {
+
+        private final UUID requestId = UUID.randomUUID();
+
+        private User liker() {
+            User liker = mock(User.class);
+            given(liker.getId()).willReturn(requestId);
+            given(liker.getNickname()).willReturn("좋아요한 사람");
+            return liker;
+        }
+
+        @Test
+        @DisplayName("좋아요하면 저장되고 좋아요 수가 1 늘며, 댓글 작성자 알림용 이벤트를 발행하고 결과를 돌려준다")
+        void success() {
+            User author = author();
+            given(author.getNickname()).willReturn("작성자");
+            Article article = mock(Article.class);
+            given(article.getId()).willReturn(articleId);
+            Comment comment = savedComment(author, article);
+            User liker = liker();
+            given(userUseCase.getActiveUser(requestId)).willReturn(liker);
+            given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
+            given(commentLikeRepository.existsByCommentIdAndUserId(commentId, requestId))
+                    .willReturn(false);
+            given(commentLikeRepository.save(any(CommentLike.class)))
+                    .willAnswer(invocation -> invocation.getArgument(0));
+
+            CommentLikeResult result = commentApplication.like(commentId, requestId);
+
+            verify(commentLikeRepository).save(any(CommentLike.class));
+            assertThat(comment.getLikeCount()).isEqualTo(1L);
+            verify(eventPublisher)
+                    .publishEvent(new CommentLikedEvent(commentId, authorId, requestId, "좋아요한 사람"));
+            assertThat(result)
+                    .isEqualTo(
+                            new CommentLikeResult(
+                                    null, requestId, null, commentId, articleId, authorId, "작성자",
+                                    "수정 전", 1L, createdAt));
+        }
+
+        @Test
+        @DisplayName("이미 좋아요한 댓글이면 COMMENT_LIKE_DUPLICATED 예외가 나고 저장·알림이 없다")
+        void duplicated() {
+            Comment comment = savedComment(mock(User.class), mock(Article.class));
+            given(userUseCase.getActiveUser(requestId)).willReturn(mock(User.class));
+            given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
+            given(commentLikeRepository.existsByCommentIdAndUserId(commentId, requestId))
+                    .willReturn(true);
+
+            assertThatThrownBy(() -> commentApplication.like(commentId, requestId))
+                    .isInstanceOf(MonewException.class)
+                    .extracting("errorType")
+                    .isEqualTo(CommentErrorType.COMMENT_LIKE_DUPLICATED);
+            assertThat(comment.getLikeCount()).isZero();
+            verify(commentLikeRepository, never()).save(any());
+            verifyNoInteractions(eventPublisher);
+        }
+
+        @Test
+        @DisplayName("없거나 탈퇴한 사용자면 USER_NOT_FOUND 예외가 나고 댓글·좋아요를 건드리지 않는다")
+        void notExistUser() {
+            given(userUseCase.getActiveUser(requestId))
+                    .willThrow(new MonewException(UserErrorType.USER_NOT_FOUND));
+
+            assertThatThrownBy(() -> commentApplication.like(commentId, requestId))
+                    .isInstanceOf(MonewException.class)
+                    .extracting("errorType")
+                    .isEqualTo(UserErrorType.USER_NOT_FOUND);
+            verifyNoInteractions(commentRepository, commentLikeRepository, eventPublisher);
+        }
+
+        @Test
+        @DisplayName("삭제된 댓글이면 COMMENT_NOT_FOUND 예외가 나고 저장·알림이 없다")
+        void deletedComment() {
+            Comment comment = savedComment(mock(User.class), mock(Article.class));
+            comment.softDelete();
+            given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
+
+            assertThatThrownBy(() -> commentApplication.like(commentId, requestId))
+                    .isInstanceOf(MonewException.class)
+                    .extracting("errorType")
+                    .isEqualTo(CommentErrorType.COMMENT_NOT_FOUND);
+            verifyNoInteractions(commentLikeRepository, eventPublisher);
+        }
+
+        @Test
+        @DisplayName("없는 댓글이면 COMMENT_NOT_FOUND 예외가 나고 저장·알림이 없다")
+        void notExistComment() {
+            given(commentRepository.findById(commentId)).willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> commentApplication.like(commentId, requestId))
+                    .isInstanceOf(MonewException.class)
+                    .extracting("errorType")
+                    .isEqualTo(CommentErrorType.COMMENT_NOT_FOUND);
+            verifyNoInteractions(commentLikeRepository, eventPublisher);
         }
     }
 }
