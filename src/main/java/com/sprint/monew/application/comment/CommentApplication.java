@@ -45,10 +45,7 @@ public class CommentApplication implements CommentUseCase {
     @Override
     @Transactional
     public void unlike(UUID commentId, UUID requestId) {
-        Comment comment = getComment(commentId);
-        if (comment.isDeleted()) {
-            throw new MonewException(CommentErrorType.COMMENT_NOT_FOUND);
-        }
+        Comment comment = getActiveComment(commentId);
 
         CommentLike commentLike =
                 commentLikeRepository
@@ -82,5 +79,14 @@ public class CommentApplication implements CommentUseCase {
         return commentRepository
                 .findById(commentId)
                 .orElseThrow(() -> new MonewException(CommentErrorType.COMMENT_NOT_FOUND));
+    }
+
+    // 논리 삭제된 댓글은 없는 댓글처럼 다룬다
+    private Comment getActiveComment(UUID commentId) {
+        Comment comment = getComment(commentId);
+        if (comment.isDeleted()) {
+            throw new MonewException(CommentErrorType.COMMENT_NOT_FOUND);
+        }
+        return comment;
     }
 }
