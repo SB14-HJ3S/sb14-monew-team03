@@ -9,17 +9,19 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-// JPA Auditing은 엔티티가 하나도 없으면 앱이 뜨지 않아서 미리 둔 빈 엔티티 — 필드는 사용자 담당자가 채운다
 @Entity
 @Table(name = "users", uniqueConstraints = @UniqueConstraint(columnNames = "email"))
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User extends BaseSoftDeletableEntity {
+
+    public static final int NICKNAME_MAX_LENGTH = 20; // 닉네임 최대 글자 수
+
     // @Email
     @Column(nullable = false)
     private String email;
 
-    @Column(nullable = false, length = 10)
+    @Column(nullable = false, length = NICKNAME_MAX_LENGTH)
     private String nickname;
 
     @Column(nullable = false)
