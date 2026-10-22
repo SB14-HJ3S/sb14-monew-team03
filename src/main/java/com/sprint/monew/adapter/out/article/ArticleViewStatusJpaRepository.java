@@ -6,8 +6,16 @@ import java.util.Set;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface ArticleViewStatusJpaRepository extends JpaRepository<ArticleViewStatus, UUID> {
-    @Query() // TODO
-    Set<UUID> findViewedArticleIds(UUID userId, Collection<UUID> articleIds);
+    @Query(
+            """
+        select v.article.id
+        from ArticleViewStatus v
+        where v.user.id = :userId
+          and v.article.id in :articleIds
+        """)
+    Set<UUID> findViewedArticleIds(
+            @Param("userId") UUID userId, @Param("articleIds") Collection<UUID> articleIds);
 }
