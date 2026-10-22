@@ -6,6 +6,7 @@ import com.sprint.monew.application.comment.provided.dto.CommentResult;
 import com.sprint.monew.application.comment.required.CommentLikeRepositoryPort;
 import com.sprint.monew.application.comment.required.CommentRepositoryPort;
 import com.sprint.monew.domain.comment.entity.Comment;
+import com.sprint.monew.domain.comment.entity.CommentLike;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.CommentErrorType;
 import com.sprint.monew.global.pagination.PageResult;
@@ -42,7 +43,22 @@ public class CommentApplication implements CommentUseCase {
     }
 
     @Override
-    public void unlike(UUID commentId, UUID requestId) {}
+    @Transactional
+    public void unlike(UUID commentId, UUID requestId) {
+        Comment comment = getComment(commentId);
+        if (comment.isDeleted()) {
+            throw new MonewException(CommentErrorType.COMMENT_NOT_FOUND);
+        }
+
+        CommentLike commentLike =
+                commentLikeRepository
+                        .findByCommentIdAndUserId(commentId, requestId)
+                        .orElseThrow(
+                                () -> new MonewException(CommentErrorType.COMMENT_LIKE_NOT_FOUND));
+
+        commentLikeRepository.delete(commentLike);
+        comment.decreaseLikeCount();
+    }
 
     @Override
     @Transactional
