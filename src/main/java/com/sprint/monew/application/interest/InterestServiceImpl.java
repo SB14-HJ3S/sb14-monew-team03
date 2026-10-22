@@ -1,0 +1,50 @@
+package com.sprint.monew.application.interest;
+
+import com.sprint.monew.application.interest.required.InterestRepository;
+import com.sprint.monew.domain.interest.entity.Interest;
+import com.sprint.monew.global.exception.MonewException;
+import com.sprint.monew.global.exception.errortype.InterestErrorType;
+import com.sprint.monew.global.util.similarity.StringSimilarityUtils;
+import java.util.List;
+import java.util.Map;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class InterestServiceImpl implements InterestService {
+
+    private static final double NAME_SIMILARITY_THRESHOLD = 0.8D;
+
+    private final InterestRepository repository;
+
+    @Override
+    public Interest create(String name, List<String> keywords) {
+        // name이 80% 이상 유사한 이름의 관심사가 있다면 등록할 수 없습니다.
+        validateSimilarNameDoesNotExist(name);
+        Interest interest = Interest.create(name, keywords);
+        return repository.save(interest);
+    }
+
+    private void validateSimilarNameDoesNotExist(String name) {
+        repository.findAllNames().stream()
+                .filter(existing -> isSimilarityMoreThanThreshold(name, existing))
+                .findAny()
+                .ifPresent(
+                        similar -> {
+                            throw new MonewException(
+                                    InterestErrorType.SIMILAR_NAME_CONFLICT,
+                                    Map.of(
+                                            "requestedName", name,
+                                            "existingName", similar,
+                                            "similarity",
+                                                    StringSimilarityUtils.calculateSimilarity(
+                                                            name, similar)));
+                        });
+    }
+
+    private boolean isSimilarityMoreThanThreshold(String requestingName, String existingName) {
+        return StringSimilarityUtils.calculateSimilarity(requestingName, existingName)
+                >= NAME_SIMILARITY_THRESHOLD;
+    }
+}
