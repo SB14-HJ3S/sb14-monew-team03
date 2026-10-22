@@ -12,9 +12,10 @@ class InterestKeywordTest {
     @Test
     @DisplayName("InterestKeyword 생성 시 keyword가 비어있으면 예외 발생")
     void givenBlankName_whenCreate_thenThrow() {
+        String whiteSpace = " ";
         MonewException thrown =
                 Assertions.catchThrowableOfType(
-                        MonewException.class, () -> InterestKeyword.create(null, ""));
+                        MonewException.class, () -> InterestKeyword.create(null, whiteSpace));
 
         assertThat(thrown.getErrorType()).isEqualTo(InterestErrorType.INTEREST_KEYWORD_REQUIRED);
     }

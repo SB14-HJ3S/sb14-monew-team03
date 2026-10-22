@@ -1,6 +1,5 @@
 package com.sprint.monew.domain.interest.entity;
 
-import ch.qos.logback.core.util.StringUtil;
 import com.sprint.monew.global.entity.BaseEntity;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.InterestErrorType;
@@ -11,6 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.springframework.util.StringUtils;
 
 @Entity
 @Table(name = "interest_keywords")
@@ -27,7 +27,7 @@ public class InterestKeyword extends BaseEntity {
     private String keyword;
 
     private InterestKeyword(Interest interest, String keyword) {
-        if (StringUtil.isNullOrEmpty(keyword)) {
+        if (!StringUtils.hasText(keyword)) {
             throw new MonewException(
                     InterestErrorType.INTEREST_KEYWORD_REQUIRED,
                     Collections.singletonMap("keyword", keyword));

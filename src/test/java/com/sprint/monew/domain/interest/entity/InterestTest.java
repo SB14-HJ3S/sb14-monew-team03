@@ -13,14 +13,14 @@ import org.junit.jupiter.api.Test;
 class InterestTest {
 
     @Test
-    @DisplayName("Interest 생성 시 name이 비어있으면 예외 발생")
+    @DisplayName("Interest 생성 시 name이 null,empty,only whitespace인 경우 예외 발생")
     void givenBlankName_whenCreate_thenThrow() {
-        String blank = null;
+        String whitespace = " ";
         List<String> keywords = List.of("1", "2", "3");
 
         MonewException thrown =
                 Assertions.catchThrowableOfType(
-                        MonewException.class, () -> Interest.create(blank, keywords));
+                        MonewException.class, () -> Interest.create(whitespace, keywords));
 
         assertThat(thrown.getErrorType()).isEqualTo(InterestErrorType.INTEREST_NAME_REQUIRED);
     }
