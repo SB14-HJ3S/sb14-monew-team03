@@ -6,12 +6,14 @@ import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.article.entity.ArticleViewStatus;
 import com.sprint.monew.global.pagination.PageResult;
 import com.sprint.monew.global.type.ArticleSourceType;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 public interface ArticleUseCase {
-    PageResult<ArticleResult> findArticlePage(ArticleQuery query);
+    PageResult<ArticleResult> findArticlePage(@NotNull @Valid ArticleQuery query);
 
     ArticleResult findById(UUID articleId, UUID requestId);
 

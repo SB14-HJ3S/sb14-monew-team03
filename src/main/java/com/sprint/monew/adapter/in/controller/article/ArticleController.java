@@ -4,6 +4,7 @@ import com.sprint.monew.adapter.in.controller.article.dto.response.ArticleDto;
 import com.sprint.monew.application.article.provided.ArticleUseCase;
 import com.sprint.monew.application.article.provided.dto.ArticleQuery;
 import com.sprint.monew.application.article.provided.dto.ArticleResult;
+import com.sprint.monew.global.annotation.RestWebAdapter;
 import com.sprint.monew.global.pagination.PageResult;
 import com.sprint.monew.global.pagination.SortDirection;
 import jakarta.validation.constraints.Min;
@@ -15,8 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
-@RestController
-@RequestMapping("/api/articles")
+@RestWebAdapter(path = "/api/articles")
 @RequiredArgsConstructor
 public class ArticleController {
 
