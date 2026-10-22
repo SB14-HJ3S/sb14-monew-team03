@@ -94,7 +94,7 @@ jobs:
             -f title="$TITLE"
 
       # 날짜(요일)·시간 칸을 비워 두고 올리면 GitHub가 글 올린 날짜·시간(예 261019(월) 14:05)으로 채워 둔다
-      - name: 비워 둔 날짜 칸을 날짜로 채우기
+      - name: 비워 둔 날짜 칸 채우고 칸 사이 구분선 넣기
         continue-on-error: true
         env:
           GH_TOKEN: ${{ steps.bot.outputs.token || secrets.GITHUB_TOKEN }}
@@ -105,9 +105,11 @@ jobs:
         run: |
           # 멘토링처럼 작성 시각(한국 시간)도 같이 적는다
           FILL_LABEL="$DATE_LABEL $(TZ=Asia/Seoul date -d "$CREATED_AT" +%H:%M)"
-          NEW_BODY=$(printf '%s' "$BODY" | DATE_LABEL="$FILL_LABEL" bash .github/scripts/fill-date-field.sh)
-          if [[ -z "$NEW_BODY" ]]; then
-            echo "날짜 칸이 이미 채워져 있어 건너뜁니다."
+          FILLED=$(printf '%s' "$BODY" | DATE_LABEL="$FILL_LABEL" bash .github/scripts/fill-date-field.sh)
+          # 멤버별·기타 칸(📝·📑) 위에 구분선도 넣는다. 이미 있으면 그대로 둔다 (#133)
+          NEW_BODY=$(printf '%s' "${FILLED:-$BODY}" | bash .github/scripts/add-dividers.sh)
+          if [[ "$NEW_BODY" == "$(printf '%s' "$BODY" | tr -d '\r')" ]]; then
+            echo "날짜 칸이 채워져 있고 구분선도 있어 건너뜁니다."
             exit 0
           fi
           gh api graphql -f query='
@@ -408,7 +410,7 @@ jobs:
             -f title="$TITLE"
 
       # 날짜(요일)·시간 칸을 비워 두고 올리면 GitHub가 글 올린 날짜·시간(예 261019(월) 14:05)으로 채워 둔다
-      - name: 비워 둔 날짜 칸을 날짜로 채우기
+      - name: 비워 둔 날짜 칸 채우고 칸 사이 구분선 넣기
         continue-on-error: true
         env:
           GH_TOKEN: ${{ steps.bot.outputs.token || secrets.GITHUB_TOKEN }}
@@ -419,9 +421,11 @@ jobs:
         run: |
           # 멘토링처럼 작성 시각(한국 시간)도 같이 적는다
           FILL_LABEL="$DATE_LABEL $(TZ=Asia/Seoul date -d "$CREATED_AT" +%H:%M)"
-          NEW_BODY=$(printf '%s' "$BODY" | DATE_LABEL="$FILL_LABEL" bash .github/scripts/fill-date-field.sh)
-          if [[ -z "$NEW_BODY" ]]; then
-            echo "날짜 칸이 이미 채워져 있어 건너뜁니다."
+          FILLED=$(printf '%s' "$BODY" | DATE_LABEL="$FILL_LABEL" bash .github/scripts/fill-date-field.sh)
+          # 멤버별·기타 칸(📝·📑) 위에 구분선도 넣는다. 이미 있으면 그대로 둔다 (#133)
+          NEW_BODY=$(printf '%s' "${FILLED:-$BODY}" | bash .github/scripts/add-dividers.sh)
+          if [[ "$NEW_BODY" == "$(printf '%s' "$BODY" | tr -d '\r')" ]]; then
+            echo "날짜 칸이 채워져 있고 구분선도 있어 건너뜁니다."
             exit 0
           fi
           gh api graphql -f query='

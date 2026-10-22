@@ -1,0 +1,106 @@
+name: Board In Progress
+# 이슈 브랜치에 첫 커밋을 push하면 Projects 보드 상태를 "Todo (할것)" → "In progress (진행중)"으로 옮긴다 (#111)
+# - 브랜치만 만든 경우(develop 대비 새 커밋 없음)는 건너뜀 — Branch Keyword로 이슈 생성과 동시에 브랜치가 생기기 때문
+# - 상태가 "Todo"일 때만 바꿈. 이미 진행중·PR·완료·취소면 그대로 둠 (손으로 바꾼 상태를 덮어쓰지 않음)
+# - 노션 일정 DB의 "진행 중" 반영(schedule-notion-sync.yml)과 같은 시점이지만, 한쪽이 실패해도 영향이 없도록 파일을 나눔
+on:
+  push:
+    branches-ignore: [main, develop, codecov-badge]
+
+permissions:
+  contents: read
+  issues: read
+
+concurrency:
+  group: board-in-progress-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  move:
+    if: ${{ !github.event.deleted }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: 브랜치의 이슈 번호와 새 커밋 확인
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          # 브랜치 규칙 {타입}/{이슈번호}-{이름} (schedule-notion.js의 BRANCH_PATTERN과 같음)
+          if [[ ! "$BRANCH" =~ ^[a-z]+/([0-9]+)- ]]; then
+            echo "브랜치 이름($BRANCH)에 이슈 번호가 없어 건너뜁니다."
+            exit 0
+          fi
+          ISSUE="${BASH_REMATCH[1]}"
+
+          # 비교 호출이 실패하면(push 직후 브랜치 삭제, 일시적 API 오류 등) 새 커밋이 없는 것으로 보고 건너뜀
+          AHEAD=$(gh api "repos/$REPO/compare/develop...$BRANCH" --jq '.ahead_by' 2>/dev/null) || AHEAD=0
+          if [ "${AHEAD:-0}" -eq 0 ]; then
+            echo "$BRANCH: develop 대비 새 커밋이 없어 건너뜁니다."
+            exit 0
+          fi
+
+          # PR 번호이거나 없는 번호면 건너뜀
+          if ! NODE=$(gh api "repos/$REPO/issues/$ISSUE" --jq 'select(.pull_request == null) | .node_id' 2>/dev/null) || [ -z "$NODE" ]; then
+            echo "#$ISSUE 이슈를 찾을 수 없어 건너뜁니다."
+            exit 0
+          fi
+          echo "issue=$ISSUE" >> "$GITHUB_OUTPUT"
+          echo "node=$NODE" >> "$GITHUB_OUTPUT"
+
+      - name: 보드 상태가 Todo면 In progress로 변경
+        if: steps.check.outputs.node != ''
+        env:
+          # Projects 보드는 기본 토큰으로 못 건드려서 PROJECTS_PAT을 씀 (issue-auto-setup.yml과 같음)
+          GH_TOKEN: ${{ secrets.PROJECTS_PAT }}
+          ISSUE: ${{ steps.check.outputs.issue }}
+          CONTENT_ID: ${{ steps.check.outputs.node }}
+        run: |
+          set -e
+          PROJECT_ID="PVT_kwDOE8RtFM4BkpC5"
+          STATUS_FIELD_ID="PVTSSF_lADOE8RtFM4BkpC5zhjY7W8"
+          TODO_NAME="Todo (할것)"
+          IN_PROGRESS_OPTION_ID="a9b01166" # In progress (진행중)
+
+          # 이미 보드에 있으면 기존 항목 id를 그대로 돌려주는 멱등 호출
+          ITEM_ID=$(gh api graphql -f query='
+            mutation($project: ID!, $content: ID!) {
+              addProjectV2ItemById(input: { projectId: $project, contentId: $content }) {
+                item { id }
+              }
+            }' -f project="$PROJECT_ID" -f content="$CONTENT_ID" --jq '.data.addProjectV2ItemById.item.id')
+          if [ -z "$ITEM_ID" ] || [ "$ITEM_ID" = "null" ]; then
+            echo "프로젝트 항목을 찾지 못했습니다: #$ISSUE" >&2
+            exit 1
+          fi
+
+          CURRENT=$(gh api graphql -f query='
+            query($item: ID!) {
+              node(id: $item) {
+                ... on ProjectV2Item {
+                  fieldValueByName(name: "Status") {
+                    ... on ProjectV2ItemFieldSingleSelectValue { name }
+                  }
+                }
+              }
+            }' -f item="$ITEM_ID" --jq '.data.node.fieldValueByName.name // ""')
+
+          # 정확히 Todo일 때만 바꿈. 상태가 비어 있으면(보드 자동화가 아직 Todo를 안 넣었거나 일부러 비운 경우) 건너뛰고,
+          # 보드 자동화가 Todo를 넣은 뒤 다음 push 때 바뀜
+          if [ "$CURRENT" != "$TODO_NAME" ]; then
+            echo "#$ISSUE 보드 상태가 \"${CURRENT:-빈 값}\"라 그대로 둡니다."
+            exit 0
+          fi
+
+          gh api graphql -f query='
+            mutation($project: ID!, $item: ID!, $field: ID!, $option: String!) {
+              updateProjectV2ItemFieldValue(input: {
+                projectId: $project
+                itemId: $item
+                fieldId: $field
+                value: { singleSelectOptionId: $option }
+              }) { projectV2Item { id } }
+            }' -f project="$PROJECT_ID" -f item="$ITEM_ID" -f field="$STATUS_FIELD_ID" -f option="$IN_PROGRESS_OPTION_ID" > /dev/null
+          echo "#$ISSUE 보드 상태를 In progress (진행중)으로 바꿨습니다."
