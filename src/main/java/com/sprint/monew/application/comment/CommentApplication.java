@@ -9,6 +9,8 @@ import com.sprint.monew.application.comment.required.CommentRepositoryPort;
 import com.sprint.monew.application.user.provided.UserUseCase;
 import com.sprint.monew.domain.comment.entity.Comment;
 import com.sprint.monew.domain.comment.entity.CommentLike;
+import com.sprint.monew.domain.comment.event.CommentLikedEvent;
+import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.CommentErrorType;
 import com.sprint.monew.global.pagination.PageResult;
@@ -43,8 +45,25 @@ public class CommentApplication implements CommentUseCase {
     }
 
     @Override
+    @Transactional
     public CommentLikeResult like(UUID commentId, UUID requestId) {
-        return null;
+        User user = userUseCase.getActiveUser(requestId);
+        Comment comment = getActiveComment(commentId);
+        if (commentLikeRepository.existsByCommentIdAndUserId(commentId, requestId)) {
+            throw new MonewException(CommentErrorType.COMMENT_LIKE_DUPLICATED);
+        }
+
+        CommentLike commentLike = commentLikeRepository.save(CommentLike.create(user, comment));
+        comment.increaseLikeCount();
+
+        eventPublisher.publishEvent(
+                new CommentLikedEvent(
+                        comment.getId(),
+                        comment.getUser().getId(),
+                        user.getId(),
+                        user.getNickname()));
+
+        return CommentLikeResult.create(commentLike);
     }
 
     @Override
