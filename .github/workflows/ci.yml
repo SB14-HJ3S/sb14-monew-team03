@@ -126,7 +126,8 @@ jobs:
         env:
           BASE_REF: ${{ github.base_ref }}
         run: |
-          git diff -U0 --no-color "origin/$BASE_REF...HEAD" > pr.diff
+          # core.quotePath=false: 한글 경로를 "\355…"처럼 바꾸지 않고 그대로 쓴다 (#135)
+          git -c core.quotePath=false diff -U0 --no-color "origin/$BASE_REF...HEAD" > pr.diff
           python3 .github/scripts/checkstyle-report.py >> "$GITHUB_OUTPUT"
 
       - name: Checkstyle 위반 알림 댓글 (이 PR에서 생긴 위반이 있을 때만, PR당 1개 고정)

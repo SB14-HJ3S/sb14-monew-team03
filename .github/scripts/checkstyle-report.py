@@ -6,6 +6,7 @@
 # 출력: 표준출력 pr_count=…/total=… (GITHUB_OUTPUT용), 파일 checkstyle-comment.md
 import os
 import re
+from urllib.parse import quote
 import xml.etree.ElementTree as ET
 
 REPORTS = ("build/reports/checkstyle/main.xml", "build/reports/checkstyle/test.xml")
@@ -39,12 +40,19 @@ RULES = {
 }
 
 # diff에서 파일별로 추가·수정된 줄 번호 모으기
-added, current = {}, None
+# "+++ " 줄은 "diff --git" 다음(파일 헤더)에서만 파일 이름으로 읽는다. 추가한 소스 줄이 "++"로 시작해도 "+++ "로 보이기 때문
+# 한글 경로는 ci.yml에서 core.quotePath=false로 diff를 만들어 따옴표·이스케이프 없이 들어온다
+added, current, in_header = {}, None, False
 for line in open("pr.diff", encoding="utf-8", errors="ignore"):
-    if line.startswith("+++ "):
+    if line.startswith("diff --git "):
+        in_header, current = True, None
+    elif in_header and line.startswith("+++ "):
         path = line[4:].strip()
         current = path[2:] if path.startswith("b/") else None
-    elif line.startswith("@@") and current:
+    elif line.startswith("@@"):
+        in_header = False
+        if not current:
+            continue
         m = re.search(r"\+(\d+)(?:,(\d+))?", line)
         start, length = int(m.group(1)), int(m.group(2) or 1)
         added.setdefault(current, set()).update(range(start, start + length))
@@ -78,7 +86,7 @@ def table(items, max_rows):
     rows = ["| 위치 | 규칙 | 내용 |", "|---|---|---|"]
     for v in sorted(items, key=lambda v: (v["path"], v["line"]))[:max_rows]:
         name = v["path"].rsplit("/", 1)[-1]
-        where = f"[{name}:{v['line']}]({base}/{v['path']}#L{v['line']})"
+        where = f"[{name}:{v['line']}]({base}/{quote(v['path'])}#L{v['line']})"  # 한글·공백 경로도 링크가 안 깨지게
         rows.append(f"| {where} | {cell(RULES.get(v['rule'], v['rule']))} | {cell(v['message'])} |")
     if len(items) > max_rows:
         rows.append(f"\n외 {len(items) - max_rows}건은 CI 로그(빌드 및 테스트 단계)에서 `checkstyle`로 검색하세요.")
