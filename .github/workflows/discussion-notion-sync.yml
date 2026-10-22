@@ -23,6 +23,11 @@ jobs:
           sparse-checkout: .github/scripts
           sparse-checkout-cone-mode: false
 
+      # 본문 서식 변환 라이브러리(.github/scripts/package.json). 설치에 실패해도 서식 없이 연동은 계속함
+      - name: 노션 변환 라이브러리 설치
+        continue-on-error: true
+        run: npm ci --prefix .github/scripts --ignore-scripts --no-audit --no-fund
+
       # 사람이 쓴 디스커션의 제목·라벨은 기본 토큰(GITHUB_TOKEN)으로 못 고쳐서 조직 봇 토큰을 씀
       # 봇 설정이 없거나 실패하면 제목·라벨 수정만 건너뛰고 노션 연동은 계속함
       - name: 봇 토큰 만들기
@@ -210,7 +215,7 @@ jobs:
               + ([$participants[] | $pmap[.] | select(. != null) | {id: .}] as $people
                  | if ($people | length) == 0 then {} else {"참여자": {people: $people}} end)
               ),
-              children: $blocks
+              children: $blocks[:100]
             }')
 
           RESPONSE=$(curl -sS --fail --max-time 15 \
@@ -225,6 +230,11 @@ jobs:
             echo "::error::노션 페이지 생성 실패: $RESPONSE"
             exit 1
           fi
+          # 노션은 한 번에 블록 100개까지만 받아서, 나머지는 만든 페이지 뒤에 이어 붙인다
+          # 실패해도 페이지는 이미 생겼으니 연동 댓글은 남기고, 재연동으로 다시 채울 수 있게 경고만
+          jq -c '.[100:]' <<<"$BLOCKS" \
+            | bash .github/scripts/append-notion-blocks.sh "$(echo "$RESPONSE" | jq -r '.id')" \
+            || echo "::warning::본문 일부를 노션에 못 넣었습니다. resync:재연동 라벨로 다시 채워 주세요."
           echo "page_url=$PAGE_URL" >> "$GITHUB_OUTPUT"
           echo "synced_at=$SYNCED_AT" >> "$GITHUB_OUTPUT"
 
@@ -255,6 +265,11 @@ jobs:
         with:
           sparse-checkout: .github/scripts
           sparse-checkout-cone-mode: false
+
+      # 본문 서식 변환 라이브러리(.github/scripts/package.json). 설치에 실패해도 서식 없이 연동은 계속함
+      - name: 노션 변환 라이브러리 설치
+        continue-on-error: true
+        run: npm ci --prefix .github/scripts --ignore-scripts --no-audit --no-fund
 
       # 제목·라벨 수정용 봇 토큰 (이유는 위 create job 참고)
       - name: 봇 토큰 만들기
@@ -433,10 +448,21 @@ jobs:
               updateDiscussion(input: {discussionId: $discussionId, body: $body}) { discussion { id } }
             }' -f discussionId="$DISCUSSION_NODE_ID" -f body="$NEW_BODY"
 
-      - name: 노션 페이지 속성 덮어쓰기
+      # 노션 페이지를 지웠으면 휴지통에서 꺼내고, 완전히 지워졌으면 새로 만든다 (새로 만들면 연동 댓글 주소도 바뀜)
+      - name: 노션 페이지 확인
+        id: page
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           PAGE_ID: ${{ steps.find_page.outputs.page_id }}
+          PAGE_URL: ${{ steps.find_page.outputs.page_url }}
+          TITLE_PROP: 회의록
+          TITLE: ${{ steps.title.outputs.title }}
+        run: bash .github/scripts/ensure-notion-page.sh >> "$GITHUB_OUTPUT"
+
+      - name: 노션 페이지 속성 덮어쓰기
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          PAGE_ID: ${{ steps.page.outputs.page_id }}
           TITLE: ${{ steps.title.outputs.title }}
           NOTE: ${{ steps.fields.outputs.note }}
           AMPM: ${{ steps.fields.outputs.ampm }}
@@ -484,7 +510,7 @@ jobs:
         id: old_blocks
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
-          PAGE_ID: ${{ steps.find_page.outputs.page_id }}
+          PAGE_ID: ${{ steps.page.outputs.page_id }}
         run: |
           : > /tmp/old_block_ids.txt
           CURSOR=""
@@ -517,7 +543,7 @@ jobs:
           SYNC_NOW: ${{ steps.sync_meta.outputs.now }}
           SYNC_COUNT: ${{ steps.sync_meta.outputs.count }}
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
-          PAGE_ID: ${{ steps.find_page.outputs.page_id }}
+          PAGE_ID: ${{ steps.page.outputs.page_id }}
           BODY: ${{ github.event.discussion.body }}
           AUTHOR: ${{ github.event.discussion.user.login }}
           DISCUSSION_URL: ${{ github.event.discussion.html_url }}
@@ -526,14 +552,8 @@ jobs:
         run: |
           SYNC_LINE=$(FIRST="$SYNC_FIRST" NOW="$SYNC_NOW" COUNT="$SYNC_COUNT" MODE=line bash .github/scripts/build-sync-comment.sh)
           BLOCKS=$(printf '%s' "$BODY" | EXTRA_NOTE="$SYNC_LINE" bash .github/scripts/build-notion-blocks.sh)
-          PAYLOAD=$(jq -n --argjson blocks "$BLOCKS" '{children: $blocks}')
-
-          curl -sS --fail --max-time 15 \
-            -X PATCH "https://api.notion.com/v1/blocks/$PAGE_ID/children" \
-            -H "Authorization: Bearer $NOTION_TOKEN" \
-            -H "Notion-Version: 2022-06-28" \
-            -H "Content-Type: application/json" \
-            -d "$PAYLOAD"
+          # 블록이 100개를 넘으면 나눠서 붙인다
+          bash .github/scripts/append-notion-blocks.sh "$PAGE_ID" <<<"$BLOCKS"
 
       - name: 기존 본문 블록 삭제 (새 내용 쓰기 성공한 뒤에만)
         env:
@@ -570,7 +590,7 @@ jobs:
           DISCUSSION_NODE_ID: ${{ github.event.discussion.node_id }}
           COMMENT_ID: ${{ steps.find_page.outputs.comment_id }}
           COMMENT_AUTHOR: ${{ steps.find_page.outputs.comment_author }}
-          PAGE_URL: ${{ steps.find_page.outputs.page_url }}
+          PAGE_URL: ${{ steps.page.outputs.page_url }}
           SYNC_FIRST: ${{ steps.sync_meta.outputs.first }}
           SYNC_NOW: ${{ steps.sync_meta.outputs.now }}
           SYNC_COUNT: ${{ steps.sync_meta.outputs.count }}
