@@ -31,4 +31,30 @@ class UserRepositoryAdapterTest {
 
         assertThat(userRepository.findActiveById(saved.getId())).isEmpty();
     }
+
+    @Test
+    @DisplayName("탈퇴하지 않은 사용자는 이메일로 조회된다")
+    void givenActiveUser_whenFindActiveByEmail_thenFound() {
+        userRepository.save(User.create("hello@monew.com", "활성", "password1!"));
+
+        assertThat(userRepository.findActiveByEmail("hello@monew.com")).isPresent();
+    }
+
+    @Test
+    @DisplayName("탈퇴(논리 삭제)한 사용자는 이메일로도 조회되지 않는다 — 로그인 차단")
+    void givenDeletedUser_whenFindActiveByEmail_thenEmpty() {
+        User saved = userRepository.save(User.create("bye@monew.com", "탈퇴", "password1!"));
+        saved.softDelete();
+
+        assertThat(userRepository.findActiveByEmail("bye@monew.com")).isEmpty();
+    }
+
+    @Test
+    @DisplayName("탈퇴한 사용자의 이메일도 이미 있는 이메일로 본다 — 재가입 중복 확인")
+    void givenDeletedUser_whenExistsByEmail_thenTrue() {
+        User saved = userRepository.save(User.create("left@monew.com", "탈퇴", "password1!"));
+        saved.softDelete();
+
+        assertThat(userRepository.existsByEmail("left@monew.com")).isTrue();
+    }
 }
