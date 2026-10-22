@@ -38,6 +38,12 @@
     <property name="optional" value="true"/>
   </module>
 
+  <!-- 팀 규칙: 테스트 코드의 숫자(테스트 데이터 개수·길이 등)는 매직 넘버로 보지 않음 (#137) -->
+  <module name="SuppressionSingleFilter">
+    <property name="checks" value="MagicNumber"/>
+    <property name="files" value="[\\/]src[\\/]test[\\/]"/>
+  </module>
+
   <!-- https://checkstyle.org/filters/suppresswithnearbytextfilter.html -->
   <module name="SuppressWithNearbyTextFilter">
     <property name="nearbyTextPattern"
@@ -313,6 +319,12 @@
                     PARAMETER_DEF, VARIABLE_DEF, METHOD_DEF, PATTERN_VARIABLE_DEF, RECORD_DEF,
                     RECORD_COMPONENT_DEF"/>
     </module>
+    <!-- 팀 규칙: 인터페이스 이름 맨 앞의 I(IArticleService, IUserService)는 약어로 보지 않음 (#137)
+         I 바로 뒤가 "대문자 + 소문자"인 인터페이스 이름만 제외. IHTTPService처럼 진짜 약어가 이어지면 그대로 경고 -->
+    <module name="SuppressionXpathSingleFilter">
+      <property name="checks" value="AbbreviationAsWordInName"/>
+      <property name="query" value="//INTERFACE_DEF/IDENT[matches(@text, '^I[A-Z][a-z]')]"/>
+    </module>
     <module name="NoWhitespaceBeforeCaseDefaultColon"/>
     <module name="OverloadMethodsDeclarationOrder"/>
     <module name="ConstructorsDeclarationGrouping"/>
@@ -411,8 +423,12 @@
     <module name="EmptyCatchBlock">
       <property name="exceptionVariableName" value="expected"/>
     </module>
-    <!-- 팀 추가(Google 기본 규칙엔 없음): 매직 넘버 검출 (기본적으로 -1,0,1,2는 허용) -->
-    <module name="MagicNumber"/>
+    <!-- 팀 추가(Google 기본 규칙엔 없음): 매직 넘버 검출 (기본적으로 -1,0,1,2는 허용)
+         어노테이션 안 숫자(@Column(length = 255), @Size(max = 50) 등)는 제외 (#137) — 값의 뜻이 어노테이션 이름으로 드러남
+         테스트 코드는 맨 위 SuppressionSingleFilter로 제외 -->
+    <module name="MagicNumber">
+      <property name="ignoreAnnotation" value="true"/>
+    </module>
     <module name="CommentsIndentation">
       <property name="tokens" value="SINGLE_LINE_COMMENT, BLOCK_COMMENT_BEGIN"/>
     </module>
