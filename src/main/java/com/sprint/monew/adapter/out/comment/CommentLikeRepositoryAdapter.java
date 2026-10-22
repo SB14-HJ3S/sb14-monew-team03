@@ -35,7 +35,17 @@ public class CommentLikeRepositoryAdapter implements CommentLikeRepositoryPort {
     }
 
     @Override
+    public void delete(CommentLike entity) {
+        jpaRepository.delete(entity);
+    }
+
+    @Override
     public boolean existsByCommentIdAndUserId(UUID commentId, UUID userId) {
         return jpaRepository.existsByCommentIdAndUserId(commentId, userId);
+    }
+
+    @Override
+    public Optional<CommentLike> findByCommentIdAndUserId(UUID commentId, UUID userId) {
+        return jpaRepository.findByCommentIdAndUserId(commentId, userId);
     }
 }
