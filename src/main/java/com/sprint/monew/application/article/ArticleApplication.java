@@ -18,8 +18,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ArticleApplication implements ArticleUseCase {
 
-    private final ArticleService articleService;
-    private final ArticleViewStatusStatusService articleViewStatusService;
+    private final IArticleService articleService;
+    private final IArticleViewStatusService articleViewStatusService;
 
     @Override
     public PageResult<ArticleListItem> findByQuery(ArticleQuery query) {
