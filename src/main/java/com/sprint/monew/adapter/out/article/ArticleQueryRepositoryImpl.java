@@ -55,7 +55,7 @@ public class ArticleQueryRepositoryImpl implements ArticleQueryRepository {
         return Objects.requireNonNullElse(count, 0L);
     }
 
-    // ==== where 절: FILTER 관련 =====================================================================
+    // ==== where 절: FILTER 관련 ===================================================
 
     private BooleanExpression[] searchConditions(ArticleQuery condition) {
         return new BooleanExpression[] {
@@ -107,8 +107,7 @@ public class ArticleQueryRepositoryImpl implements ArticleQueryRepository {
         return Objects.nonNull(to) ? article.publishedAt.loe(to) : null;
     }
 
-    // ==== where 절: Cursor 관련
-    // ========================================================================
+    // ==== where 절: Cursor 관련 =======================================================
 
     public BooleanExpression cursorCondition(
             String cursor, Instant after, ArticleQuery.SortOrder sortField, boolean descending) {
@@ -117,8 +116,8 @@ public class ArticleQueryRepositoryImpl implements ArticleQueryRepository {
             throw new MonewException(
                     CommonErrorType.PAGINATION_NOT_BOTH_CURSOR_AND_AFTER,
                     Map.of(
-                            "cursor", cursor,
-                            "after", after));
+                            "cursor", Objects.toString(cursor, "null"),
+                            "after", Objects.toString(after, "null")));
         }
 
         BooleanExpression createdAtCondition =
