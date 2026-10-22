@@ -1,8 +1,8 @@
 package com.sprint.monew.application.article;
 
 import com.sprint.monew.application.article.provided.ArticleUseCase;
-import com.sprint.monew.application.article.provided.dto.ArticleListItem;
 import com.sprint.monew.application.article.provided.dto.ArticleQuery;
+import com.sprint.monew.application.article.provided.dto.ArticleResult;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.article.entity.ArticleViewStatus;
 import com.sprint.monew.global.pagination.PageResult;
@@ -22,10 +22,10 @@ public class ArticleApplication implements ArticleUseCase {
     private final IArticleViewStatusService articleViewStatusService;
 
     @Override
-    public PageResult<ArticleListItem> findByQuery(ArticleQuery query) {
-        // 여기서 ArticleListItem 조립한다 -
+    public PageResult<ArticleResult> findArticlePage(ArticleQuery query) {
+        // 여기서 ArticleResult 조립한다
         // 1 - 기사 목록 call
-        PageResult<Article> articles = articleService.findByQuery(query);
+        PageResult<Article> articles = articleService.findPageByQuery(query);
 
         // 2 - 기사 ID List 추출
         List<UUID> articleIds = articles.content().stream().map(Article::getId).toList();
@@ -34,12 +34,12 @@ public class ArticleApplication implements ArticleUseCase {
         Set<UUID> viewedArticleIds =
                 articleViewStatusService.findViewedArticleIds(query.requestId(), articleIds);
 
-        // 4 - ArticleListItem List 조립
-        List<ArticleListItem> content =
+        // 4 - ArticleResult List 조립
+        List<ArticleResult> content =
                 articles.content().stream()
                         .map(
                                 article ->
-                                        ArticleListItem.from(
+                                        ArticleResult.from(
                                                 article,
                                                 viewedArticleIds.contains(article.getId())))
                         .toList();
@@ -53,7 +53,7 @@ public class ArticleApplication implements ArticleUseCase {
     }
 
     @Override
-    public ArticleListItem findById(UUID articleId, UUID requestId) {
+    public ArticleResult findById(UUID articleId, UUID requestId) {
         return null;
     }
 

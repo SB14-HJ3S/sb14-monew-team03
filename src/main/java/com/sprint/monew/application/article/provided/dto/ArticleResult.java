@@ -5,7 +5,7 @@ import com.sprint.monew.global.type.ArticleSourceType;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-public record ArticleListItem(
+public record ArticleResult(
         UUID id,
         ArticleSourceType source,
         String sourceUrl,
@@ -16,9 +16,9 @@ public record ArticleListItem(
         long viewCount,
         boolean viewedByMe) {
 
-    public static ArticleListItem from(Article article, boolean viewedByMe) {
+    public static ArticleResult from(Article article, boolean viewedByMe) {
 
-        return new ArticleListItem(
+        return new ArticleResult(
                 article.getId(),
                 article.getSource(),
                 article.getSourceUrl(),

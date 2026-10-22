@@ -1,7 +1,7 @@
 package com.sprint.monew.application.article.provided;
 
-import com.sprint.monew.application.article.provided.dto.ArticleListItem;
 import com.sprint.monew.application.article.provided.dto.ArticleQuery;
+import com.sprint.monew.application.article.provided.dto.ArticleResult;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.article.entity.ArticleViewStatus;
 import com.sprint.monew.global.pagination.PageResult;
@@ -11,9 +11,9 @@ import java.util.List;
 import java.util.UUID;
 
 public interface ArticleUseCase {
-    PageResult<ArticleListItem> findByQuery(ArticleQuery query);
+    PageResult<ArticleResult> findArticlePage(ArticleQuery query);
 
-    ArticleListItem findById(UUID articleId, UUID requestId);
+    ArticleResult findById(UUID articleId, UUID requestId);
 
     List<ArticleSourceType> findSourceTypes();
 
