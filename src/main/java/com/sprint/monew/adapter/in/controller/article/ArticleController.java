@@ -23,7 +23,7 @@ public class ArticleController {
     private final ArticleUseCase articleUseCase;
 
     @GetMapping
-    public PageResult<ArticleDto> findArticlePage(
+    public PageResult<ArticleDto> findArticlePagesByQuery(
             @RequestParam(name = "keyword", required = false) String keyword,
             @RequestParam(name = "interestId", required = false) UUID interestId,
             @RequestParam(name = "sourceIn", required = false) List<String> sourceIn,
