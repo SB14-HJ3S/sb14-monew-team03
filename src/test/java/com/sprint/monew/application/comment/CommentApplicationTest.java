@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.sprint.monew.application.comment.provided.dto.CommentLikeResult;
 import com.sprint.monew.application.comment.provided.dto.CommentResult;
+import com.sprint.monew.application.comment.required.CommentEventPublisherPort;
 import com.sprint.monew.application.comment.required.CommentLikeRepositoryPort;
 import com.sprint.monew.application.comment.required.CommentRepositoryPort;
 import com.sprint.monew.application.user.provided.UserUseCase;
@@ -32,7 +33,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -41,7 +41,7 @@ class CommentApplicationTest {
     @Mock private CommentRepositoryPort commentRepository;
     @Mock private CommentLikeRepositoryPort commentLikeRepository;
     @Mock private UserUseCase userUseCase;
-    @Mock private ApplicationEventPublisher eventPublisher;
+    @Mock private CommentEventPublisherPort commentEventPublisher;
     @InjectMocks private CommentApplication commentApplication;
 
     private final UUID commentId = UUID.randomUUID();
@@ -233,8 +233,8 @@ class CommentApplicationTest {
 
             verify(commentLikeRepository).save(any(CommentLike.class));
             assertThat(comment.getLikeCount()).isEqualTo(1L);
-            verify(eventPublisher)
-                    .publishEvent(new CommentLikedEvent(commentId, authorId, requestId, "좋아요한 사람"));
+            verify(commentEventPublisher)
+                    .publish(new CommentLikedEvent(commentId, authorId, requestId, "좋아요한 사람"));
             assertThat(result)
                     .isEqualTo(
                             new CommentLikeResult(
@@ -257,7 +257,7 @@ class CommentApplicationTest {
                     .isEqualTo(CommentErrorType.COMMENT_LIKE_DUPLICATED);
             assertThat(comment.getLikeCount()).isZero();
             verify(commentLikeRepository, never()).save(any());
-            verifyNoInteractions(eventPublisher);
+            verifyNoInteractions(commentEventPublisher);
         }
 
         @Test
@@ -270,7 +270,7 @@ class CommentApplicationTest {
                     .isInstanceOf(MonewException.class)
                     .extracting("errorType")
                     .isEqualTo(UserErrorType.USER_NOT_FOUND);
-            verifyNoInteractions(commentRepository, commentLikeRepository, eventPublisher);
+            verifyNoInteractions(commentRepository, commentLikeRepository, commentEventPublisher);
         }
 
         @Test
@@ -284,7 +284,7 @@ class CommentApplicationTest {
                     .isInstanceOf(MonewException.class)
                     .extracting("errorType")
                     .isEqualTo(CommentErrorType.COMMENT_NOT_FOUND);
-            verifyNoInteractions(commentLikeRepository, eventPublisher);
+            verifyNoInteractions(commentLikeRepository, commentEventPublisher);
         }
 
         @Test
@@ -296,7 +296,7 @@ class CommentApplicationTest {
                     .isInstanceOf(MonewException.class)
                     .extracting("errorType")
                     .isEqualTo(CommentErrorType.COMMENT_NOT_FOUND);
-            verifyNoInteractions(commentLikeRepository, eventPublisher);
+            verifyNoInteractions(commentLikeRepository, commentEventPublisher);
         }
     }
 }
