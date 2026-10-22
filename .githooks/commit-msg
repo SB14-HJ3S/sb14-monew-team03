@@ -50,11 +50,17 @@ case "$FIRST_LINE" in
       -e "s/^($TYPES)(\((red|green|blue)\))?[[:space:]]*:[[:space:]]*//" \
       -e 's/^\[[A-Za-z]+\][[:space:]]*:[[:space:]]*//' \
       -e 's/[[:space:]]*(\[#[0-9]+\]|\(#[0-9]+\))[[:space:]]*$//')
-    if [ -n "$INNER" ]; then
-      NEW_TITLE="chore : $(cut_chars "$INNER" 47) 되돌리기"
-    else
-      NEW_TITLE="chore : 커밋 되돌리기"
-    fi ;;
+    # 되돌린 걸 다시 되돌리면 "다시 적용", 그걸 또 되돌리면 다시 "되돌리기"
+    case "$INNER" in
+      *" 되돌리기")
+        NEW_TITLE="chore : $(cut_chars "${INNER% 되돌리기}" 46) 다시 적용" ;;
+      *" 다시 적용")
+        NEW_TITLE="chore : $(cut_chars "${INNER% 다시 적용}" 47) 되돌리기" ;;
+      "")
+        NEW_TITLE="chore : 커밋 되돌리기" ;;
+      *)
+        NEW_TITLE="chore : $(cut_chars "$INNER" 47) 되돌리기" ;;
+    esac ;;
 esac
 if [ -n "$SRC" ]; then
   NEW_TITLE="chore : $(cut_chars "${SRC#origin/}" 43) 최신 내용 반영"
