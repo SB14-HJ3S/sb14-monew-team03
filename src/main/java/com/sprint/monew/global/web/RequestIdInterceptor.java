@@ -1,10 +1,10 @@
 package com.sprint.monew.global.web;
 
 import com.sprint.monew.global.annotation.RequestId;
+import com.sprint.monew.global.constant.MonewHeaders;
 import com.sprint.monew.global.context.RequestIdContext;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.CommonErrorType;
-import com.sprint.monew.global.logging.MdcLoggingFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Collections;
@@ -29,7 +29,7 @@ public class RequestIdInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        String requestHeader = request.getHeader(MdcLoggingFilter.USER_ID_HEADER);
+        String requestHeader = request.getHeader(MonewHeaders.REQUEST_USER_ID);
         try {
             UUID requestId = UUID.fromString(requestHeader);
             RequestIdContext.set(requestId);
@@ -37,7 +37,7 @@ public class RequestIdInterceptor implements HandlerInterceptor {
         } catch (IllegalArgumentException | NullPointerException e) {
             throw new MonewException(
                     CommonErrorType.INVALID_REQUEST,
-                    Collections.singletonMap(MdcLoggingFilter.USER_ID_HEADER, requestHeader));
+                    Collections.singletonMap(MonewHeaders.REQUEST_USER_ID, requestHeader));
         }
     }
 

@@ -1,7 +1,7 @@
 package com.sprint.monew.global.config;
 
 import com.sprint.monew.global.annotation.RequestId;
-import com.sprint.monew.global.logging.MdcLoggingFilter;
+import com.sprint.monew.global.constant.MonewHeaders;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.media.StringSchema;
@@ -31,7 +31,7 @@ public class SwaggerConfig {
             if (handlerMethod.hasMethodAnnotation(RequestId.class)) {
                 operation.addParametersItem(
                         new HeaderParameter()
-                                .name(MdcLoggingFilter.USER_ID_HEADER)
+                                .name(MonewHeaders.REQUEST_USER_ID)
                                 .description("요청자 ID")
                                 .required(true)
                                 .schema(new StringSchema().format("uuid")));
