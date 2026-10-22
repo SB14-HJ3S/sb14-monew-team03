@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class ArticleViewStatusStatusService implements IArticleViewStatusService {
+public class ArticleViewStatusService implements IArticleViewStatusService {
 
     private final ArticleViewStatusRepositoryPort repository;
 
