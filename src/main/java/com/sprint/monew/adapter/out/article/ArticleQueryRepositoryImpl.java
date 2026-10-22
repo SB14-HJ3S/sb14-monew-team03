@@ -16,6 +16,7 @@ import com.sprint.monew.global.pagination.SortDirection;
 import com.sprint.monew.global.type.ArticleSourceType;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -77,7 +78,9 @@ public class ArticleQueryRepositoryImpl implements ArticleQueryRepository {
     }
 
     private BooleanExpression interestEquals(UUID interestId) { // ArticleInterest 중간테이블 조회
-        if (Objects.isNull(interestId)) return null;
+        if (Objects.isNull(interestId)) {
+            return null;
+        }
 
         BooleanExpression currentArticle = articleInterest.article.id.eq(article.id);
         BooleanExpression targetInterest = articleInterest.interest.id.eq(interestId);
@@ -109,7 +112,10 @@ public class ArticleQueryRepositoryImpl implements ArticleQueryRepository {
 
     public BooleanExpression cursorCondition(
             String cursor, Instant after, ArticleQuery.SortOrder sortField, boolean descending) {
-        if (!hasText(cursor) && Objects.isNull(after)) return null;
+        if (!hasText(cursor) && Objects.isNull(after)) {
+            return null;
+        }
+
         if (!hasText(cursor) || Objects.isNull(after)) {
             throw new MonewException(
                     CommonErrorType.PAGINATION_NOT_BOTH_CURSOR_AND_AFTER,
@@ -121,41 +127,45 @@ public class ArticleQueryRepositoryImpl implements ArticleQueryRepository {
         BooleanExpression createdAtCondition =
                 descending ? article.createdAt.lt(after) : article.createdAt.gt(after);
 
-        return switch (sortField) {
-            case PUBLISH_DATE -> {
-                LocalDateTime value = LocalDateTime.parse(cursor);
+        try {
+            return switch (sortField) {
+                case PUBLISH_DATE -> {
+                    LocalDateTime value = LocalDateTime.parse(cursor);
 
-                yield descending
-                        ? article.publishedAt
-                                .lt(value)
-                                .or(article.publishedAt.eq(value).and(createdAtCondition))
-                        : article.publishedAt
-                                .gt(value)
-                                .or(article.publishedAt.eq(value).and(createdAtCondition));
-            }
-            case COMMENT_COUNT -> {
-                int value = Integer.parseInt(cursor);
+                    yield descending
+                            ? article.publishedAt
+                                    .lt(value)
+                                    .or(article.publishedAt.eq(value).and(createdAtCondition))
+                            : article.publishedAt
+                                    .gt(value)
+                                    .or(article.publishedAt.eq(value).and(createdAtCondition));
+                }
+                case COMMENT_COUNT -> {
+                    int value = Integer.parseInt(cursor);
 
-                yield descending
-                        ? article.commentCount
-                                .lt(value)
-                                .or(article.commentCount.eq(value).and(createdAtCondition))
-                        : article.commentCount
-                                .gt(value)
-                                .or(article.commentCount.eq(value).and(createdAtCondition));
-            }
-            case VIEW_COUNT -> {
-                int value = Integer.parseInt(cursor);
+                    yield descending
+                            ? article.commentCount
+                                    .lt(value)
+                                    .or(article.commentCount.eq(value).and(createdAtCondition))
+                            : article.commentCount
+                                    .gt(value)
+                                    .or(article.commentCount.eq(value).and(createdAtCondition));
+                }
+                case VIEW_COUNT -> {
+                    int value = Integer.parseInt(cursor);
 
-                yield descending
-                        ? article.viewCount
-                                .lt(value)
-                                .or(article.viewCount.eq(value).and(createdAtCondition))
-                        : article.viewCount
-                                .gt(value)
-                                .or(article.viewCount.eq(value).and(createdAtCondition));
-            }
-        };
+                    yield descending
+                            ? article.viewCount
+                                    .lt(value)
+                                    .or(article.viewCount.eq(value).and(createdAtCondition))
+                            : article.viewCount
+                                    .gt(value)
+                                    .or(article.viewCount.eq(value).and(createdAtCondition));
+                }
+            };
+        } catch (DateTimeParseException | NumberFormatException e) {
+            throw new MonewException(CommonErrorType.INVALID_REQUEST, Map.of("cursor", cursor), e);
+        }
     }
 
     private OrderSpecifier<?> primarySort(ArticleQuery.SortOrder sortField, boolean descending) {

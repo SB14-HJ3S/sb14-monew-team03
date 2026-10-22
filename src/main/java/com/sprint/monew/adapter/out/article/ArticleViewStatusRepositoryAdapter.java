@@ -34,7 +34,9 @@ public class ArticleViewStatusRepositoryAdapter implements ArticleViewStatusRepo
 
     @Override
     public Set<UUID> findViewedArticleIds(UUID userId, Collection<UUID> articleIds) {
-        if (articleIds.isEmpty()) return Set.of();
+        if (articleIds.isEmpty()) {
+            return Set.of();
+        }
         return jpaRepository.findViewedArticleIds(userId, articleIds);
     }
 }
