@@ -195,8 +195,9 @@ function block(token, depth) {
         parts.push(...inline(child.tokens || [{ type: 'text', text: child.text }]));
       }
       const children = blocks(rest, depth + 1);
-      const [quote] = textBlocks('quote', parts.length ? parts : [plain(' ')]);
-      return nest(quote, children, depth);
+      // 인용 글이 없으면(목록만 있는 인용, 빈 인용) 하위 블록만 그 자리에 넣는다
+      const [quote] = textBlocks('quote', parts);
+      return quote ? nest(quote, children, depth) : children;
     }
     case 'list':
       return list(token, depth);
