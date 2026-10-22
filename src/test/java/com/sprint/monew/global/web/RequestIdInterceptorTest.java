@@ -59,7 +59,7 @@ class RequestIdInterceptorTest {
 
     @Test
     @DisplayName("@RequestId 선언된 핸들러에 request header는 유효한 UUID 형식이어야 한다.")
-    void givenAnnotated_whenHeaderIsNotUUID_thenThrow() {
+    void givenAnnotated_whenHeaderIsNotUuid_thenThrow() {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader(REQUEST_ID, "invalid uuid");
 
