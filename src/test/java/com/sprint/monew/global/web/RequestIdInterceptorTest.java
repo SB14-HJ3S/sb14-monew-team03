@@ -1,10 +1,10 @@
 package com.sprint.monew.global.web;
 
 import com.sprint.monew.global.annotation.RequestId;
+import com.sprint.monew.global.constant.MonewHeaders;
 import com.sprint.monew.global.context.RequestIdContext;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.CommonErrorType;
-import com.sprint.monew.global.logging.MdcLoggingFilter;
 import java.lang.reflect.Method;
 import java.util.UUID;
 import org.assertj.core.api.Assertions;
@@ -32,7 +32,7 @@ class RequestIdInterceptorTest {
         String strRequestId = requestId.toString();
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
-        request.addHeader(MdcLoggingFilter.USER_ID_HEADER, strRequestId);
+        request.addHeader(MonewHeaders.REQUEST_USER_ID, strRequestId);
 
         boolean result = interceptor.preHandle(request, response, handlerMethod("required"));
 
@@ -60,7 +60,7 @@ class RequestIdInterceptorTest {
     @DisplayName("@RequestId 선언된 핸들러에 request header는 유효한 UUID 형식이어야 한다.")
     void givenAnnotated_whenHeaderIsNotUuid_thenThrow() {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.addHeader(MdcLoggingFilter.USER_ID_HEADER, "invalid uuid");
+        request.addHeader(MonewHeaders.REQUEST_USER_ID, "invalid uuid");
 
         MonewException thrown =
                 Assertions.catchThrowableOfType(
