@@ -466,7 +466,8 @@ jobs:
           TITLE: ${{ steps.title.outputs.title }}
           NOTE: ${{ steps.fields.outputs.note }}
           AMPM: ${{ steps.fields.outputs.ampm }}
-          DATE_OVERRIDE: ${{ steps.fields.outputs.date_override }}
+          # 날짜를 직접 정하지 않았으면 기존 페이지 날짜는 그대로 두고, 페이지를 새로 만들었을 때만 자동 날짜를 넣는다
+          DATE_OVERRIDE: ${{ steps.fields.outputs.date_override || (steps.page.outputs.created == 'true' && steps.title.outputs.date) || '' }}
           PARTICIPANTS: ${{ steps.fields.outputs.participants }}
           AUTHOR: ${{ github.event.discussion.user.login }}
           NOTION_USER_MAP: ${{ vars.NOTION_USER_MAP }}

@@ -16,6 +16,7 @@ const { gfm } = require('turndown-plugin-gfm');
 const TEXT_LIMIT = 1900; // 노션 글 조각 하나 최대 2000자
 const RICH_TEXT_LIMIT = 100; // 블록 하나에 넣을 수 있는 글 조각 수
 const MAX_DEPTH = 2; // 노션 API는 요청 한 번에 블록을 2단까지만 겹쳐 넣을 수 있다
+const MAX_CHILDREN = 100; // 하위 블록(표의 줄 포함)도 한 번에 100개까지
 const IMAGE_MARKER = /^\[\[NOTION_IMAGE:(\d+)\]\]$/;
 
 // 노션 코드 블록이 받는 언어 이름. 목록에 없으면 plain text
@@ -177,16 +178,25 @@ function block(token, depth) {
       return [{ object: 'block', type: 'divider', divider: {} }];
     case 'code': {
       const lang = LANGUAGES[(token.lang || '').trim().toLowerCase()] || 'plain text';
-      return textBlocks('code', [plain(token.text)], { language: lang });
+      // 코드는 앞 들여쓰기를 지우면 안 돼서 trimParts를 거치지 않는다
+      const rich = richText([plain(token.text.replace(/\n+$/, ''))]);
+      return rich.length ? [{ object: 'block', type: 'code', code: { rich_text: rich, language: lang } }] : [];
     }
     case 'blockquote': {
-      // 인용 안 문단들은 줄바꿈으로 이어 한 블록에
+      // 인용 안 문단들은 줄바꿈으로 이어 한 블록에, 목록·코드 같은 나머지는 인용의 하위 블록으로
       const parts = [];
+      const rest = [];
       for (const child of token.tokens) {
+        if (child.type !== 'paragraph' && child.type !== 'text') {
+          rest.push(child);
+          continue;
+        }
         if (parts.length) parts.push(plain('\n'));
-        parts.push(...inline(child.tokens || [{ type: 'text', text: child.text || child.raw }]));
+        parts.push(...inline(child.tokens || [{ type: 'text', text: child.text }]));
       }
-      return textBlocks('quote', parts);
+      const children = blocks(rest, depth + 1);
+      const [quote] = textBlocks('quote', parts.length ? parts : [plain(' ')]);
+      return nest(quote, children, depth);
     }
     case 'list':
       return list(token, depth);
@@ -214,8 +224,8 @@ function list(token, depth) {
     }
     const parts = first ? inline(first.tokens || [{ type: 'text', text: first.text }]) : [];
     const extra = item.task ? { checked: Boolean(item.checked) } : {};
-    const [itemBlock] = textBlocks(type, parts.length ? parts : [plain(' ')], extra);
-    if (!itemBlock) continue;
+    // 첫 글이 비어 있어도(- 바로 아래 하위 목록 등) 빈 항목을 만들어 하위 블록을 살린다
+    const [itemBlock = { object: 'block', type, [type]: { rich_text: [], ...extra } }] = textBlocks(type, parts, extra);
     const children = blocks(rest, depth + 1);
     out.push(...nest(itemBlock, children, depth));
   }
@@ -223,11 +233,12 @@ function list(token, depth) {
 }
 
 // 노션은 2단까지만 겹쳐 넣을 수 있어서, 그보다 깊은 하위 블록은 같은 높이로 펼친다
+// 하위 블록도 한 번에 100개까지라 넘는 부분은 같은 높이로 펼친다
 function nest(parent, children, depth) {
   if (!children.length) return [parent];
   if (depth < MAX_DEPTH) {
-    parent[parent.type].children = children;
-    return [parent];
+    parent[parent.type].children = children.slice(0, MAX_CHILDREN);
+    return [parent, ...children.slice(MAX_CHILDREN)];
   }
   return [parent, ...children];
 }
@@ -247,13 +258,21 @@ function table(token, depth) {
     type: 'table_row',
     table_row: { cells: Array.from({ length: width }, (_, i) => richText(trimParts(cells[i] || []))) },
   });
-  return [
-    {
+  // 표 하나에 줄을 100개까지만 넣을 수 있어서, 넘으면 제목 줄을 반복해 표를 나눈다
+  const tables = [];
+  for (let i = 0; i === 0 || i < rows.length; i += MAX_CHILDREN - 1) {
+    tables.push({
       object: 'block',
       type: 'table',
-      table: { table_width: width, has_column_header: true, has_row_header: false, children: [row(header), ...rows.map(row)] },
-    },
-  ];
+      table: {
+        table_width: width,
+        has_column_header: true,
+        has_row_header: false,
+        children: [row(header), ...rows.slice(i, i + MAX_CHILDREN - 1).map(row)],
+      },
+    });
+  }
+  return tables;
 }
 
 // HTML로 붙여 넣은 부분 → 마크다운으로 바꿔서 다시 변환
