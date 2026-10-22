@@ -89,14 +89,12 @@ public class ArticleQueryRepositoryImpl implements ArticleQueryRepository {
                 .exists();
     }
 
-    private BooleanExpression sourceIn(List<String> sources) {
-        if (Objects.isNull(sources) || sources.isEmpty()) return null;
+    private BooleanExpression sourceIn(List<ArticleSourceType> sources) {
+        if (Objects.isNull(sources) || sources.isEmpty()) {
+            return null;
+        }
 
-        // String -> Enum ArticleSourceType
-        List<ArticleSourceType> sourceTypes =
-                sources.stream().map(ArticleSourceType::valueOf).toList();
-
-        return article.source.in(sourceTypes); // 네이버/한경/조선/연합 중 하나인지
+        return article.source.in(sources); // 네이버/한경/조선/연합 중 하나인지
     }
 
     private BooleanExpression publishDateGreaterThanOrEqual(LocalDateTime from) {

@@ -7,6 +7,7 @@ import com.sprint.monew.application.article.provided.dto.ArticleResult;
 import com.sprint.monew.global.annotation.RestWebAdapter;
 import com.sprint.monew.global.pagination.PageResult;
 import com.sprint.monew.global.pagination.SortDirection;
+import com.sprint.monew.global.type.ArticleSourceType;
 import jakarta.validation.constraints.Min;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -14,7 +15,9 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestWebAdapter(path = "/api/articles")
 @RequiredArgsConstructor
@@ -26,7 +29,7 @@ public class ArticleController {
     public PageResult<ArticleDto> findArticlePagesByQuery(
             @RequestParam(name = "keyword", required = false) String keyword,
             @RequestParam(name = "interestId", required = false) UUID interestId,
-            @RequestParam(name = "sourceIn", required = false) List<String> sourceIn,
+            @RequestParam(name = "sourceIn", required = false) List<ArticleSourceType> sourceIn,
             @RequestParam(name = "publishDateFrom", required = false)
                     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
                     LocalDateTime publishDateFrom,
