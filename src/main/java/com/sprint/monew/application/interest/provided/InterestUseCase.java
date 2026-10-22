@@ -1,21 +1,30 @@
 package com.sprint.monew.application.interest.provided;
 
 import com.sprint.monew.application.interest.provided.dto.InterestQuery;
+import com.sprint.monew.application.interest.provided.dto.InterestResult;
 import com.sprint.monew.domain.interest.entity.Interest;
+import com.sprint.monew.domain.interest.entity.InterestKeyword;
 import com.sprint.monew.global.pagination.PageResult;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
 import java.util.List;
 import java.util.UUID;
 
 public interface InterestUseCase {
-    PageResult<Interest> findByQuery(InterestQuery query);
+    PageResult<InterestResult> findByQuery(InterestQuery query);
 
-    Interest register(String name, List<String> keywords);
+    InterestResult register(
+            @NotBlank @Size(min = 1, max = Interest.MAX_NAME_LENGTH) String name,
+            @NotEmpty @Size(min = 1, max = Interest.MAX_KEYWORDS_SIZE)
+                    List<@NotBlank @Size(min = 1, max = InterestKeyword.MAX_KEYWORD_LENGTH) String>
+                            keywords);
 
-    Interest subscribe(UUID interestId, UUID requestId);
+    InterestResult subscribe(UUID interestId, UUID requestId);
 
     void unsubscribe(UUID interestId, UUID requestId);
 
     void delete(UUID interestId);
 
-    Interest update(UUID interestId, List<String> keywords);
+    InterestResult update(UUID interestId, List<String> keywords);
 }
