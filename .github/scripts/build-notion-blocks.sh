@@ -1,7 +1,7 @@
 #!/bin/bash
 # 디스커션 본문(표준입력)을 노션 블록 배열(JSON)로 바꾼다
 # - 맨 위: 작성자·디스커션 원문 링크 콜아웃 (EXTRA_NOTE가 있으면 그 아래 한 줄 추가 — 연동 기록 "🔄 최초 연동 … (재연동 N회)")
-# - 폼 항목("### 📝 김민재" 등) → 노션 제목3 블록, 내용 → 문단("- " 줄은 글머리 기호), 붙인 이미지 → 이미지 블록
+# - 폼 항목("### 📝 김민재" 등) → 노션 제목3 블록, 내용 → notion-markdown.js로 제목·목록·표·서식 그대로, 붙인 이미지 → 이미지 블록
 # - 멤버별·기타 칸(📝·📑) 위에는 노션 구분선을 넣는다(GitHub 본문의 칸 사이 "---"와 같은 모양, #133). 내용 중간의 "---" 문단도 구분선으로
 # - 비워 둔 항목("_No response_")과 노션 속성으로 이미 들어가는 항목(회의 종류·날짜·회의 시간·참여자)은 뺀다
 # - 날짜(요일)·시간과 회의 시간은 콜아웃 아래 "📆 261020(화) · ⏰ 오전 11시" 한 줄로 같이 보여 준다
@@ -28,7 +28,10 @@ else
   IMAGES='[]'
 fi
 
-printf '%s' "$BODY_INPUT" | jq -Rs \
+# 칸 내용은 notion-markdown.js가 노션 블록(제목·표·목록·서식 등)으로 바꾼다
+# 그래서 jq는 칸 내용을 {"__markdown": 내용, "__fallback": 예전 방식 블록}으로 남겨 두고,
+# 변환 스크립트를 못 쓰면(의존성 설치 실패 등) 예전 방식(문단·글머리 목록)으로 넣는다
+DRAFT=$(printf '%s' "$BODY_INPUT" | jq -Rs \
   --argjson images "$IMAGES" \
   --argjson fields "$FIELDS" \
   --argjson skip "$SKIP" \
@@ -66,12 +69,17 @@ printf '%s' "$BODY_INPUT" | jq -Rs \
      | select($content != "" and $content != "_No response_")
      | (if ($t | test("^(📝|📑) ")) then [divider] else [] end)
        + [{object: "block", type: "heading_3", heading_3: {rich_text: [{text: {content: .title}}]}}]
-       + [$content | split("\n\n")[] | trim | select(. != "")
+       + [{__markdown: $content, __fallback: [$content | split("\n\n")[] | trim | select(. != "")
           | if test("^\\[\\[NOTION_IMAGE:[0-9]+\\]\\]$") then
               (capture("(?<n>[0-9]+)").n | tonumber) as $n | ($images[$n] // empty)
             elif test("^-{3,}$") then divider
             elif (split("\n") | all(test("^\\s*[-*] "))) then
               (split("\n")[] | sub("^\\s*[-*] "; "") | text_blocks("bulleted_list_item")[])
-            else text_blocks("paragraph")[] end]
+            else text_blocks("paragraph")[] end]}]
     ] | flatten
-'
+')
+
+if ! NOTION_IMAGES="$IMAGES" node "$(dirname "$0")/notion-markdown.js" <<<"$DRAFT"; then
+  echo "::warning::서식 변환에 실패해 문단·글머리 목록으로만 노션에 넣습니다." >&2
+  jq -c '[.[] | if type == "object" and has("__markdown") then .__fallback[] else . end]' <<<"$DRAFT"
+fi
