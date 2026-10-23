@@ -1,6 +1,7 @@
 package com.sprint.monew.application.comment.provided;
 
 import com.sprint.monew.application.comment.provided.dto.CommentQuery;
+import com.sprint.monew.application.comment.provided.dto.CommentResult;
 import com.sprint.monew.domain.comment.entity.Comment;
 import com.sprint.monew.global.pagination.PageResult;
 import java.util.UUID;
@@ -16,7 +17,7 @@ public interface CommentUseCase {
 
     void unlike(UUID commentId, UUID requestId);
 
-    Comment changeContent(UUID commentId, UUID requestId, String content);
+    CommentResult changeContent(UUID commentId, UUID requestId, String content);
 
     void softDeleteComment(UUID commentId);
 

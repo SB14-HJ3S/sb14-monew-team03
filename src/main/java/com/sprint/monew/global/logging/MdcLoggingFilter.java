@@ -1,5 +1,6 @@
 package com.sprint.monew.global.logging;
 
+import com.sprint.monew.global.constant.MonewHeaders;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,9 +20,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class MdcLoggingFilter extends OncePerRequestFilter {
 
-    public static final String REQUEST_ID_HEADER = "Monew-Request-ID";
-    public static final String CLIENT_IP_HEADER = "Monew-Client-IP";
-    public static final String USER_ID_HEADER = "Monew-Request-User-ID";
     public static final String MDC_REQUEST_ID = "requestId";
     public static final String MDC_CLIENT_IP = "clientIp";
     public static final String MDC_USER_ID = "userId";
@@ -36,12 +34,12 @@ public class MdcLoggingFilter extends OncePerRequestFilter {
 
         MDC.put(MDC_REQUEST_ID, requestId);
         MDC.put(MDC_CLIENT_IP, clientIp);
-        UUID userId = parseUserId(request.getHeader(USER_ID_HEADER));
+        UUID userId = parseUserId(request.getHeader(MonewHeaders.REQUEST_USER_ID));
         if (userId != null) {
             MDC.put(MDC_USER_ID, userId.toString());
         }
-        response.setHeader(REQUEST_ID_HEADER, requestId);
-        response.setHeader(CLIENT_IP_HEADER, clientIp);
+        response.setHeader(MonewHeaders.TRACE_ID, requestId);
+        response.setHeader(MonewHeaders.CLIENT_IP, clientIp);
 
         try {
             filterChain.doFilter(request, response);

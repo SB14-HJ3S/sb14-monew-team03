@@ -9,7 +9,7 @@ set -euo pipefail
 CLEAN="$(cat | tr -d '\r')"
 FIELD_HEADINGS='🧑‍🏫 피드백 종류|📆 날짜·시간|😄 질문자 및 참여자|⚠️ 특이사항|📝 내용'
 
-# extract-meeting-fields.sh와 같은 방식: 폼 항목 제목만 경계로 쓰고, 글자 그대로 비교
+# extract-meeting-fields.sh와 같은 방식: 폼 항목 제목만 경계로 쓰고, 글자 그대로 비교. 칸 사이 구분선(---, #133)은 뺀다
 extract_heading() {
   printf '%s\n' "$CLEAN" | awk -v h="$1" -v fields="$FIELD_HEADINGS" '
     BEGIN { n = split(fields, list, "|"); for (i = 1; i <= n; i++) is_field[list[i]] = 1 }
@@ -19,7 +19,7 @@ extract_heading() {
       if (capture && (title in is_field)) { capture = 0; next }
     }
     capture { print }
-  ' | sed '/^[[:space:]]*$/d' | sed -E 's/^[[:space:]]+|[[:space:]]+$//g'
+  ' | sed -E '/^[[:space:]]*$/d; /^[[:space:]]*-{3,}[[:space:]]*$/d; s/^[[:space:]]+|[[:space:]]+$//g'
 }
 
 FEEDBACK_TYPE="$(extract_heading "🧑‍🏫 피드백 종류" | head -1)"

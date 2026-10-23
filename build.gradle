@@ -68,7 +68,10 @@ repositories {
 }
 
 dependencies {
-	// ── Web & Validation ──────────────────────────────
+  // ── String Similarity Utils  ──────────────────────
+  implementation 'org.apache.commons:commons-text:1.15.0'
+
+  // ── Web & Validation ──────────────────────────────
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 
@@ -211,14 +214,17 @@ jacocoTestCoverageVerification {
 
 check.dependsOn jacocoTestCoverageVerification
 
-// 팀원 클론 시 pre-commit/commit-msg/pre-push hook 자동 설치
+// 팀원 클론 시 pre-commit/commit-msg/prepare-commit-msg/pre-push hook 자동 설치
 // - pre-commit: 커밋 전 spotlessApply 자동 실행
 // - commit-msg: 커밋 메시지 형식 검사 + 타입 단축키(f;·t1; 등) 변환 + 브랜치명의 이슈번호 [#번호] 자동 삽입
+//   + Git이 영어로 만드는 머지·되돌리기 제목 변환
+// - prepare-commit-msg: commit-msg를 안 거치는 git revert도 제목이 변환되게 commit-msg를 미리 실행
 // - pre-push: push 전 포맷 검사·본 코드 컴파일만 자동 실행, 테스트 컴파일·실행은 CI가 담당
 tasks.register('installGitHooks', Copy) {
-	description = '팀원 클론 시 pre-commit/commit-msg/pre-push hook을 자동으로 설치합니다.'
+	description = '팀원 클론 시 pre-commit/commit-msg/prepare-commit-msg/pre-push hook을 자동으로 설치합니다.'
 	from "$rootDir/scripts/pre-commit"
 	from "$rootDir/.githooks/commit-msg"
+	from "$rootDir/.githooks/prepare-commit-msg"
 	from "$rootDir/.githooks/pre-push"
 	into "$rootDir/.git/hooks"
 	filePermissions {
@@ -337,6 +343,7 @@ if (!runFromGitHook && file("$rootDir/.git/hooks").exists()) {
 	copy {
 		from "$rootDir/scripts/pre-commit"
 		from "$rootDir/.githooks/commit-msg"
+		from "$rootDir/.githooks/prepare-commit-msg"
 		from "$rootDir/.githooks/pre-push"
 		into "$rootDir/.git/hooks"
 		filePermissions {

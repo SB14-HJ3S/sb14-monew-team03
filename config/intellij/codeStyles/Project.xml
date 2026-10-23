@@ -2,6 +2,23 @@
   <code_scheme name="Project" version="173">
     <!-- google-java-format aosp() 스타일(들여쓰기 4칸)에 맞춘 커스텀 규칙.
          build.gradle의 Spotless 설정(googleJavaFormat().aosp())이랑 짝을 맞춤. -->
+    <!-- import 정리 규칙: Spotless(google-java-format)·Checkstyle(AvoidStarImport, CustomImportOrder)과 같게 맞춤 (#137)
+         - 같은 패키지 import가 많아도 * 로 합치지 않음 (기본값 5개 → 999개, 자동으로 * 쓰는 패키지 목록도 비움)
+         - 순서: static import 전부 → 빈 줄 → 나머지 전부 (각각 알파벳순) -->
+    <JavaCodeStyleSettings>
+      <option name="CLASS_COUNT_TO_USE_IMPORT_ON_DEMAND" value="999" />
+      <option name="NAMES_COUNT_TO_USE_IMPORT_ON_DEMAND" value="999" />
+      <option name="PACKAGES_TO_USE_IMPORT_ON_DEMAND">
+        <value />
+      </option>
+      <option name="IMPORT_LAYOUT_TABLE">
+        <value>
+          <package name="" withSubpackages="true" static="true" />
+          <emptyLine />
+          <package name="" withSubpackages="true" static="false" />
+        </value>
+      </option>
+    </JavaCodeStyleSettings>
     <codeStyleSettings language="Java">
       <option name="RIGHT_MARGIN" value="100" />
       <indentOptions>

@@ -2,27 +2,58 @@ package com.sprint.monew.application.article;
 
 import com.sprint.monew.application.article.provided.ArticleUseCase;
 import com.sprint.monew.application.article.provided.dto.ArticleQuery;
+import com.sprint.monew.application.article.provided.dto.ArticleResult;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.article.entity.ArticleViewStatus;
+import com.sprint.monew.global.annotation.ApplicationService;
 import com.sprint.monew.global.pagination.PageResult;
 import com.sprint.monew.global.type.ArticleSourceType;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
-@Service
+@ApplicationService
 @RequiredArgsConstructor
 public class ArticleApplication implements ArticleUseCase {
 
+    private final IArticleService articleService;
+    private final IArticleViewStatusService articleViewStatusService;
+
     @Override
-    public PageResult<Article> findByQuery(ArticleQuery query) {
-        return null;
+    public PageResult<ArticleResult> findArticlePage(ArticleQuery query) {
+        // 여기서 ArticleResult 조립한다
+        // 1 - 기사 목록 call
+        PageResult<Article> articles = articleService.findPageByQuery(query);
+
+        // 2 - 기사 ID List 추출
+        List<UUID> articleIds = articles.content().stream().map(Article::getId).toList();
+
+        // 3 - 기사 ID, 요청자 ID로 요청자가 조회한 기사 ID Set 추출
+        Set<UUID> viewedArticleIds =
+                articleViewStatusService.findViewedArticleIds(query.requestId(), articleIds);
+
+        // 4 - ArticleResult List 조립
+        List<ArticleResult> content =
+                articles.content().stream()
+                        .map(
+                                article ->
+                                        ArticleResult.from(
+                                                article,
+                                                viewedArticleIds.contains(article.getId())))
+                        .toList();
+        return new PageResult<>(
+                content,
+                articles.nextCursor(),
+                articles.nextAfter(),
+                articles.size(),
+                articles.totalElements(),
+                articles.hasNext());
     }
 
     @Override
-    public Article findById(UUID articleId, UUID requestId) {
+    public ArticleResult findById(UUID articleId, UUID requestId) {
         return null;
     }
 

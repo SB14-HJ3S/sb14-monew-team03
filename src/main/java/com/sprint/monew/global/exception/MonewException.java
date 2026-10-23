@@ -10,8 +10,10 @@ import lombok.Getter;
  *
  * <pre>{@code
  * throw new MonewException(UserErrorType.USER_NOT_FOUND);
- * throw new MonewException(UserErrorType.USER_NOT_FOUND, Map.of("userId", userId)); // 응답 details에 추가 정보
- * throw new MonewException(ExternalErrorType.EXTERNAL_API_CALL_FAILED, e); // 외부 라이브러리 예외 e를 원인으로 담기
+ * // 응답 details에 추가 정보
+ * throw new MonewException(UserErrorType.USER_NOT_FOUND, Map.of("userId", userId));
+ * // 외부 라이브러리 예외 e를 원인으로 담기
+ * throw new MonewException(ExternalErrorType.EXTERNAL_API_CALL_FAILED, e);
  * }</pre>
  */
 @Getter

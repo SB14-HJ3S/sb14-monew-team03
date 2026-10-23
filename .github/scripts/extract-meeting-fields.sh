@@ -27,7 +27,8 @@ extract_heading() {
   '
 }
 
-NOTE="$(extract_heading "⚠️ 특이사항" | sed '/^[[:space:]]*$/d' | paste -sd' ' -)"
+# 칸 사이 구분선(---, #133)은 내용이 아니라서 뺀다
+NOTE="$(extract_heading "⚠️ 특이사항" | sed -E '/^[[:space:]]*$/d; /^[[:space:]]*-{3,}[[:space:]]*$/d' | paste -sd' ' -)"
 if [[ -z "$NOTE" ]]; then
   NOTE="$(printf '%s\n' "$CLEAN" | { grep -m1 -E '^특이사항[[:space:]]*[:：]' || true; } | sed -E 's/^특이사항[[:space:]]*[:：][[:space:]]*//')"
 fi
