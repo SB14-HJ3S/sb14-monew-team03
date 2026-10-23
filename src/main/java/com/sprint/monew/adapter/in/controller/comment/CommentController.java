@@ -4,8 +4,10 @@ import com.sprint.monew.adapter.in.controller.comment.dto.request.CommentUpdateR
 import com.sprint.monew.adapter.in.controller.comment.dto.response.CommentDto;
 import com.sprint.monew.adapter.in.controller.comment.dto.response.CommentLikeDto;
 import com.sprint.monew.application.comment.provided.CommentUseCase;
+import com.sprint.monew.application.comment.provided.dto.CommentLikeResult;
 import com.sprint.monew.application.comment.provided.dto.CommentResult;
 import com.sprint.monew.global.annotation.RequestId;
+import com.sprint.monew.global.context.RequestIdContext;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -38,18 +40,26 @@ public class CommentController {
         CommentResult result =
                 commentUseCase.changeContent(commentId, requestId, request.content());
         log.info("댓글 수정 완료: commentId={}", commentId);
-        return ResponseEntity.ok(CommentDto.create(result));
+        return ResponseEntity.ok(CommentDto.from(result));
     }
 
     @RequestId
     @PostMapping("/{commentId}/comment-likes")
     public ResponseEntity<CommentLikeDto> like(@PathVariable UUID commentId) {
-        return null;
+        UUID requestUserId = RequestIdContext.get();
+        log.info("댓글 좋아요 요청: commentId={}, requestUserId={}", commentId, requestUserId);
+        CommentLikeResult result = commentUseCase.like(commentId, requestUserId);
+        log.info("댓글 좋아요 완료: commentId={}, commentLikeId={}", commentId, result.id());
+        return ResponseEntity.ok(CommentLikeDto.from(result));
     }
 
     @RequestId
     @DeleteMapping("/{commentId}/comment-likes")
     public ResponseEntity<Void> unlike(@PathVariable UUID commentId) {
-        return null;
+        UUID requestUserId = RequestIdContext.get();
+        log.info("댓글 좋아요 취소 요청: commentId={}, requestUserId={}", commentId, requestUserId);
+        commentUseCase.unlike(commentId, requestUserId);
+        log.info("댓글 좋아요 취소 완료: commentId={}", commentId);
+        return ResponseEntity.ok().build();
     }
 }

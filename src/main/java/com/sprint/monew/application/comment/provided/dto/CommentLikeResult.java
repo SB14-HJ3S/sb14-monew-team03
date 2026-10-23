@@ -19,7 +19,7 @@ public record CommentLikeResult(
         Instant commentCreatedAt) {
 
     // 댓글·작성자·기사를 지연 로딩으로 읽으므로 트랜잭션 안에서 호출해야 한다
-    public static CommentLikeResult create(CommentLike commentLike) {
+    public static CommentLikeResult from(CommentLike commentLike) {
         Comment comment = commentLike.getComment();
         return new CommentLikeResult(
                 commentLike.getId(),

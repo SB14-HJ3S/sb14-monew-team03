@@ -14,7 +14,7 @@ public record CommentDto(
         boolean likedByMe, // 요청자의 좋아요 여부
         Instant createdAt) { // 작성된 날짜
 
-    public static CommentDto create(CommentResult result) {
+    public static CommentDto from(CommentResult result) {
         return new CommentDto(
                 result.id(),
                 result.articleId(),
