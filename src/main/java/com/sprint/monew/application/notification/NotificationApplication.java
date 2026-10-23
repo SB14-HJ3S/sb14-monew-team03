@@ -3,7 +3,6 @@ package com.sprint.monew.application.notification;
 import com.sprint.monew.application.notification.provided.NotificationUseCase;
 import com.sprint.monew.application.notification.provided.dto.NotificationQuery;
 import com.sprint.monew.application.notification.required.NotificationRepositoryPort;
-import com.sprint.monew.application.notification.required.SubscriberReader;
 import com.sprint.monew.domain.notification.entity.Notification;
 import com.sprint.monew.global.pagination.PageResult;
 import com.sprint.monew.global.type.ResourceType;
@@ -21,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class NotificationApplication implements NotificationUseCase {
 
     private final NotificationRepositoryPort notificationRepository;
-    private final SubscriberReader subscriberReader; // 구독자 목록조회 구현이 필요한 인터페이스
 
     @Override
     public PageResult<Notification> findByQuery(NotificationQuery query) {
