@@ -11,4 +11,9 @@ public interface NotificationUseCase {
     void markAllAsRead(UUID requestId);
 
     void markAsRead(UUID notificationId, UUID requestId);
+
+    void createArticleNotifications(UUID interestId, String interestName, int articleCount);
+
+    void createCommentLikeNotification(
+            UUID commentId, UUID authorId, UUID likerId, String likerNickname);
 }
