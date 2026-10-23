@@ -72,6 +72,27 @@ public record PageResult<T>(
                 content, nextCursor, nextAfter, content.size(), totalElements, hasNext);
     }
 
+    public static <T> PageResult<T> of(
+            List<T> fetched,
+            long totalElements,
+            PageQuery query,
+            Function<T, String> cursorExtractor,
+            Function<T, Instant> afterExtractor) {
+        boolean hasNext = fetched.size() > query.limit();
+        List<T> content = List.copyOf(hasNext ? fetched.subList(0, query.limit()) : fetched);
+        String nextCursor = null;
+        Instant nextAfter = null;
+
+        if (hasNext) {
+            T last = content.get(content.size() - 1);
+            nextCursor = cursorExtractor.apply(last);
+            nextAfter = afterExtractor.apply(last);
+        }
+
+        return new PageResult<>(
+                content, nextCursor, nextAfter, content.size(), totalElements, hasNext);
+    }
+
     public <R> PageResult<R> map(Function<T, R> mapper) {
         List<R> mappedContent = content.stream().map(mapper).toList();
 
