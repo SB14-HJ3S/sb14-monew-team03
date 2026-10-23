@@ -48,4 +48,9 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
     public boolean existsByEmail(String email) {
         return jpaRepository.existsByEmail(email);
     }
+
+    @Override
+    public List<User> findAllActiveByIds(List<UUID> ids) {
+        return jpaRepository.findAllByIdInAndDeletedAtIsNull(ids);
+    }
 }

@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.support.IntegrationTest;
+import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,5 +58,20 @@ class UserRepositoryAdapterTest {
         saved.softDelete();
 
         assertThat(userRepository.existsByEmail("left@monew.com")).isTrue();
+    }
+
+    @Test
+    @DisplayName("여러 id로 조회하면 탈퇴했거나 없는 사용자는 빼고 활성 사용자만 찾는다")
+    void givenActiveDeletedAndMissingIds_whenFindAllActiveByIds_thenOnlyActive() {
+        User first = userRepository.save(User.create("first@monew.com", "첫째", "password1!"));
+        User second = userRepository.save(User.create("second@monew.com", "둘째", "password1!"));
+        User deleted = userRepository.save(User.create("gone@monew.com", "탈퇴", "password1!"));
+        deleted.softDelete();
+
+        List<User> result =
+                userRepository.findAllActiveByIds(
+                        List.of(first.getId(), second.getId(), deleted.getId(), UUID.randomUUID()));
+
+        assertThat(result).containsExactlyInAnyOrder(first, second);
     }
 }
