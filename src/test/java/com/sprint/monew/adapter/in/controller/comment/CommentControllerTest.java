@@ -42,11 +42,11 @@ class CommentControllerTest {
     @MockitoBean private CommentUseCase commentUseCase;
 
     private final UUID commentId = UUID.randomUUID();
-    private final UUID requestId = UUID.randomUUID();
+    private final UUID requestUserId = UUID.randomUUID();
 
     private MockHttpServletRequestBuilder changeContentRequest(String content) throws Exception {
         return patch("/api/comments/{commentId}", commentId)
-                .header(USER_ID_HEADER, requestId)
+                .header(USER_ID_HEADER, requestUserId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(new CommentUpdateRequest(content)));
     }
@@ -63,19 +63,19 @@ class CommentControllerTest {
                     new CommentResult(
                             commentId,
                             articleId,
-                            requestId,
+                            requestUserId,
                             "작성자",
                             "수정 후",
                             3L,
                             true,
                             Instant.parse("2026-10-21T00:00:00Z"));
-            given(commentUseCase.changeContent(commentId, requestId, "수정 후")).willReturn(result);
+            given(commentUseCase.changeContent(commentId, "수정 후")).willReturn(result);
 
             mockMvc.perform(changeContentRequest("수정 후"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(commentId.toString()))
                     .andExpect(jsonPath("$.articleId").value(articleId.toString()))
-                    .andExpect(jsonPath("$.userId").value(requestId.toString()))
+                    .andExpect(jsonPath("$.userId").value(requestUserId.toString()))
                     .andExpect(jsonPath("$.userNickname").value("작성자"))
                     .andExpect(jsonPath("$.content").value("수정 후"))
                     .andExpect(jsonPath("$.likeCount").value(3))
@@ -120,7 +120,7 @@ class CommentControllerTest {
         @Test
         @DisplayName("작성자가 아니면 403과 COMMENT_NOT_OWNER를 응답한다")
         void notOwner() throws Exception {
-            given(commentUseCase.changeContent(any(), any(), any()))
+            given(commentUseCase.changeContent(any(), any()))
                     .willThrow(new MonewException(CommentErrorType.COMMENT_NOT_OWNER));
 
             mockMvc.perform(changeContentRequest("수정 후"))
@@ -131,7 +131,7 @@ class CommentControllerTest {
         @Test
         @DisplayName("없거나 삭제된 댓글이면 404와 COMMENT_NOT_FOUND를 응답한다")
         void notFound() throws Exception {
-            given(commentUseCase.changeContent(any(), any(), any()))
+            given(commentUseCase.changeContent(any(), any()))
                     .willThrow(new MonewException(CommentErrorType.COMMENT_NOT_FOUND));
 
             mockMvc.perform(changeContentRequest("수정 후"))
@@ -153,7 +153,7 @@ class CommentControllerTest {
             CommentLikeResult result =
                     new CommentLikeResult(
                             likeId,
-                            requestId,
+                            requestUserId,
                             Instant.parse("2026-10-23T01:00:00Z"),
                             commentId,
                             articleId,
@@ -162,14 +162,14 @@ class CommentControllerTest {
                             "댓글 내용",
                             1L,
                             Instant.parse("2026-10-22T00:00:00Z"));
-            given(commentUseCase.like(commentId, requestId)).willReturn(result);
+            given(commentUseCase.like(commentId)).willReturn(result);
 
             mockMvc.perform(
                             post("/api/comments/{commentId}/comment-likes", commentId)
-                                    .header(USER_ID_HEADER, requestId))
+                                    .header(USER_ID_HEADER, requestUserId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(likeId.toString()))
-                    .andExpect(jsonPath("$.likedBy").value(requestId.toString()))
+                    .andExpect(jsonPath("$.likedBy").value(requestUserId.toString()))
                     .andExpect(jsonPath("$.createdAt").value("2026-10-23T01:00:00Z"))
                     .andExpect(jsonPath("$.commentId").value(commentId.toString()))
                     .andExpect(jsonPath("$.articleId").value(articleId.toString()))
@@ -192,12 +192,12 @@ class CommentControllerTest {
         @Test
         @DisplayName("없거나 삭제된 댓글이면 404와 COMMENT_NOT_FOUND를 응답한다")
         void notFound() throws Exception {
-            given(commentUseCase.like(any(), any()))
+            given(commentUseCase.like(any()))
                     .willThrow(new MonewException(CommentErrorType.COMMENT_NOT_FOUND));
 
             mockMvc.perform(
                             post("/api/comments/{commentId}/comment-likes", commentId)
-                                    .header(USER_ID_HEADER, requestId))
+                                    .header(USER_ID_HEADER, requestUserId))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.code").value("COMMENT_NOT_FOUND"));
         }
@@ -205,12 +205,12 @@ class CommentControllerTest {
         @Test
         @DisplayName("이미 좋아요한 댓글이면 409와 COMMENT_LIKE_DUPLICATED를 응답한다")
         void duplicated() throws Exception {
-            given(commentUseCase.like(any(), any()))
+            given(commentUseCase.like(any()))
                     .willThrow(new MonewException(CommentErrorType.COMMENT_LIKE_DUPLICATED));
 
             mockMvc.perform(
                             post("/api/comments/{commentId}/comment-likes", commentId)
-                                    .header(USER_ID_HEADER, requestId))
+                                    .header(USER_ID_HEADER, requestUserId))
                     .andExpect(status().isConflict())
                     .andExpect(jsonPath("$.code").value("COMMENT_LIKE_DUPLICATED"));
         }
@@ -221,13 +221,13 @@ class CommentControllerTest {
     class Unlike {
 
         @Test
-        @DisplayName("정상 요청이면 200을 응답하고 요청자 ID로 좋아요 취소를 부른다")
+        @DisplayName("정상 요청이면 200을 응답하고 좋아요 취소를 부른다")
         void success() throws Exception {
             mockMvc.perform(
                             delete("/api/comments/{commentId}/comment-likes", commentId)
-                                    .header(USER_ID_HEADER, requestId))
+                                    .header(USER_ID_HEADER, requestUserId))
                     .andExpect(status().isOk());
-            verify(commentUseCase).unlike(commentId, requestId);
+            verify(commentUseCase).unlike(commentId);
         }
 
         @Test
@@ -244,11 +244,11 @@ class CommentControllerTest {
         void likeNotFound() throws Exception {
             willThrow(new MonewException(CommentErrorType.COMMENT_LIKE_NOT_FOUND))
                     .given(commentUseCase)
-                    .unlike(any(), any());
+                    .unlike(any());
 
             mockMvc.perform(
                             delete("/api/comments/{commentId}/comment-likes", commentId)
-                                    .header(USER_ID_HEADER, requestId))
+                                    .header(USER_ID_HEADER, requestUserId))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.code").value("COMMENT_LIKE_NOT_FOUND"));
         }
