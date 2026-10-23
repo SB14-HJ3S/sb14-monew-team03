@@ -21,4 +21,6 @@ public interface UserRepositoryPort {
     Optional<User> findActiveByEmail(String email); // 로그인용
 
     boolean existsByEmail(String email); // 회원가입 중복확인용 - 탈퇴 사용자의 이메일도 포함
+
+    List<User> findAllActiveByIds(List<UUID> ids);
 }
