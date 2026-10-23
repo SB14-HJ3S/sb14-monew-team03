@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class SubscriberReaderAdapter implements SubscriberReader {
 
+    // TODO: 관심사 담당이 실제 구독자 조회로 교체 예정
     @Override
     public List<UUID> findSubscriberIds(UUID interestId) {
         log.warn("SubscriberReader 임시 구현 호출: interestId={}", interestId);
