@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+// 프론트가 사용자ID를 헤더에 담아서 요청하면, 이 인터셉터가 헤더값을 UUID로 변환해서 RequestIdContext의 TheadLocal에 저장한다
 @Component
 public class RequestIdInterceptor implements HandlerInterceptor {
     private static final String REQUEST_ID = "MoNew-Request-User-ID";

@@ -6,6 +6,7 @@ import com.sprint.monew.application.article.provided.dto.ArticleResult;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.article.entity.ArticleViewStatus;
 import com.sprint.monew.global.annotation.ApplicationService;
+import com.sprint.monew.global.context.RequestIdContext;
 import com.sprint.monew.global.pagination.PageResult;
 import com.sprint.monew.global.type.ArticleSourceType;
 import java.time.LocalDateTime;
@@ -23,18 +24,13 @@ public class ArticleApplication implements ArticleUseCase {
 
     @Override
     public PageResult<ArticleResult> findArticlePage(ArticleQuery query) {
-        // 여기서 ArticleResult 조립한다
-        // 1 - 기사 목록 call
+        UUID requestUserId = RequestIdContext.get();
+
         PageResult<Article> articles = articleService.findPageByQuery(query);
-
-        // 2 - 기사 ID List 추출
         List<UUID> articleIds = articles.content().stream().map(Article::getId).toList();
-
-        // 3 - 기사 ID, 요청자 ID로 요청자가 조회한 기사 ID Set 추출
         Set<UUID> viewedArticleIds =
-                articleViewStatusService.findViewedArticleIds(query.requestId(), articleIds);
+                articleViewStatusService.findViewedArticleIds(requestUserId, articleIds);
 
-        // 4 - ArticleResult List 조립
         List<ArticleResult> content =
                 articles.content().stream()
                         .map(
@@ -53,8 +49,16 @@ public class ArticleApplication implements ArticleUseCase {
     }
 
     @Override
-    public ArticleResult findById(UUID articleId, UUID requestId) {
-        return null;
+    public ArticleResult findById(UUID articleId) {
+        UUID requestUserId = RequestIdContext.get();
+
+        Article article = articleService.findById(articleId);
+        boolean viewedByMe =
+                articleViewStatusService
+                        .findViewedArticleIds(requestUserId, List.of(articleId))
+                        .contains(articleId);
+
+        return ArticleResult.from(article, viewedByMe);
     }
 
     @Override
