@@ -51,11 +51,11 @@ public class Comment extends BaseSoftDeletableEntity {
     }
 
     // 본인이 작성한 댓글만 수정할 수 있다
-    public void changeContent(UUID requestId, String content) {
+    public void changeContent(UUID requestUserId, String content) {
         if (isDeleted()) {
             throw new MonewException(CommentErrorType.COMMENT_NOT_FOUND);
         }
-        if (!isAuthor(requestId)) {
+        if (!isAuthor(requestUserId)) {
             throw new MonewException(CommentErrorType.COMMENT_NOT_OWNER);
         }
         this.content = content;
@@ -63,16 +63,5 @@ public class Comment extends BaseSoftDeletableEntity {
 
     public boolean isAuthor(UUID userId) {
         return user.getId().equals(userId);
-    }
-
-    public void increaseLikeCount() {
-        this.likeCount++;
-    }
-
-    // 좋아요 수는 0 미만으로 내려가지 않는다
-    public void decreaseLikeCount() {
-        if (this.likeCount > 0) {
-            this.likeCount--;
-        }
     }
 }
