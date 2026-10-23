@@ -22,7 +22,7 @@ public class UserService implements IUserService {
     @Override
     public User getActiveUser(UUID userId) {
         return repository
-                .findActiveById(userId)
+                .findUser(userId)
                 .orElseThrow(
                         () ->
                                 new MonewException(
@@ -34,7 +34,7 @@ public class UserService implements IUserService {
         if (userIds.isEmpty()) {
             return List.of();
         }
-        return repository.findAllActiveByIds(userIds);
+        return repository.findUsers(userIds);
     }
 
     @Override
