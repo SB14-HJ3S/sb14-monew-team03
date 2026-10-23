@@ -7,7 +7,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Objects;
-import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -19,8 +18,7 @@ public record InterestQuery(
         @NotNull SortDirection direction,
         String cursor,
         Instant after,
-        @NotNull int limit,
-        @NotNull UUID requestId)
+        @NotNull int limit)
         implements SortedPageQuery<InterestQuery.SortOrder> {
     public static InterestQuery of(
             String keyword,
@@ -28,16 +26,14 @@ public record InterestQuery(
             SortDirection direction,
             String cursor,
             LocalDateTime after,
-            int limit,
-            UUID requestId) {
+            int limit) {
         return new InterestQuery(
                 keyword,
                 orderBy,
                 direction,
                 cursor,
                 Objects.nonNull(after) ? after.atZone(ZoneId.systemDefault()).toInstant() : null,
-                limit,
-                requestId);
+                limit);
     }
 
     @Getter

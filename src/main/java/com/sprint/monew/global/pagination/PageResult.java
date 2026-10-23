@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 
 public record PageResult<T>(
         List<T> content, // 페이지 내용
@@ -30,5 +31,11 @@ public record PageResult<T>(
                 size,
                 totalElements,
                 hasNext);
+    }
+
+    public <R> PageResult<R> map(Function<T, R> mapper) {
+        List<R> mappedContent = content.stream().map(mapper).toList();
+
+        return new PageResult<>(mappedContent, nextCursor, nextAfter, size, totalElements, hasNext);
     }
 }
