@@ -15,7 +15,7 @@ public interface CommentRepositoryPort {
 
     void deleteById(UUID id);
 
-    // 동시에 다룬 사람이 눌러도 숫자가 사라지지 않게 DB에서 +1 -1
+    // 동시에 다른 사람이 눌러도 숫자가 사라지지 않게 DB에서 +1 -1
     int increaseLikeCount(UUID commentId);
 
     int decreaseLikeCount(UUID commentId);

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -33,6 +34,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -158,10 +160,9 @@ class CommentApplicationTest {
         }
 
         @Test
-        @DisplayName("좋아요를 누른 사람이 취소하면 좋아요가 삭제되고 댓글 좋아요 수가 1 줄어든다")
+        @DisplayName("좋아요를 누른 사람이 취소하면 좋아요가 삭제되고 DB에서 댓글 좋아요 수를 1 줄인다")
         void success() {
             Comment comment = savedComment(mock(User.class), mock(Article.class));
-            comment.increaseLikeCount();
             CommentLike commentLike = CommentLike.create(mock(User.class), comment);
             given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
             given(commentLikeRepository.findByCommentIdAndUserId(commentId, requestUserId))
@@ -170,14 +171,13 @@ class CommentApplicationTest {
             commentApplication.unlike(commentId);
 
             verify(commentLikeRepository).delete(commentLike);
-            assertThat(comment.getLikeCount()).isZero();
+            verify(commentRepository).decreaseLikeCount(commentId);
         }
 
         @Test
         @DisplayName("좋아요를 누르지 않았으면 COMMENT_LIKE_NOT_FOUND 예외가 나고 좋아요 수는 그대로다")
         void notLiked() {
             Comment comment = savedComment(mock(User.class), mock(Article.class));
-            comment.increaseLikeCount();
             given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
             given(commentLikeRepository.findByCommentIdAndUserId(commentId, requestUserId))
                     .willReturn(Optional.empty());
@@ -186,7 +186,7 @@ class CommentApplicationTest {
                     .isInstanceOf(MonewException.class)
                     .extracting("errorType")
                     .isEqualTo(CommentErrorType.COMMENT_LIKE_NOT_FOUND);
-            assertThat(comment.getLikeCount()).isEqualTo(1L);
+            verify(commentRepository, never()).decreaseLikeCount(any());
             verify(commentLikeRepository, never()).delete(any());
         }
 
@@ -236,16 +236,20 @@ class CommentApplicationTest {
         }
 
         @Test
-        @DisplayName("좋아요하면 저장되고 좋아요 수가 1 늘며, 댓글 작성자 알림용 이벤트를 발행하고 결과를 돌려준다")
+        @DisplayName("좋아요하면 저장되고 알림용 이벤트를 발행한 뒤 DB에서 좋아요 수를 1 늘리고, 늘어난 좋아요 수가 담긴 결과를 돌려준다")
         void success() {
             User author = author();
             given(author.getNickname()).willReturn("작성자");
             Article article = mock(Article.class);
             given(article.getId()).willReturn(articleId);
             Comment comment = savedComment(author, article);
+            // 좋아요 수를 올린 뒤 다시 읽는 댓글 — DB에서 늘어난 좋아요 수(1)를 담고 있다
+            Comment likedComment = savedComment(author, article);
+            ReflectionTestUtils.setField(likedComment, "likeCount", 1L);
             User liker = liker();
             given(userUseCase.getActiveUser(requestUserId)).willReturn(liker);
-            given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
+            given(commentRepository.findById(commentId))
+                    .willReturn(Optional.of(comment), Optional.of(likedComment));
             given(commentLikeRepository.existsByCommentIdAndUserId(commentId, requestUserId))
                     .willReturn(false);
             given(commentLikeRepository.save(any(CommentLike.class)))
@@ -254,9 +258,11 @@ class CommentApplicationTest {
             CommentLikeResult result = commentApplication.like(commentId);
 
             verify(commentLikeRepository).save(any(CommentLike.class));
-            assertThat(comment.getLikeCount()).isEqualTo(1L);
-            verify(commentEventPublisher)
+            // 좋아요 수를 올리면 영속성 컨텍스트가 비워지므로 이벤트가 먼저다
+            InOrder inOrder = inOrder(commentEventPublisher, commentRepository);
+            inOrder.verify(commentEventPublisher)
                     .publish(new CommentLikedEvent(commentId, authorId, requestUserId, "좋아요한 사람"));
+            inOrder.verify(commentRepository).increaseLikeCount(commentId);
             assertThat(result)
                     .isEqualTo(
                             new CommentLikeResult(
@@ -285,7 +291,7 @@ class CommentApplicationTest {
                     .isInstanceOf(MonewException.class)
                     .extracting("errorType")
                     .isEqualTo(CommentErrorType.COMMENT_LIKE_DUPLICATED);
-            assertThat(comment.getLikeCount()).isZero();
+            verify(commentRepository, never()).increaseLikeCount(any());
             verify(commentLikeRepository, never()).save(any());
             verifyNoInteractions(commentEventPublisher);
         }
