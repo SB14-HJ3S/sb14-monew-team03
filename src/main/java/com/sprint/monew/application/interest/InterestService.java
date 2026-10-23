@@ -18,4 +18,6 @@ public interface InterestService {
     default List<UUID> findSubscriberIds(UUID interestId) {
         throw new UnsupportedOperationException("TODO: 관심사 담당 구현 예정");
     }
+
+    PageResult<Interest> findPageByQuery(InterestQuery query);
 }
