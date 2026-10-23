@@ -1,5 +1,6 @@
 package com.sprint.monew.adapter.in.controller.comment.dto.response;
 
+import com.sprint.monew.application.comment.provided.dto.CommentLikeResult;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -13,4 +14,9 @@ public record CommentLikeDto(
         String commentUserNickname, // 작성자 닉네임
         String commentContent, // 내용
         Long commentLikeCount, // 좋아요 수
-        Instant commentCreatedAt) {} // 작성된 날짜
+        Instant commentCreatedAt) { // 작성된 날짜
+
+    public static CommentLikeDto create(CommentLikeResult result) {
+        return null;
+    }
+}
