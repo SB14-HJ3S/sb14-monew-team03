@@ -1,11 +1,12 @@
 package com.sprint.monew.application.notification;
 
+import com.sprint.monew.application.interest.InterestService;
 import com.sprint.monew.application.notification.provided.NotificationUseCase;
 import com.sprint.monew.application.notification.provided.dto.NotificationQuery;
-import com.sprint.monew.application.notification.required.NotificationRepositoryPort;
+import com.sprint.monew.application.user.IUserService;
 import com.sprint.monew.domain.notification.entity.Notification;
+import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.pagination.PageResult;
-import com.sprint.monew.global.type.ResourceType;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,9 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class NotificationApplication implements NotificationUseCase {
 
-    private final NotificationRepositoryPort notificationRepository;
+    private final NotificationService notificationService;
+    private final InterestService interestService;
+    private final IUserService userService;
 
     @Override
     public PageResult<Notification> findByQuery(NotificationQuery query) {
@@ -35,23 +38,14 @@ public class NotificationApplication implements NotificationUseCase {
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void createArticleNotifications(UUID interestId, String interestName, int articleCount) {
-
-        String content = String.format("%s와 관련된 기사가 %d건 등록되었습니다.", interestName, articleCount);
-
-        List<Notification> notifications =
-                subscriberReader.findSubscriberIds(interestId).stream()
-                        .map(notificationRepository::getUserReference)
-                        .map(
-                                user ->
-                                        Notification.create(
-                                                user, ResourceType.INTEREST, interestId, content))
+        List<User> subscribers =
+                interestService.findSubscriberIds(interestId).stream()
+                        .map(userService::getActiveUser)
                         .toList();
 
-        if (notifications.isEmpty()) {
-            return;
-        }
-        notificationRepository.saveAll(notifications);
-        log.info("기사 알림 생성: interestId={}, 대상={}명", interestId, notifications.size());
+        notificationService.createArticleNotifications(
+                subscribers, interestId, interestName, articleCount);
+        log.info("기사 알림 생성: interestId={}, 대상={}명", interestId, subscribers.size());
     }
 
     @Override
