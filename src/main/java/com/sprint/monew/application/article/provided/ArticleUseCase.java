@@ -15,7 +15,7 @@ import java.util.UUID;
 public interface ArticleUseCase {
     PageResult<ArticleResult> findArticlePage(@NotNull @Valid ArticleQuery query);
 
-    ArticleResult findById(UUID articleId, UUID requestId);
+    ArticleResult findById(UUID articleId);
 
     List<ArticleSourceType> findSourceTypes();
 
