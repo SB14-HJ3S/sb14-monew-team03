@@ -30,6 +30,10 @@
 ### 인증 방식
 로그인 후 요청은 세션·토큰 없이 `Monew-Request-User-ID` 헤더로 사용자를 구분합니다(요구사항). 헤더는 Swagger에 `Monew-Request-User-ID`가 적힌 API에서만 받습니다.
 
+- 요청자 ID는 컨트롤러 메서드에 `@RequestId`를 붙이고, 필요한 곳에서 `RequestIdContext.get()`으로 꺼낸다(ADR #103). 변수 이름은 `requestUserId`
+- `RequestId`·`RequestIdContext`·`RequestIdInterceptor` 이름은 유지한다 (사용자 ID라는 건 변수 이름 `requestUserId`로 구분). 이름을 바꾸라고 제안하지 않는다
+- `get()` 뒤에 `null` 확인을 넣으라고 제안하지 않는다 (`@RequestId`가 있으면 항상 값이 있음). 대신 `@RequestId` 누락을 지적한다
+
 ## 팀 컨벤션
 
 **확정된 것:**
