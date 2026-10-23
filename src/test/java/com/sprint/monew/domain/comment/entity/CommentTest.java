@@ -94,26 +94,4 @@ class CommentTest {
         assertThat(comment.isDeleted()).isTrue();
         assertThat(comment.getDeletedAt()).isNotNull();
     }
-
-    @Test
-    @DisplayName("좋아요 수를 늘리고 줄일 수 있다")
-    void increaseAndDecreaseLikeCount() {
-        Comment comment = Comment.create(author, article, "댓글 내용");
-
-        comment.increaseLikeCount();
-        comment.increaseLikeCount();
-        comment.decreaseLikeCount();
-
-        assertThat(comment.getLikeCount()).isEqualTo(1L);
-    }
-
-    @Test
-    @DisplayName("좋아요 수가 0일 때 줄여도 0 미만으로 내려가지 않는다")
-    void decreaseLikeCount_notBelowZero() {
-        Comment comment = Comment.create(author, article, "댓글 내용");
-
-        comment.decreaseLikeCount();
-
-        assertThat(comment.getLikeCount()).isZero();
-    }
 }

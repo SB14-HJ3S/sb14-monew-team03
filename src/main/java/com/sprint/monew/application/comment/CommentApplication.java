@@ -56,8 +56,8 @@ public class CommentApplication implements CommentUseCase {
         }
 
         CommentLike commentLike = commentLikeRepository.save(CommentLike.create(user, comment));
-        comment.increaseLikeCount();
 
+        // +1 쿼리 뒤에는 댓글 정보를 못 읽을 수 있어서 알림 이벤트를 먼저 보낸다
         commentEventPublisher.publish(
                 new CommentLikedEvent(
                         comment.getId(),
@@ -65,14 +65,17 @@ public class CommentApplication implements CommentUseCase {
                         user.getId(),
                         user.getNickname()));
 
-        return CommentLikeResult.from(commentLike);
+        commentRepository.increaseLikeCount(commentId);
+
+        // 늘어난 좋아요 수를 응답에 넣으려고 댓글을 다시 읽는다
+        return CommentLikeResult.of(commentLike, getComment(commentId));
     }
 
     @Override
     @Transactional
     public void unlike(UUID commentId) {
         UUID requestUserId = RequestIdContext.get();
-        Comment comment = getActiveComment(commentId);
+        getActiveComment(commentId);
 
         CommentLike commentLike =
                 commentLikeRepository
@@ -81,7 +84,7 @@ public class CommentApplication implements CommentUseCase {
                                 () -> new MonewException(CommentErrorType.COMMENT_LIKE_NOT_FOUND));
 
         commentLikeRepository.delete(commentLike);
-        comment.decreaseLikeCount();
+        commentRepository.decreaseLikeCount(commentId);
     }
 
     @Override

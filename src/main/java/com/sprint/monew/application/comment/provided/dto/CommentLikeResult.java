@@ -19,8 +19,8 @@ public record CommentLikeResult(
         Instant commentCreatedAt) {
 
     // 댓글·작성자·기사를 지연 로딩으로 읽으므로 트랜잭션 안에서 호출해야 한다
-    public static CommentLikeResult from(CommentLike commentLike) {
-        Comment comment = commentLike.getComment();
+    // 좋아요 수를 DB에서 올려서, 최신 숫자가 담긴 댓글을 따로 받는다
+    public static CommentLikeResult of(CommentLike commentLike, Comment comment) {
         return new CommentLikeResult(
                 commentLike.getId(),
                 commentLike.getUser().getId(),
