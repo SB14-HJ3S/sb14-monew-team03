@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
@@ -76,10 +77,12 @@ class UserControllerTest {
         verifyNoInteractions(userUseCase);
     }
 
-    @Test
+    @ParameterizedTest(name = "\"{0}\"")
+    @ValueSource(strings = {"password1", "password1 ", "password1가"})
     @DisplayName("비밀번호에 특수문자가 없으면 400과 details.password를 응답하고 유스케이스를 부르지 않는다")
-    void givenPasswordWithoutSpecialChar_whenRegister_thenBadRequest() throws Exception {
-        mockMvc.perform(registerRequest("new@monew.com", "새사람", "password1"))
+    void givenPasswordWithoutSpecialChar_whenRegister_thenBadRequest(String password)
+            throws Exception {
+        mockMvc.perform(registerRequest("new@monew.com", "새사람", password))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
                 .andExpect(jsonPath("$.details.password").exists());
