@@ -15,5 +15,5 @@ public interface NotificationUseCase {
     void createArticleNotifications(UUID interestId, String interestName, int articleCount);
 
     void createCommentLikeNotification(
-            UUID commentId, UUID authorId, UUID likerId, String likerNickname);
+            UUID commentId, UUID commentUserId, UUID likedById, String likedByNickname);
 }

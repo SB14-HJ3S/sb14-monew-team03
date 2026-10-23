@@ -49,6 +49,16 @@ public class NotificationApplication implements NotificationUseCase {
     }
 
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void createCommentLikeNotification(
-            UUID commentId, UUID authorId, UUID likerId, String likerNickname) {}
+            UUID commentId, UUID commentUserId, UUID likedById, String likedByNickname) {
+
+        if (commentUserId.equals(likedById)) {
+            return;
+        }
+
+        User commentUser = userService.getActiveUser(commentUserId);
+        notificationService.createCommentLikeNotification(commentUser, commentId, likedByNickname);
+        log.info("좋아요 알림 생성: commentId={}, commentUserId={}", commentId, commentUserId);
+    }
 }

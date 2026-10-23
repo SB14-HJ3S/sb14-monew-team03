@@ -33,4 +33,13 @@ public class NotificationServiceImpl implements NotificationService {
         }
         notificationRepository.saveAll(notifications);
     }
+
+    @Override
+    public void createCommentLikeNotification(
+            User commentUser, UUID commentId, String likedByNickname) {
+        String content = String.format("%s님이 나의 댓글을 좋아합니다.", likedByNickname);
+
+        notificationRepository.save(
+                Notification.create(commentUser, ResourceType.COMMENT, commentId, content));
+    }
 }
