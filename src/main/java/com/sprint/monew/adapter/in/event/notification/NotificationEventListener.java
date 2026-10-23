@@ -5,6 +5,7 @@ import com.sprint.monew.application.notification.provided.NotificationUseCase;
 import com.sprint.monew.domain.comment.event.CommentLikedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -16,6 +17,7 @@ public class NotificationEventListener {
 
     private final NotificationUseCase notification;
 
+    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onArticlesSaved(ArticlesSavedEvent event) {
         try {
@@ -26,6 +28,7 @@ public class NotificationEventListener {
         }
     }
 
+    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onCommentLiked(CommentLikedEvent event) {
         try {
