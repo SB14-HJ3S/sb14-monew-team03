@@ -1,5 +1,6 @@
 package com.sprint.monew.adapter.out.interest;
 
+import com.sprint.monew.application.interest.provided.dto.InterestQuery;
 import com.sprint.monew.application.interest.required.InterestRepository;
 import com.sprint.monew.domain.interest.entity.Interest;
 import java.util.List;
@@ -19,5 +20,15 @@ public class InterestRepositoryAdapter implements InterestRepository {
     @Override
     public List<String> findAllNames() {
         return jpaRepository.findAllNames();
+    }
+
+    @Override
+    public List<Interest> findByQuery(InterestQuery query) {
+        return jpaRepository.findByQuery(query);
+    }
+
+    @Override
+    public long countByQuery(InterestQuery query) {
+        return jpaRepository.countByQuery(query);
     }
 }
