@@ -4,6 +4,7 @@ import com.sprint.monew.application.user.required.UserRepositoryPort;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.UserErrorType;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,14 @@ public class UserService implements IUserService {
                         () ->
                                 new MonewException(
                                         UserErrorType.USER_NOT_FOUND, Map.of("userId", userId)));
+    }
+
+    @Override
+    public List<User> getActiveUsers(List<UUID> userIds) {
+        if (userIds.isEmpty()) {
+            return List.of();
+        }
+        return repository.findAllActiveByIds(userIds);
     }
 
     @Override
