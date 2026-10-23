@@ -20,4 +20,6 @@ public interface ArticleRepositoryPort {
     List<Article> findByQuery(ArticleQuery query);
 
     long countByQuery(ArticleQuery query);
+
+    Optional<Article> findBySourceUrl(String sourceUrl);
 }

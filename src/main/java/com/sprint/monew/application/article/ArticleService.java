@@ -1,6 +1,7 @@
 package com.sprint.monew.application.article;
 
 import com.sprint.monew.application.article.provided.dto.ArticleQuery;
+import com.sprint.monew.application.article.provided.dto.CollectedArticle;
 import com.sprint.monew.application.article.required.ArticleRepositoryPort;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.global.exception.MonewException;
@@ -9,6 +10,7 @@ import com.sprint.monew.global.pagination.PageResult;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -52,6 +54,31 @@ public class ArticleService implements IArticleService {
 
         return new PageResult<>(
                 content, nextCursor, nextAfter, content.size(), numArticles, hasNext);
+    }
+
+    @Override
+    public Optional<Article> saveCollectedArticle(CollectedArticle collectedArticle) {
+
+        Optional<Article> existing = repository.findBySourceUrl(collectedArticle.sourceUrl());
+        if (existing.isPresent()) { // 이미 수집했던 기사
+            Article article = existing.get();
+
+            if (article.isDeleted()) { // 논리 삭제 했었던 기사
+                return Optional.empty();
+            }
+
+            return Optional.of(article);
+        }
+
+        Article article =
+                Article.create(
+                        collectedArticle.source(),
+                        collectedArticle.sourceUrl(),
+                        collectedArticle.title(),
+                        collectedArticle.publishedAt(),
+                        collectedArticle.summary());
+
+        return Optional.of(repository.save(article));
     }
 
     private String getCursorValue(Article article, ArticleQuery.SortOrder sortField) {

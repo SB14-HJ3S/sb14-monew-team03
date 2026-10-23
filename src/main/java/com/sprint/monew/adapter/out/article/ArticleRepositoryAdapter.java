@@ -44,4 +44,9 @@ public class ArticleRepositoryAdapter implements ArticleRepositoryPort {
     public long countByQuery(ArticleQuery query) {
         return jpaRepository.countByQuery(query);
     }
+
+    @Override
+    public Optional<Article> findBySourceUrl(String sourceUrl) {
+        return jpaRepository.findBySourceUrl(sourceUrl);
+    }
 }
