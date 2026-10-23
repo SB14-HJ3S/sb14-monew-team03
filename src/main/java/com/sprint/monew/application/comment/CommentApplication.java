@@ -63,7 +63,7 @@ public class CommentApplication implements CommentUseCase {
                         user.getId(),
                         user.getNickname()));
 
-        return CommentLikeResult.create(commentLike);
+        return CommentLikeResult.from(commentLike);
     }
 
     @Override
@@ -90,7 +90,7 @@ public class CommentApplication implements CommentUseCase {
 
         boolean likedByMe = commentLikeRepository.existsByCommentIdAndUserId(commentId, requestId);
 
-        return CommentResult.create(comment, likedByMe);
+        return CommentResult.of(comment, likedByMe);
     }
 
     @Override

@@ -16,7 +16,17 @@ public record CommentLikeDto(
         Long commentLikeCount, // 좋아요 수
         Instant commentCreatedAt) { // 작성된 날짜
 
-    public static CommentLikeDto create(CommentLikeResult result) {
-        return null;
+    public static CommentLikeDto from(CommentLikeResult result) {
+        return new CommentLikeDto(
+                result.id(),
+                result.likedBy(),
+                result.createdAt(),
+                result.commentId(),
+                result.articleId(),
+                result.commentUserId(),
+                result.commentUserNickname(),
+                result.commentContent(),
+                result.commentLikeCount(),
+                result.commentCreatedAt());
     }
 }

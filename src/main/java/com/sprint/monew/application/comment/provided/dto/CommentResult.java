@@ -16,7 +16,7 @@ public record CommentResult(
         Instant createdAt) {
 
     // 작성자·기사를 지연 로딩으로 읽으므로 트랜잭션 안에서 호출해야 한다
-    public static CommentResult create(Comment comment, boolean likedByMe) {
+    public static CommentResult of(Comment comment, boolean likedByMe) {
         return new CommentResult(
                 comment.getId(),
                 comment.getArticle().getId(),
