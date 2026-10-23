@@ -1,6 +1,7 @@
 package com.sprint.monew.global.web;
 
 import com.sprint.monew.global.annotation.RequestId;
+import com.sprint.monew.global.constant.MonewHeaders;
 import com.sprint.monew.global.context.RequestIdContext;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.CommonErrorType;
@@ -15,7 +16,6 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 @Component
 public class RequestIdInterceptor implements HandlerInterceptor {
-    private static final String REQUEST_ID = "MoNew-Request-User-ID";
 
     @Override
     public boolean preHandle(
@@ -29,7 +29,7 @@ public class RequestIdInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        String requestHeader = request.getHeader(REQUEST_ID);
+        String requestHeader = request.getHeader(MonewHeaders.REQUEST_USER_ID);
         try {
             UUID requestId = UUID.fromString(requestHeader);
             RequestIdContext.set(requestId);
@@ -37,7 +37,7 @@ public class RequestIdInterceptor implements HandlerInterceptor {
         } catch (IllegalArgumentException | NullPointerException e) {
             throw new MonewException(
                     CommonErrorType.INVALID_REQUEST,
-                    Collections.singletonMap(REQUEST_ID, requestHeader));
+                    Collections.singletonMap(MonewHeaders.REQUEST_USER_ID, requestHeader));
         }
     }
 
