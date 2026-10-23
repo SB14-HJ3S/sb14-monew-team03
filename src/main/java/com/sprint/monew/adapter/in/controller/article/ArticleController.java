@@ -4,9 +4,7 @@ import com.sprint.monew.adapter.in.controller.article.dto.response.ArticleDto;
 import com.sprint.monew.application.article.provided.ArticleUseCase;
 import com.sprint.monew.application.article.provided.dto.ArticleQuery;
 import com.sprint.monew.application.article.provided.dto.ArticleResult;
-import com.sprint.monew.global.annotation.RequestId;
 import com.sprint.monew.global.annotation.RestWebAdapter;
-import com.sprint.monew.global.context.RequestIdContext;
 import com.sprint.monew.global.pagination.PageResult;
 import com.sprint.monew.global.pagination.SortDirection;
 import com.sprint.monew.global.type.ArticleSourceType;
@@ -18,6 +16,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @RestWebAdapter(path = "/api/articles")
@@ -26,7 +25,6 @@ public class ArticleController {
 
     private final ArticleUseCase articleUseCase;
 
-    @RequestId
     @GetMapping
     public PageResult<ArticleDto> findArticlePagesByQuery(
             @RequestParam(name = "keyword", required = false) String keyword,
@@ -44,8 +42,8 @@ public class ArticleController {
             @RequestParam(name = "after", required = false)
                     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
                     Instant after,
-            @RequestParam(name = "limit") @Min(1) int limit) {
-        UUID requestUserId = RequestIdContext.get();
+            @RequestParam(name = "limit") @Min(1) int limit,
+            @RequestHeader("Monew-Request-User-ID") UUID requestId) {
 
         ArticleQuery query =
                 new ArticleQuery(
@@ -59,7 +57,7 @@ public class ArticleController {
                         cursor,
                         after,
                         limit,
-                        requestUserId);
+                        requestId);
 
         PageResult<ArticleResult> result = articleUseCase.findArticlePage(query);
 

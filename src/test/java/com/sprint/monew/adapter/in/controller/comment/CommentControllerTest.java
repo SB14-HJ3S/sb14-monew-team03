@@ -11,7 +11,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.monew.adapter.in.controller.comment.dto.request.CommentUpdateRequest;
 import com.sprint.monew.application.comment.provided.CommentUseCase;
 import com.sprint.monew.application.comment.provided.dto.CommentResult;
-import com.sprint.monew.global.constant.MonewHeaders;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.CommentErrorType;
 import java.time.Instant;
@@ -29,6 +28,8 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 @WebMvcTest(CommentController.class)
 class CommentControllerTest {
 
+    private static final String USER_ID_HEADER = "Monew-Request-User-ID";
+
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
 
@@ -40,7 +41,7 @@ class CommentControllerTest {
 
     private MockHttpServletRequestBuilder changeContentRequest(String content) throws Exception {
         return patch("/api/comments/{commentId}", commentId)
-                .header(MonewHeaders.REQUEST_USER_ID, requestId)
+                .header(USER_ID_HEADER, requestId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(new CommentUpdateRequest(content)));
     }
