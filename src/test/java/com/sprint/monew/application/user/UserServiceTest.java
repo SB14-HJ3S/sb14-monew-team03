@@ -11,6 +11,7 @@ import com.sprint.monew.application.user.required.UserRepositoryPort;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.UserErrorType;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -79,5 +80,29 @@ class UserServiceTest {
                 .extracting("errorType")
                 .isEqualTo(UserErrorType.USER_EMAIL_DUPLICATED);
         verify(repository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("여러 명을 한 번에 조회하면 활성 사용자 목록을 돌려준다")
+    void givenUserIds_whenGetActiveUsers_thenReturnActiveUsers() {
+        List<UUID> userIds = List.of(UUID.randomUUID(), UUID.randomUUID());
+        List<User> users =
+                List.of(
+                        User.create("a@monew.com", "에이", "암호화된비밀번호"),
+                        User.create("b@monew.com", "비", "암호화된비밀번호"));
+        given(repository.findAllActiveByIds(userIds)).willReturn(users);
+
+        List<User> result = userService.getActiveUsers(userIds);
+
+        assertThat(result).isEqualTo(users);
+    }
+
+    @Test
+    @DisplayName("빈 목록으로 조회하면 DB를 조회하지 않고 빈 목록을 돌려준다")
+    void givenEmptyIds_whenGetActiveUsers_thenReturnEmptyWithoutQuery() {
+        List<User> result = userService.getActiveUsers(List.of());
+
+        assertThat(result).isEmpty();
+        verify(repository, never()).findAllActiveByIds(any());
     }
 }
