@@ -14,7 +14,9 @@ public class ArticleViewStatusService implements IArticleViewStatusService {
     private final ArticleViewStatusRepositoryPort repository;
 
     public Set<UUID> findViewedArticleIds(UUID userId, Collection<UUID> articleIds) {
-        if (articleIds.isEmpty()) return Set.of();
+        if (articleIds.isEmpty()) {
+            return Set.of();
+        }
         return repository.findViewedArticleIds(userId, articleIds);
     }
 }
