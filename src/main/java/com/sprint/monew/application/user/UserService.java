@@ -31,7 +31,10 @@ public class UserService implements IUserService {
 
     @Override
     public List<User> getActiveUsers(List<UUID> userIds) {
-        return List.of();
+        if (userIds.isEmpty()) {
+            return List.of();
+        }
+        return repository.findAllActiveByIds(userIds);
     }
 
     @Override
