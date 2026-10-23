@@ -20,12 +20,15 @@ import com.sprint.monew.domain.comment.entity.Comment;
 import com.sprint.monew.domain.comment.entity.CommentLike;
 import com.sprint.monew.domain.comment.event.CommentLikedEvent;
 import com.sprint.monew.domain.user.entity.User;
+import com.sprint.monew.global.context.RequestIdContext;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.CommentErrorType;
 import com.sprint.monew.global.exception.errortype.UserErrorType;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -49,6 +52,12 @@ class CommentApplicationTest {
     private final UUID articleId = UUID.randomUUID();
     private final Instant createdAt = Instant.parse("2026-10-21T00:00:00Z");
 
+    // 단위 테스트에선 인터셉터가 안 돌아서 요청자 ID를 직접 넣는다 — 다른 테스트에 남지 않게 지운다
+    @AfterEach
+    void clearRequestUserId() {
+        RequestIdContext.clear();
+    }
+
     // 단위 테스트에선 저장을 안 해서 id·createdAt이 null — 작성자는 mock으로, 댓글 id·생성일은 직접 넣는다
     private Comment savedComment(User author, Article article) {
         Comment comment = Comment.create(author, article, "수정 전");
@@ -67,6 +76,11 @@ class CommentApplicationTest {
     @DisplayName("댓글 수정")
     class ChangeContent {
 
+        @BeforeEach
+        void setRequestUserId() {
+            RequestIdContext.set(authorId);
+        }
+
         @Test
         @DisplayName("작성자가 수정하면 내용이 바뀌고, 작성자 닉네임과 요청자 좋아요 여부가 담긴 결과를 돌려준다")
         void byAuthor() {
@@ -79,7 +93,7 @@ class CommentApplicationTest {
             given(commentLikeRepository.existsByCommentIdAndUserId(commentId, authorId))
                     .willReturn(true);
 
-            CommentResult result = commentApplication.changeContent(commentId, authorId, "수정 후");
+            CommentResult result = commentApplication.changeContent(commentId, "수정 후");
 
             assertThat(comment.getContent()).isEqualTo("수정 후");
             assertThat(result)
@@ -94,11 +108,9 @@ class CommentApplicationTest {
         void byNotAuthor() {
             Comment comment = savedComment(author(), mock(Article.class));
             given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
+            RequestIdContext.set(UUID.randomUUID());
 
-            assertThatThrownBy(
-                            () ->
-                                    commentApplication.changeContent(
-                                            commentId, UUID.randomUUID(), "수정 후"))
+            assertThatThrownBy(() -> commentApplication.changeContent(commentId, "수정 후"))
                     .isInstanceOf(MonewException.class)
                     .extracting("errorType")
                     .isEqualTo(CommentErrorType.COMMENT_NOT_OWNER);
@@ -113,7 +125,7 @@ class CommentApplicationTest {
             comment.softDelete();
             given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
 
-            assertThatThrownBy(() -> commentApplication.changeContent(commentId, authorId, "수정 후"))
+            assertThatThrownBy(() -> commentApplication.changeContent(commentId, "수정 후"))
                     .isInstanceOf(MonewException.class)
                     .extracting("errorType")
                     .isEqualTo(CommentErrorType.COMMENT_NOT_FOUND);
@@ -126,7 +138,7 @@ class CommentApplicationTest {
         void notExistComment() {
             given(commentRepository.findById(commentId)).willReturn(Optional.empty());
 
-            assertThatThrownBy(() -> commentApplication.changeContent(commentId, authorId, "수정 후"))
+            assertThatThrownBy(() -> commentApplication.changeContent(commentId, "수정 후"))
                     .isInstanceOf(MonewException.class)
                     .extracting("errorType")
                     .isEqualTo(CommentErrorType.COMMENT_NOT_FOUND);
@@ -138,7 +150,12 @@ class CommentApplicationTest {
     @DisplayName("댓글 좋아요 취소")
     class Unlike {
 
-        private final UUID requestId = UUID.randomUUID();
+        private final UUID requestUserId = UUID.randomUUID();
+
+        @BeforeEach
+        void setRequestUserId() {
+            RequestIdContext.set(requestUserId);
+        }
 
         @Test
         @DisplayName("좋아요를 누른 사람이 취소하면 좋아요가 삭제되고 댓글 좋아요 수가 1 줄어든다")
@@ -147,10 +164,10 @@ class CommentApplicationTest {
             comment.increaseLikeCount();
             CommentLike commentLike = CommentLike.create(mock(User.class), comment);
             given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
-            given(commentLikeRepository.findByCommentIdAndUserId(commentId, requestId))
+            given(commentLikeRepository.findByCommentIdAndUserId(commentId, requestUserId))
                     .willReturn(Optional.of(commentLike));
 
-            commentApplication.unlike(commentId, requestId);
+            commentApplication.unlike(commentId);
 
             verify(commentLikeRepository).delete(commentLike);
             assertThat(comment.getLikeCount()).isZero();
@@ -162,10 +179,10 @@ class CommentApplicationTest {
             Comment comment = savedComment(mock(User.class), mock(Article.class));
             comment.increaseLikeCount();
             given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
-            given(commentLikeRepository.findByCommentIdAndUserId(commentId, requestId))
+            given(commentLikeRepository.findByCommentIdAndUserId(commentId, requestUserId))
                     .willReturn(Optional.empty());
 
-            assertThatThrownBy(() -> commentApplication.unlike(commentId, requestId))
+            assertThatThrownBy(() -> commentApplication.unlike(commentId))
                     .isInstanceOf(MonewException.class)
                     .extracting("errorType")
                     .isEqualTo(CommentErrorType.COMMENT_LIKE_NOT_FOUND);
@@ -180,7 +197,7 @@ class CommentApplicationTest {
             comment.softDelete();
             given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
 
-            assertThatThrownBy(() -> commentApplication.unlike(commentId, requestId))
+            assertThatThrownBy(() -> commentApplication.unlike(commentId))
                     .isInstanceOf(MonewException.class)
                     .extracting("errorType")
                     .isEqualTo(CommentErrorType.COMMENT_NOT_FOUND);
@@ -192,7 +209,7 @@ class CommentApplicationTest {
         void notExistComment() {
             given(commentRepository.findById(commentId)).willReturn(Optional.empty());
 
-            assertThatThrownBy(() -> commentApplication.unlike(commentId, requestId))
+            assertThatThrownBy(() -> commentApplication.unlike(commentId))
                     .isInstanceOf(MonewException.class)
                     .extracting("errorType")
                     .isEqualTo(CommentErrorType.COMMENT_NOT_FOUND);
@@ -204,11 +221,16 @@ class CommentApplicationTest {
     @DisplayName("댓글 좋아요")
     class Like {
 
-        private final UUID requestId = UUID.randomUUID();
+        private final UUID requestUserId = UUID.randomUUID();
+
+        @BeforeEach
+        void setRequestUserId() {
+            RequestIdContext.set(requestUserId);
+        }
 
         private User liker() {
             User liker = mock(User.class);
-            given(liker.getId()).willReturn(requestId);
+            given(liker.getId()).willReturn(requestUserId);
             given(liker.getNickname()).willReturn("좋아요한 사람");
             return liker;
         }
@@ -222,36 +244,44 @@ class CommentApplicationTest {
             given(article.getId()).willReturn(articleId);
             Comment comment = savedComment(author, article);
             User liker = liker();
-            given(userUseCase.getActiveUser(requestId)).willReturn(liker);
+            given(userUseCase.getActiveUser(requestUserId)).willReturn(liker);
             given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
-            given(commentLikeRepository.existsByCommentIdAndUserId(commentId, requestId))
+            given(commentLikeRepository.existsByCommentIdAndUserId(commentId, requestUserId))
                     .willReturn(false);
             given(commentLikeRepository.save(any(CommentLike.class)))
                     .willAnswer(invocation -> invocation.getArgument(0));
 
-            CommentLikeResult result = commentApplication.like(commentId, requestId);
+            CommentLikeResult result = commentApplication.like(commentId);
 
             verify(commentLikeRepository).save(any(CommentLike.class));
             assertThat(comment.getLikeCount()).isEqualTo(1L);
             verify(commentEventPublisher)
-                    .publish(new CommentLikedEvent(commentId, authorId, requestId, "좋아요한 사람"));
+                    .publish(new CommentLikedEvent(commentId, authorId, requestUserId, "좋아요한 사람"));
             assertThat(result)
                     .isEqualTo(
                             new CommentLikeResult(
-                                    null, requestId, null, commentId, articleId, authorId, "작성자",
-                                    "수정 전", 1L, createdAt));
+                                    null,
+                                    requestUserId,
+                                    null,
+                                    commentId,
+                                    articleId,
+                                    authorId,
+                                    "작성자",
+                                    "수정 전",
+                                    1L,
+                                    createdAt));
         }
 
         @Test
         @DisplayName("이미 좋아요한 댓글이면 COMMENT_LIKE_DUPLICATED 예외가 나고 저장·알림이 없다")
         void duplicated() {
             Comment comment = savedComment(mock(User.class), mock(Article.class));
-            given(userUseCase.getActiveUser(requestId)).willReturn(mock(User.class));
+            given(userUseCase.getActiveUser(requestUserId)).willReturn(mock(User.class));
             given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
-            given(commentLikeRepository.existsByCommentIdAndUserId(commentId, requestId))
+            given(commentLikeRepository.existsByCommentIdAndUserId(commentId, requestUserId))
                     .willReturn(true);
 
-            assertThatThrownBy(() -> commentApplication.like(commentId, requestId))
+            assertThatThrownBy(() -> commentApplication.like(commentId))
                     .isInstanceOf(MonewException.class)
                     .extracting("errorType")
                     .isEqualTo(CommentErrorType.COMMENT_LIKE_DUPLICATED);
@@ -263,10 +293,10 @@ class CommentApplicationTest {
         @Test
         @DisplayName("없거나 탈퇴한 사용자면 USER_NOT_FOUND 예외가 나고 댓글·좋아요를 건드리지 않는다")
         void notExistUser() {
-            given(userUseCase.getActiveUser(requestId))
+            given(userUseCase.getActiveUser(requestUserId))
                     .willThrow(new MonewException(UserErrorType.USER_NOT_FOUND));
 
-            assertThatThrownBy(() -> commentApplication.like(commentId, requestId))
+            assertThatThrownBy(() -> commentApplication.like(commentId))
                     .isInstanceOf(MonewException.class)
                     .extracting("errorType")
                     .isEqualTo(UserErrorType.USER_NOT_FOUND);
@@ -280,7 +310,7 @@ class CommentApplicationTest {
             comment.softDelete();
             given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
 
-            assertThatThrownBy(() -> commentApplication.like(commentId, requestId))
+            assertThatThrownBy(() -> commentApplication.like(commentId))
                     .isInstanceOf(MonewException.class)
                     .extracting("errorType")
                     .isEqualTo(CommentErrorType.COMMENT_NOT_FOUND);
@@ -292,7 +322,7 @@ class CommentApplicationTest {
         void notExistComment() {
             given(commentRepository.findById(commentId)).willReturn(Optional.empty());
 
-            assertThatThrownBy(() -> commentApplication.like(commentId, requestId))
+            assertThatThrownBy(() -> commentApplication.like(commentId))
                     .isInstanceOf(MonewException.class)
                     .extracting("errorType")
                     .isEqualTo(CommentErrorType.COMMENT_NOT_FOUND);

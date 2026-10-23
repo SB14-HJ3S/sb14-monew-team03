@@ -14,11 +14,11 @@ public interface CommentUseCase {
 
     Comment findById(UUID commentId);
 
-    CommentLikeResult like(UUID commentId, UUID requestId);
+    CommentLikeResult like(UUID commentId);
 
-    void unlike(UUID commentId, UUID requestId);
+    void unlike(UUID commentId);
 
-    CommentResult changeContent(UUID commentId, UUID requestId, String content);
+    CommentResult changeContent(UUID commentId, String content);
 
     void softDeleteComment(UUID commentId);
 

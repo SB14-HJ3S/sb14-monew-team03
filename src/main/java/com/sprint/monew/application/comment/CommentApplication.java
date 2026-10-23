@@ -12,6 +12,7 @@ import com.sprint.monew.domain.comment.entity.Comment;
 import com.sprint.monew.domain.comment.entity.CommentLike;
 import com.sprint.monew.domain.comment.event.CommentLikedEvent;
 import com.sprint.monew.domain.user.entity.User;
+import com.sprint.monew.global.context.RequestIdContext;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.CommentErrorType;
 import com.sprint.monew.global.pagination.PageResult;
@@ -46,10 +47,11 @@ public class CommentApplication implements CommentUseCase {
 
     @Override
     @Transactional
-    public CommentLikeResult like(UUID commentId, UUID requestId) {
-        User user = userUseCase.getActiveUser(requestId);
+    public CommentLikeResult like(UUID commentId) {
+        UUID requestUserId = RequestIdContext.get();
+        User user = userUseCase.getActiveUser(requestUserId);
         Comment comment = getActiveComment(commentId);
-        if (commentLikeRepository.existsByCommentIdAndUserId(commentId, requestId)) {
+        if (commentLikeRepository.existsByCommentIdAndUserId(commentId, requestUserId)) {
             throw new MonewException(CommentErrorType.COMMENT_LIKE_DUPLICATED);
         }
 
@@ -68,12 +70,13 @@ public class CommentApplication implements CommentUseCase {
 
     @Override
     @Transactional
-    public void unlike(UUID commentId, UUID requestId) {
+    public void unlike(UUID commentId) {
+        UUID requestUserId = RequestIdContext.get();
         Comment comment = getActiveComment(commentId);
 
         CommentLike commentLike =
                 commentLikeRepository
-                        .findByCommentIdAndUserId(commentId, requestId)
+                        .findByCommentIdAndUserId(commentId, requestUserId)
                         .orElseThrow(
                                 () -> new MonewException(CommentErrorType.COMMENT_LIKE_NOT_FOUND));
 
@@ -83,12 +86,14 @@ public class CommentApplication implements CommentUseCase {
 
     @Override
     @Transactional
-    public CommentResult changeContent(UUID commentId, UUID requestId, String content) {
+    public CommentResult changeContent(UUID commentId, String content) {
+        UUID requestUserId = RequestIdContext.get();
         Comment comment = getComment(commentId);
 
-        comment.changeContent(requestId, content);
+        comment.changeContent(requestUserId, content);
 
-        boolean likedByMe = commentLikeRepository.existsByCommentIdAndUserId(commentId, requestId);
+        boolean likedByMe =
+                commentLikeRepository.existsByCommentIdAndUserId(commentId, requestUserId);
 
         return CommentResult.of(comment, likedByMe);
     }
