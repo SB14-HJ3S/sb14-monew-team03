@@ -33,4 +33,14 @@ public class CommentRepositoryAdapter implements CommentRepositoryPort {
     public void deleteById(UUID id) {
         jpaRepository.deleteById(id);
     }
+
+    @Override
+    public int increaseLikeCount(UUID commentId) {
+        return 0;
+    }
+
+    @Override
+    public int decreaseLikeCount(UUID commentId) {
+        return 0;
+    }
 }
