@@ -46,4 +46,9 @@ public class UserService implements IUserService {
         String encodedPassword = passwordEncoder.encode(password);
         return repository.save(User.create(email, nickname, encodedPassword));
     }
+
+    @Override
+    public User login(String email, String password) {
+        return null;
+    }
 }
