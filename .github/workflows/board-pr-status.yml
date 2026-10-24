@@ -1,0 +1,126 @@
+name: Board PR Status
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review, converted_to_draft, closed]
+  issues:
+    types: [closed]
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: read
+
+concurrency:
+  group: board-pr-status-${{ github.event.pull_request.number || github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  move:
+    if: github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: 보드 상태 옮기기
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        env:
+          PROJECTS_PAT: ${{ secrets.PROJECTS_PAT }}
+        with:
+          script: |
+            const PROJECT_ID = 'PVT_kwDOE8RtFM4BkpC5';
+            const STATUS_FIELD_ID = 'PVTSSF_lADOE8RtFM4BkpC5zhjY7W8';
+            const STATUS = {
+              inProgress: { id: 'a9b01166', name: 'In progress (진행중)' },
+              review: { id: 'db52805d', name: 'PR (코드 리뷰 중)' },
+              closed: { id: '41787ab0', name: 'Closed (취소)' },
+            };
+
+            if (!process.env.PROJECTS_PAT) {
+              core.warning('PROJECTS_PAT이 없어 보드 상태를 옮기지 않습니다.');
+              return;
+            }
+            const board = getOctokit(process.env.PROJECTS_PAT);
+
+            const setStatus = async (contentId, status, label) => {
+              const added = await board.graphql(
+                `mutation($project: ID!, $content: ID!) {
+                  addProjectV2ItemById(input: { projectId: $project, contentId: $content }) { item { id } }
+                }`,
+                { project: PROJECT_ID, content: contentId },
+              );
+              const itemId = added.addProjectV2ItemById.item.id;
+              await board.graphql(
+                `mutation($project: ID!, $item: ID!, $field: ID!, $option: String!) {
+                  updateProjectV2ItemFieldValue(input: {
+                    projectId: $project, itemId: $item, fieldId: $field,
+                    value: { singleSelectOptionId: $option }
+                  }) { projectV2Item { id } }
+                }`,
+                { project: PROJECT_ID, item: itemId, field: STATUS_FIELD_ID, option: status.id },
+              );
+              core.info(`${label} → ${status.name}`);
+            };
+
+            if (context.eventName === 'issues') {
+              const issue = context.payload.issue;
+              if (issue.pull_request || issue.state_reason !== 'not_planned') return;
+              await setStatus(issue.node_id, STATUS.closed, `이슈 #${issue.number}`);
+              return;
+            }
+
+            const pr = context.payload.pull_request;
+            const action = context.payload.action;
+            if (action === 'closed' && pr.merged) return;
+
+            let prStatus;
+            let issueStatus;
+            if (action === 'closed') {
+              prStatus = STATUS.closed;
+              issueStatus = STATUS.inProgress;
+            } else if (pr.draft) {
+              prStatus = STATUS.inProgress;
+              issueStatus = STATUS.inProgress;
+            } else {
+              prStatus = STATUS.review;
+              issueStatus = STATUS.review;
+            }
+
+            await setStatus(pr.node_id, prStatus, `PR #${pr.number}`);
+
+            const result = await github.graphql(
+              `query($owner: String!, $repo: String!, $number: Int!) {
+                repository(owner: $owner, name: $repo) {
+                  pullRequest(number: $number) {
+                    closingIssuesReferences(first: 10) { nodes { number id state } }
+                  }
+                }
+              }`,
+              { owner: context.repo.owner, repo: context.repo.repo, number: pr.number },
+            );
+            const issues = new Map(
+              result.repository.pullRequest.closingIssuesReferences.nodes.map((i) => [i.number, i]),
+            );
+
+            const branchMatch = pr.head.ref.match(/^[a-z]+\/(\d+)-/);
+            if (branchMatch && !issues.has(Number(branchMatch[1]))) {
+              try {
+                const { data } = await github.rest.issues.get({
+                  ...context.repo,
+                  issue_number: Number(branchMatch[1]),
+                });
+                if (!data.pull_request) {
+                  issues.set(data.number, {
+                    number: data.number,
+                    id: data.node_id,
+                    state: data.state.toUpperCase(),
+                  });
+                }
+              } catch (e) {
+                core.info(`브랜치의 이슈 #${branchMatch[1]}를 찾지 못했습니다: ${e.message}`);
+              }
+            }
+
+            for (const issue of issues.values()) {
+              if (issue.state !== 'OPEN') continue;
+              await setStatus(issue.id, issueStatus, `이슈 #${issue.number}`);
+            }
