@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.event.Level;
 import org.slf4j.spi.LoggingEventBuilder;
 import org.springframework.beans.TypeMismatchException;
+import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -83,6 +84,22 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 .body(
                         ErrorResponse.of(
                                 CommonErrorType.DUPLICATE_RESOURCE,
+                                Map.of(),
+                                e,
+                                HttpStatus.CONFLICT.value()));
+    }
+
+    // 같은 데이터를 동시에 고쳐 락(@Version 등) 충돌이 나면 → 409, 다시 시도하면 되는 상황이라 500이 아님
+    @ExceptionHandler(ConcurrencyFailureException.class)
+    public ResponseEntity<ErrorResponse> handleConcurrencyFailure(ConcurrencyFailureException e) {
+        log.warn(
+                "[{}] 동시 수정 충돌: {}",
+                CommonErrorType.CONCURRENT_MODIFICATION.name(),
+                e.getMostSpecificCause().getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(
+                        ErrorResponse.of(
+                                CommonErrorType.CONCURRENT_MODIFICATION,
                                 Map.of(),
                                 e,
                                 HttpStatus.CONFLICT.value()));

@@ -57,7 +57,8 @@ jobs:
 
             /code-review:code-review high --comment ${{ github.repository }}/pull/${{ github.event.pull_request.number }}
 
-            리뷰 결과는 아래 형식의 요약 코멘트 하나에만 써. 이슈가 없을 때도 "리뷰 완료", "발견된 이슈 없음" 같은 확인 코멘트를 따로 달지 마.
+            리뷰 결과는 아래 형식의 요약 코멘트 하나에만 써. 요약 코멘트와 별개로 "리뷰 완료" 같은 확인 코멘트를 하나 더 달지는 마.
+            이 PR의 첫 리뷰(이전 `<!-- claude-review -->` 댓글이 없음)는 지적이 하나도 없어도 요약 코멘트 1개를 반드시 남기고, 맨 아래에 "## ✅ 머지해도 됩니다"와 그 아랫줄 "Claude Code Review 완료 - 발견된 이슈 없음"을 써.
             요약 코멘트는 `gh pr comment ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --body "<본문>"`로 남기고, 본문 맨 첫 줄에 `<!-- claude-review -->`를 넣어. 이전 리뷰는 `gh pr view ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --comments`에서 이 표시가 있는 댓글로 찾아.
 
             다시 리뷰할 때 같은 말을 반복하지 마:
