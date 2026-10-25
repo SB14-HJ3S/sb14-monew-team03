@@ -60,9 +60,14 @@ jobs:
         run: |
           DESIRED=$(aws ecs describe-services --cluster "$ECS_CLUSTER" --services "${{ matrix.service }}" \
             --query 'services[0].desiredCount' --output text)
-          if [ "$DESIRED" = "0" ] || [ "$DESIRED" = "None" ]; then
+          if [ "$DESIRED" = "None" ]; then
+            echo "::error::${{ matrix.service }} 서비스를 찾을 수 없습니다."
+            exit 1
+          fi
+          if [ "$DESIRED" = "0" ]; then
             echo "::notice::${{ matrix.service }}가 꺼져 있어 다시 띄우지 않습니다."
             exit 0
           fi
           aws ecs update-service --cluster "$ECS_CLUSTER" --service "${{ matrix.service }}" \
             --force-new-deployment > /dev/null
+          aws ecs wait services-stable --cluster "$ECS_CLUSTER" --services "${{ matrix.service }}"
