@@ -13,8 +13,8 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-// 요청마다 로그 앞에 [요청 ID] [IP] [사용자 ID]를 붙여, 어떤 요청에서 찍힌 로그인지 찾기 쉽게 한다
-// 예) INFO [3f2a…] [203.0.113.7] [9b1c…] … : 댓글 등록 완료
+// 요청마다 로그 앞에 [요청 ID] [IP] [사용자 ID] [HTTP 메서드 URL]을 붙여, 어떤 요청에서 찍힌 로그인지 찾기 쉽게 한다
+// 예) INFO [3f2a…] [203.0.113.7] [9b1c…] [POST /api/comments] … : 댓글 등록 완료
 // 사용자 ID는 로그 표시용일 뿐 요청을 막지 않는다 — API에 필요한 사용자 ID는 이 필터가 아니라 각 API가 Swagger대로 헤더로 받는다
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -23,6 +23,8 @@ public class MdcLoggingFilter extends OncePerRequestFilter {
     public static final String MDC_REQUEST_ID = "requestId";
     public static final String MDC_CLIENT_IP = "clientIp";
     public static final String MDC_USER_ID = "userId";
+    public static final String MDC_HTTP_METHOD = "httpMethod";
+    public static final String MDC_REQUEST_URI = "requestUri";
 
     @Override
     protected void doFilterInternal(
@@ -34,6 +36,8 @@ public class MdcLoggingFilter extends OncePerRequestFilter {
 
         MDC.put(MDC_REQUEST_ID, requestId);
         MDC.put(MDC_CLIENT_IP, clientIp);
+        MDC.put(MDC_HTTP_METHOD, request.getMethod());
+        MDC.put(MDC_REQUEST_URI, request.getRequestURI());
         UUID userId = parseUserId(request.getHeader(MonewHeaders.REQUEST_USER_ID));
         if (userId != null) {
             MDC.put(MDC_USER_ID, userId.toString());
@@ -48,6 +52,8 @@ public class MdcLoggingFilter extends OncePerRequestFilter {
             MDC.remove(MDC_REQUEST_ID);
             MDC.remove(MDC_CLIENT_IP);
             MDC.remove(MDC_USER_ID);
+            MDC.remove(MDC_HTTP_METHOD);
+            MDC.remove(MDC_REQUEST_URI);
         }
     }
 
