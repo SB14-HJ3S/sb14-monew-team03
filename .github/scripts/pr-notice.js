@@ -127,8 +127,11 @@ const COVERAGE_TARGET = 80;
 function changedLines(diff) {
   const files = new Map();
   let current = null;
+  let prev = '';
   for (const line of diff.split('\n')) {
-    if (line.startsWith('+++ ')) {
+    const header = line.startsWith('+++ ') && prev.startsWith('--- ');
+    prev = line;
+    if (header) {
       current = line.startsWith('+++ b/') ? line.slice(6) : null;
       if (current) files.set(current, new Set());
       continue;
@@ -208,6 +211,10 @@ async function coverageNotice({ github, context, core }) {
   }
   if (rows.length === 0 && !testChanged) {
     core.info('본 코드와 테스트 코드가 바뀌지 않아 안내를 건너뛰어요');
+    await upsertNotice(
+      { github, context },
+      { marker: '<!-- coverage-notice -->', problem: false, okBody: '### 📊 이번 PR에는 커버리지 대상 변경이 없어요' },
+    );
     return;
   }
 
