@@ -90,8 +90,81 @@ jobs:
       - name: 빌드 및 테스트
         run: ./gradlew build
 
-      # 테스트가 실패하면 브라우저로 볼 수 있는 테스트 리포트(HTML)를 실행 결과에 첨부한다
-      # Actions 실행 화면 아래 Artifacts에서 test-report를 받아 index.html을 열면 실패한 테스트와 원인을 볼 수 있음
+      - name: 실패한 테스트 이름 표시
+        id: junit
+        if: ${{ !cancelled() }}
+        uses: mikepenz/action-junit-report@6ef3fdcfcd5f0b5d14df3e659ef19b8c6820f93d # v6.6.1
+        with:
+          report_paths: 'build/test-results/test/TEST-*.xml'
+          check_name: '테스트 결과'
+          include_passed: false
+          detailed_summary: true
+
+      - name: 테스트 결과 알림 댓글 (PR당 1개, 수정 방식)
+        if: ${{ !cancelled() && github.event_name == 'pull_request' && steps.junit.outputs.total != '' && steps.junit.outputs.total != '0' }}
+        continue-on-error: true
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        env:
+          FAILED: ${{ steps.junit.outputs.failed }}
+          TOTAL: ${{ steps.junit.outputs.total }}
+          DETAIL: ${{ steps.junit.outputs.detailed_summary }}
+          REPORT_URL: ${{ steps.junit.outputs.report_url }}
+        with:
+          script: |
+            const MARKER = '<!-- test-result-notice -->';
+            const failed = Number(process.env.FAILED || 0);
+            const issue_number = context.payload.pull_request.number;
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              ...context.repo,
+              issue_number,
+              per_page: 100,
+            });
+            const existing = comments.find((c) => c.body && c.body.includes(MARKER));
+
+            if (!existing && failed === 0) return;
+
+            const prevCount = existing ? Number((existing.body.match(/재수정 (\d+)회/) || [0, 0])[1]) : 0;
+            const editCount = existing ? prevCount + 1 : 0;
+
+            const parts = Object.fromEntries(
+              new Intl.DateTimeFormat('ko-KR', {
+                timeZone: 'Asia/Seoul',
+                month: 'numeric',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hourCycle: 'h23',
+              }).formatToParts(new Date()).map((p) => [p.type, p.value]),
+            );
+            const time = `${parts.month}월 ${parts.day}일 ${parts.hour}시 ${parts.minute}분 ${parts.second}초`;
+            const editLine = editCount > 0 ? `재수정 ${editCount}회, 수정된 시각 ${time}` : `작성 시각 ${time}`;
+
+            const body = failed > 0
+              ? [
+                  MARKER,
+                  `### ❌ 테스트 실패 ${failed}건 (전체 ${process.env.TOTAL}개)`,
+                  '',
+                  process.env.DETAIL || '',
+                  '',
+                  `[자세히 보기](${process.env.REPORT_URL})`,
+                  '',
+                  `<sub>${editLine}</sub>`,
+                ].join('\n')
+              : [
+                  MARKER,
+                  `### ✅ 테스트 모두 통과 (전체 ${process.env.TOTAL}개)`,
+                  '',
+                  `<sub>${editLine}</sub>`,
+                ].join('\n');
+
+            if (existing) {
+              await github.rest.issues.updateComment({ ...context.repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ ...context.repo, issue_number, body });
+            }
+
       - name: 테스트 실패 시 테스트 리포트 첨부
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
