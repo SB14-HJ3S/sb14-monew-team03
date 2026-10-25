@@ -10,8 +10,4 @@ coverage:
       default:
         target: 80%
         informational: true
-comment:
-  layout: "header"
-  hide_project_coverage: false
-  behavior: default
-  require_changes: true
+comment: false

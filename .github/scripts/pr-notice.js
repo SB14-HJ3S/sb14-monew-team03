@@ -18,7 +18,7 @@ function nowKst() {
   return `${p.month}월 ${p.day}일 ${p.hour}시 ${p.minute}분 ${p.second}초`;
 }
 
-async function upsertNotice({ github, context }, { marker, legacyMarkers = [], problem, problemBody, okBody }) {
+async function upsertNotice({ github, context }, { marker, legacyMarkers = [], problem, problemBody, okBody, skipSame = false }) {
   const issue_number = context.payload.pull_request.number;
   const comments = await github.paginate(github.rest.issues.listComments, {
     ...context.repo,
@@ -39,6 +39,7 @@ async function upsertNotice({ github, context }, { marker, legacyMarkers = [], p
   if (main.length + tail.length > MAX_BODY) {
     main = main.slice(0, MAX_BODY - tail.length - cut.length) + cut;
   }
+  if (existing && skipSame && existing.body.startsWith(`${main}\n`)) return;
   const body = `${main}\n${tail}`;
 
   if (existing) {
@@ -121,4 +122,114 @@ async function archNotice({ github, context, core }) {
   );
 }
 
-module.exports = { upsertNotice, archNotice, _test: { archViolations, unescapeXml } };
+const COVERAGE_TARGET = 80;
+
+function changedLines(diff) {
+  const files = new Map();
+  let current = null;
+  for (const line of diff.split('\n')) {
+    if (line.startsWith('+++ ')) {
+      current = line.startsWith('+++ b/') ? line.slice(6) : null;
+      if (current) files.set(current, new Set());
+      continue;
+    }
+    const hunk = current && line.match(/^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/);
+    if (hunk) {
+      const start = Number(hunk[1]);
+      const count = hunk[2] === undefined ? 1 : Number(hunk[2]);
+      for (let n = start; n < start + count; n++) files.get(current).add(n);
+    }
+  }
+  return files;
+}
+
+function coverageReport(xml) {
+  const percent = (missed, covered) => (missed + covered === 0 ? null : (covered * 100) / (missed + covered));
+  const lineCounter = (s) => {
+    const m = s.match(/<counter type="LINE" missed="(\d+)" covered="(\d+)"\/>/);
+    return m ? percent(Number(m[1]), Number(m[2])) : null;
+  };
+  const files = new Map();
+  const pkgRe = /<package name="([^"]*)">([\s\S]*?)<\/package>/g;
+  let p;
+  while ((p = pkgRe.exec(xml)) !== null) {
+    const srcRe = /<sourcefile name="([^"]*)">([\s\S]*?)<\/sourcefile>/g;
+    let s;
+    while ((s = srcRe.exec(p[2])) !== null) {
+      const uncovered = new Set();
+      const lineRe = /<line nr="(\d+)" mi="(\d+)" ci="(\d+)"/g;
+      let l;
+      while ((l = lineRe.exec(s[2])) !== null) {
+        if (Number(l[2]) > 0 && Number(l[3]) === 0) uncovered.add(Number(l[1]));
+      }
+      files.set(`src/main/java/${p[1]}/${s[1]}`, { percent: lineCounter(s[2]), uncovered });
+    }
+  }
+  const tail = xml.slice(xml.lastIndexOf('</package>'));
+  return { total: lineCounter(tail), files };
+}
+
+function ranges(numbers) {
+  const sorted = [...numbers].sort((a, b) => a - b);
+  const out = [];
+  for (let i = 0; i < sorted.length; i++) {
+    let j = i;
+    while (j + 1 < sorted.length && sorted[j + 1] === sorted[j] + 1) j++;
+    out.push(i === j ? `${sorted[i]}` : `${sorted[i]}~${sorted[j]}`);
+    i = j;
+  }
+  return out;
+}
+
+async function coverageNotice({ github, context, core }) {
+  const reportPath = 'build/reports/jacoco/test/jacocoTestReport.xml';
+  if (!fs.existsSync(reportPath)) {
+    core.info('커버리지 결과 파일이 없어 안내를 건너뛰어요');
+    return;
+  }
+  const { execSync } = require('child_process');
+  const diff = execSync(
+    `git -c core.quotePath=false diff -U0 --no-color "origin/${process.env.BASE_REF}...HEAD" -- src/main/java`,
+    { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 },
+  );
+  const changed = changedLines(diff);
+  const report = coverageReport(fs.readFileSync(reportPath, 'utf8'));
+
+  const rows = [];
+  for (const [file, lines] of changed) {
+    const info = report.files.get(file);
+    if (!info || lines.size === 0) continue;
+    const missed = ranges([...lines].filter((n) => info.uncovered.has(n)));
+    const shown = missed.length > 15 ? [...missed.slice(0, 15), `외 ${missed.length - 15}곳`] : missed;
+    const pct = info.percent === null ? '-' : `${info.percent.toFixed(1)}%`;
+    rows.push(`| \`${path.basename(file)}\` | ${pct} | ${shown.length ? shown.join(', ') : '✅ 없음'} |`);
+  }
+  if (rows.length === 0) {
+    core.info('커버리지를 계산하는 본 코드가 바뀌지 않아 안내를 건너뛰어요');
+    return;
+  }
+
+  const total = report.total === null ? '-' : `${report.total.toFixed(1)}%`;
+  const mark = report.total !== null && report.total >= COVERAGE_TARGET ? '✅' : '📊';
+  const body = [
+    `### ${mark} 테스트 커버리지 ${total} (목표 ${COVERAGE_TARGET}%)`,
+    '',
+    '이번 PR에서 바뀐 파일',
+    '',
+    '| 파일 | 커버리지 | 테스트 안 된 줄 (이번에 바꾼 줄 중) |',
+    '|---|---|---|',
+    ...rows,
+  ].join('\n');
+
+  await upsertNotice(
+    { github, context },
+    { marker: '<!-- coverage-notice -->', problem: true, problemBody: body, okBody: '', skipSame: true },
+  );
+}
+
+module.exports = {
+  upsertNotice,
+  archNotice,
+  coverageNotice,
+  _test: { archViolations, unescapeXml, changedLines, coverageReport, ranges },
+};

@@ -126,6 +126,17 @@ jobs:
               okBody: `### ✅ 테스트 모두 통과 (전체 ${process.env.TOTAL}개)`,
             });
 
+      - name: 테스트 커버리지 알림 댓글 (본 코드가 바뀐 PR만)
+        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
+        continue-on-error: true
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        with:
+          script: |
+            const { coverageNotice } = require('./.github/scripts/pr-notice.js');
+            await coverageNotice({ github, context, core });
+
       - name: 패키지 규칙 검사 (경고만)
         if: ${{ !cancelled() && github.event_name == 'pull_request' }}
         continue-on-error: true
