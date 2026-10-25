@@ -1,13 +1,13 @@
 #!/bin/bash
 # 멘토링·피드백 디스커션 본문(표준입력)에서 피드백 종류·날짜·시간·참여자를 뽑고 제목을 만든다
 # 입력(환경변수): CREATED_AT(디스커션 생성 시각, UTC ISO)
-# 출력: {"title": "[261019(월)] 강사님 피드백", "feedback_type": "강사님", "date": "2026-10-19",
-#        "notion_date": "2026-10-19T14:00:00+09:00", "date_label": "261019(월) 14:00", "participants": [...], "note": "..."}
+# 출력: {"title": "[26.10.19(월)] 강사님 피드백", "feedback_type": "강사님", "date": "2026-10-19",
+#        "notion_date": "2026-10-19T14:00:00+09:00", "date_label": "26.10.19(월) 14:00", "participants": [...], "note": "...", "category": "..."}
 # 날짜·시간 칸을 비우면 글을 올린 날짜·시간(한국 시간)을 쓴다
 set -euo pipefail
 
 CLEAN="$(cat | tr -d '\r')"
-FIELD_HEADINGS='🧑‍🏫 피드백 종류|📆 날짜·시간|😄 질문자 및 참여자|⚠️ 특이사항|📝 내용'
+FIELD_HEADINGS='🗂️ 노션 카테고리|🧑‍🏫 피드백 종류|📆 날짜·시간|😄 질문자 및 참여자|⚠️ 특이사항|📝 내용'
 
 # extract-meeting-fields.sh와 같은 방식: 폼 항목 제목만 경계로 쓰고, 글자 그대로 비교. 칸 사이 구분선(---, #133)은 뺀다
 extract_heading() {
@@ -27,13 +27,13 @@ if [[ "$FEEDBACK_TYPE" != "강사님" && "$FEEDBACK_TYPE" != "멘토님" && "$FE
   FEEDBACK_TYPE=""
 fi
 
-# "261019 14:00" / "26-10-19 14:00" / "2026-10-19 14:00" / 날짜만 → 날짜·시간 분리
+# "261019 14:00" / "26-10-19 14:00" / "26.10.19 14:00" / "2026-10-19 14:00" / 날짜만 → 날짜·시간 분리
 RAW="$(extract_heading "📆 날짜·시간" | head -1)"
-# 봇이 채운 "261019(월) 14:00"처럼 요일이 붙어 있어도 읽는다
+# 봇이 채운 "26.10.19(월) 14:00"처럼 요일이 붙어 있어도 읽는다
 RAW="$(printf '%s' "$RAW" | sed -E 's/\([^)]*\)//')"
 DATE=""
 TIME=""
-if [[ "$RAW" =~ ^([0-9]{2}|[0-9]{4})-?([0-9]{2})-?([0-9]{2})([[:space:]]+([0-9]{1,2}):([0-9]{2}))?$ ]]; then
+if [[ "$RAW" =~ ^([0-9]{2}|[0-9]{4})[.-]?([0-9]{2})[.-]?([0-9]{2})([[:space:]]+([0-9]{1,2}):([0-9]{2}))?$ ]]; then
   YEAR="${BASH_REMATCH[1]}"
   [[ ${#YEAR} -eq 2 ]] && YEAR="20$YEAR"
   DATE="$YEAR-${BASH_REMATCH[2]}-${BASH_REMATCH[3]}"
@@ -53,7 +53,7 @@ fi
 
 WEEKDAYS=(월 화 수 목 금 토 일)
 WEEKDAY="${WEEKDAYS[$(( $(date -d "$DATE" +%u) - 1 ))]}"
-DAY_LABEL="$(date -d "$DATE" +%y%m%d)($WEEKDAY)"
+DAY_LABEL="$(date -d "$DATE" +%y.%m.%d)($WEEKDAY)"
 TITLE="[$DAY_LABEL]"
 [[ -n "$FEEDBACK_TYPE" ]] && TITLE="$TITLE $FEEDBACK_TYPE 피드백"
 DATE_LABEL="$DAY_LABEL"
@@ -72,6 +72,12 @@ PARTICIPANTS_JSON="${PARTICIPANTS_JSON:-[]}"
 NOTE="$(extract_heading "⚠️ 특이사항" | paste -sd' ' -)"
 [[ "$NOTE" == "_No response_" ]] && NOTE=""
 
-jq -n --arg note "$NOTE" --arg title "$TITLE" --arg feedback_type "$FEEDBACK_TYPE" --arg date "$DATE" \
+CATEGORY="$(extract_heading "🗂️ 노션 카테고리" | head -1)"
+case "$CATEGORY" in
+  "[1차] 멘토링"|"[2차] 멘토링"|"[3차] 멘토링"|"[4차] 멘토링") ;;
+  *) CATEGORY="[미정]" ;;
+esac
+
+jq -n --arg note "$NOTE" --arg category "$CATEGORY" --arg title "$TITLE" --arg feedback_type "$FEEDBACK_TYPE" --arg date "$DATE" \
   --arg notion_date "$NOTION_DATE" --arg date_label "$DATE_LABEL" --argjson participants "$PARTICIPANTS_JSON" \
-  '{title: $title, note: $note, feedback_type: $feedback_type, date: $date, notion_date: $notion_date, date_label: $date_label, participants: $participants}'
+  '{title: $title, note: $note, category: $category, feedback_type: $feedback_type, date: $date, notion_date: $notion_date, date_label: $date_label, participants: $participants}'

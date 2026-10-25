@@ -1,7 +1,7 @@
 #!/bin/sh
 
 COMMIT_MSG_FILE="$1"
-TYPES='feat|fix|refactor|docs|chore|test|batch'
+TYPES='feat|fix|refactor|docs|chore|test|batch|merge|revert'
 
 FIRST_LINE=$(awk '/^[[:space:]]*#/{next} NF{print; exit}' "$COMMIT_MSG_FILE")
 
@@ -30,40 +30,41 @@ cut_chars() {
 }
 
 # Git이 영어로 만드는 머지·되돌리기 커밋 제목을 팀 형식으로 바꿈 (이슈 번호는 아래에서 붙음)
-#   Merge branch 'develop' of https://… into feat/47-…  → chore : develop 최신 내용 반영
-#   Merge origin/develop into feat/33-… (인텔리제이)     → chore : develop 최신 내용 반영
-#   Revert "feat : 관심사 등록 [#30]"                    → chore : 관심사 등록 되돌리기
+#   Merge branch 'develop' of https://… into feat/47-…  → merge : develop 최신 내용 반영
+#   Merge origin/develop into feat/33-… (인텔리제이)     → merge : develop 최신 내용 반영
+#   Revert "feat : 관심사 등록 [#30]"                    → revert : 관심사 등록 되돌리기
 NEW_TITLE=""
 SRC=""
 case "$FIRST_LINE" in
   "Merge commit '"*|"Merge branches "*)
-    NEW_TITLE="chore : 브랜치 병합" ;;
+    NEW_TITLE="merge : 브랜치 병합" ;;
   "Merge branch '"*|"Merge remote-tracking branch '"*|"Merge tag '"*)
     SRC=$(printf '%s' "$FIRST_LINE" | sed -E "s/^Merge [a-z -]+'([^']+)'.*/\1/") ;;
   "Merge "*" into "*)
     SRC=$(printf '%s' "$FIRST_LINE" | awk '{print $2}') ;;
   "Merge "*)
-    NEW_TITLE="chore : 브랜치 병합" ;;
+    NEW_TITLE="merge : 브랜치 병합" ;;
   "Revert "*)
     INNER=$(printf '%s' "$FIRST_LINE" | sed -E \
       -e 's/^Revert "(.*)"$/\1/' \
+      -e 's/^[^A-Za-z[]*\[/[/' \
       -e "s/^($TYPES)(\((red|green|blue)\))?[[:space:]]*:[[:space:]]*//" \
       -e 's/^\[[A-Za-z]+\][[:space:]]*:[[:space:]]*//' \
       -e 's/[[:space:]]*(\[#[0-9]+\]|\(#[0-9]+\))[[:space:]]*$//')
     # 되돌린 걸 다시 되돌리면 "다시 적용", 그걸 또 되돌리면 다시 "되돌리기"
     case "$INNER" in
       *" 되돌리기")
-        NEW_TITLE="chore : $(cut_chars "${INNER% 되돌리기}" 46) 다시 적용" ;;
+        NEW_TITLE="revert : $(cut_chars "${INNER% 되돌리기}" 45) 다시 적용" ;;
       *" 다시 적용")
-        NEW_TITLE="chore : $(cut_chars "${INNER% 다시 적용}" 47) 되돌리기" ;;
+        NEW_TITLE="revert : $(cut_chars "${INNER% 다시 적용}" 46) 되돌리기" ;;
       "")
-        NEW_TITLE="chore : 커밋 되돌리기" ;;
+        NEW_TITLE="revert : 커밋 되돌리기" ;;
       *)
-        NEW_TITLE="chore : $(cut_chars "$INNER" 47) 되돌리기" ;;
+        NEW_TITLE="revert : $(cut_chars "$INNER" 46) 되돌리기" ;;
     esac ;;
 esac
 if [ -n "$SRC" ]; then
-  NEW_TITLE="chore : $(cut_chars "${SRC#origin/}" 43) 최신 내용 반영"
+  NEW_TITLE="merge : $(cut_chars "${SRC#origin/}" 43) 최신 내용 반영"
 fi
 if [ -n "$NEW_TITLE" ]; then
   NEW_TITLE="$NEW_TITLE" awk '
@@ -102,6 +103,12 @@ if [ -n "$TITLE_LINE" ]; then
     -e "${TITLE_LINE}s/^(($TYPES)(\((red|green|blue)\))?)[[:space:]]*[:;][[:space:]]*/\1 : /" \
     "$COMMIT_MSG_FILE" && rm -f "${COMMIT_MSG_FILE}.bak"
 
+  sed -i.bak -E \
+    -e "${TITLE_LINE}s/[[:space:]]+;[[:space:]]*c[[:space:]]*\$/ (클로드 리뷰 반영 수정)/" \
+    -e "${TITLE_LINE}s/[[:space:]]+;[[:space:]]*r[[:space:]]*\$/ (코드래빗 리뷰 반영 수정)/" \
+    -e "${TITLE_LINE}s/[[:space:]]+;[[:space:]]*t[[:space:]]*\$/ (팀원 피드백 반영 수정)/" \
+    "$COMMIT_MSG_FILE" && rm -f "${COMMIT_MSG_FILE}.bak"
+
   # 브랜치명({타입}/{이슈번호}-{키워드})에서 이슈번호를 추출해 제목 끝에 자동으로 붙임
   # 이미 [#번호]가 있으면 중복으로 안 붙임. develop/main처럼 이슈번호가 없는 브랜치면 조용히 건너뜀
   BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null)
@@ -133,6 +140,11 @@ print_examples() {
   echo "  f1 : 관심사 등록 구현              → feat(green) : …"
   echo "  x1 : 중복 저장 오류 수정           → fix(green) : …"
   echo "  r1 : 관심사 서비스 정리            → refactor(blue) : …"
+  echo ""
+  echo "리뷰 반영 단축키 (제목 맨 끝에 띄어쓰기 + ;c / ;r / ;t, \"; c\"처럼 띄어 써도 됨):"
+  echo "  c : 설정파일 수정 ;c → chore : 설정파일 수정 (클로드 리뷰 반영 수정)"
+  echo "  f : 관심사 등록 ;r   → feat : 관심사 등록 (코드래빗 리뷰 반영 수정)"
+  echo "  x : 중복 저장 수정 ;t → fix : 중복 저장 수정 (팀원 피드백 반영 수정)"
   echo ""
   echo "이슈 번호는 현재 브랜치명에서 자동으로 추출해 제목 끝에 붙습니다 (직접 안 적어도 됨):"
   echo "  t1 : 관심사 등록 실패 테스트 추가  →  test(red) : 관심사 등록 실패 테스트 추가 [#30]"
@@ -177,6 +189,8 @@ if ! echo "$TITLE" | grep -Eq "^($TYPES)(\((red|green|blue)\))? : .+"; then
   echo "  chore : 코드 로직과 무관한 설정/빌드/도구 변경"
   echo "  test : 테스트 코드 추가/수정 (TDD 사이클 커밋 포함)"
   echo "  batch : 배치 작업 관련 변경"
+  echo "  merge : 다른 브랜치 내용 반영 (머지 커밋, 보통 자동으로 붙음)"
+  echo "  revert : 이전 커밋 되돌리기 (git revert, 보통 자동으로 붙음)"
   echo ""
   print_examples
   echo ""

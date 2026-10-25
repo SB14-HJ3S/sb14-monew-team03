@@ -11,7 +11,7 @@
 
 <!-- develop의 CI 실행 완료 후 갱신. 청록: 성공 또는 커버리지 80% 이상, 밝은 분홍: 실패 또는 80% 미만, 연한 회색: 취소 또는 결과 없음. -->
 
-<img width="200" alt="MONEW 로고" src="docs/images/logo-square.png" />
+<a href="https://monew.is-a.dev/"><img width="200" alt="MONEW 로고" src="docs/images/logo-square.png" /></a>
 
 <table align="center">
 <tr>
