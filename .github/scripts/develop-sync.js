@@ -6,8 +6,8 @@ const LABEL = '🚨 develop 반영 필수';
 const CONFLICT_LABEL = '⚠️ 충돌';
 const CHECK_LINE = '여기를 체크하면 최신 develop을 이 PR에 반영해요';
 const BOT_LOGIN = 'github-actions[bot]';
-const PUSH_BOT_NAME = 'monew-discussion-bot[bot]';
-const PUSH_BOT_EMAIL = '344808795+monew-discussion-bot[bot]@users.noreply.github.com';
+const PUSH_BOT_NAME = 'monew-team03[bot]';
+const PUSH_BOT_EMAIL = '344808795+monew-team03[bot]@users.noreply.github.com';
 
 const TEXT = {
   latest: '✅ 최신이에요',

@@ -295,7 +295,7 @@ jobs:
             # 가장 최근 연동 댓글(봇 또는 github-actions)에서 노션 주소·댓글 id를 꺼냄 — 재연동 때 이 댓글을 고침
             SYNC_COMMENT=$(echo "$RESULT" | jq -c '
               [.data.repository.discussion.comments.nodes[]
-               | select(.author.login == "github-actions" or .author.login == "monew-discussion-bot")
+               | select(.author.login == "github-actions" or .author.login == "monew-team03")
                | select(.body | contains("노션 동기화됨"))] | last // empty')
             if [[ -n "$SYNC_COMMENT" ]]; then
               PAGE_URL=$(echo "$SYNC_COMMENT" | jq -r .body | grep -oE 'https://[^ ]*notion[^ ]*' | head -1)
@@ -561,7 +561,7 @@ jobs:
           COMMENT_BODY=$(PAGE_URL="$PAGE_URL" TARGET=디스커션 \
             FIRST="$SYNC_FIRST" NOW="$SYNC_NOW" COUNT="$SYNC_COUNT" \
             bash .github/scripts/build-sync-comment.sh)
-          if [[ "$COMMENT_AUTHOR" == "monew-discussion-bot" ]] && gh api graphql -f query='
+          if [[ "$COMMENT_AUTHOR" == "monew-team03" ]] && gh api graphql -f query='
             mutation($id: ID!, $body: String!) {
               updateDiscussionComment(input: {commentId: $id, body: $body}) { comment { id } }
             }' -f id="$COMMENT_ID" -f body="$COMMENT_BODY"; then
