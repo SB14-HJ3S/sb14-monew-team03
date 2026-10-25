@@ -38,7 +38,7 @@ body:
   - type: input
     id: date
     attributes:
-      label: 📆 날짜(요일)·시간
+      label: 📆 회의 날짜(요일) · 회의 시간
       description: 비워두면 이 글을 올린 날짜·시간이 자동으로 채워집니다. 다른 날짜로 기록하려면 26.10.07처럼 적어주세요.
     validations:
       required: false
@@ -104,5 +104,23 @@ body:
     attributes:
       label: 📑 기타
       description: 팀 회의 메모 / 멘토링 / 강사님 피드백 등
+    validations:
+      required: false
+  - type: textarea
+    id: comment_template
+    attributes:
+      label: 📝 댓글 양식 (복사해서 쓰세요)
+      description: 위 칸에 못 적은 사람은 글이 올라간 뒤 이 양식을 복사해서 댓글로 남겨 주세요. 그대로 두면 됩니다.
+      value: |
+        ```markdown
+        **1. 한 것**
+        -
+
+        **2. 할 것**
+        -
+
+        **3. 기타 사항** (막히는 점, 도움이 필요한 점 등)
+        -
+        ```
     validations:
       required: false

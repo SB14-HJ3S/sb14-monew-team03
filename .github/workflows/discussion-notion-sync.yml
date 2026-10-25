@@ -97,7 +97,7 @@ jobs:
             -f discussionId="$DISCUSSION_NODE_ID" \
             -f title="$TITLE"
 
-      # 날짜(요일)·시간 칸을 비워 두고 올리면 GitHub가 글 올린 날짜·시간(예 26.10.19(월) 14:05)으로 채워 둔다
+      # 회의 날짜(요일)·시간 칸을 비워 두고 올리면 GitHub가 글 올린 날짜·시간(예 26.10.19(월) 14:05)으로 채워 둔다
       - name: 비워 둔 날짜 칸 채우고 칸 사이 구분선 넣기
         continue-on-error: true
         env:
@@ -420,7 +420,7 @@ jobs:
             -f discussionId="$DISCUSSION_NODE_ID" \
             -f title="$TITLE"
 
-      # 날짜(요일)·시간 칸을 비워 두고 올리면 GitHub가 글 올린 날짜·시간(예 26.10.19(월) 14:05)으로 채워 둔다
+      # 회의 날짜(요일)·시간 칸을 비워 두고 올리면 GitHub가 글 올린 날짜·시간(예 26.10.19(월) 14:05)으로 채워 둔다
       - name: 비워 둔 날짜 칸 채우고 칸 사이 구분선 넣기
         continue-on-error: true
         env:

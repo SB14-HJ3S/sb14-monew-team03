@@ -10,7 +10,7 @@ CLEAN="$(printf '%s\n' "$BODY" | tr -d '\r')"
 # 템플릿(.github/DISCUSSION_TEMPLATE/b-daily-scrum.yml)의 실제 필드 제목 목록.
 # 캡처 중단 기준을 "아무 '#' 제목"이 아니라 "이 목록에 있는 제목"으로만 잡아서,
 # 사용자가 답변 안에 "### 다음 단계" 같은 마크다운 제목을 적어도 안 끊기게 함.
-FIELD_HEADINGS='🗂️ 노션 카테고리|📌 회의 종류|📆 날짜(요일)·시간|🕘 오전/오후|⏰ 회의 시간|😄 참여자 목록|⚠️ 특이사항|📝 김민재|📝 이승현|📝 박수민|📝 정수환|📝 이수찬|📑 기타'
+FIELD_HEADINGS='🗂️ 노션 카테고리|📌 회의 종류|📆 회의 날짜(요일) · 회의 시간|📆 날짜(요일)·시간|🕘 오전/오후|⏰ 회의 시간|😄 참여자 목록|⚠️ 특이사항|📝 김민재|📝 이승현|📝 박수민|📝 정수환|📝 이수찬|📑 기타|📝 댓글 양식 (복사해서 쓰세요)'
 
 extract_heading() {
   local heading="$1"
@@ -49,7 +49,7 @@ if [[ "$MEETING_TYPE" != "데일리 스크럼" && "$MEETING_TYPE" != "정기 회
   MEETING_TYPE="데일리 스크럼"
 fi
 
-DATE_OVERRIDE="$(extract_heading "📆 날짜(요일)·시간" | sed '/^[[:space:]]*$/d' | head -1 | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')"
+DATE_OVERRIDE="$({ extract_heading "📆 회의 날짜(요일) · 회의 시간"; extract_heading "📆 날짜(요일)·시간"; } | sed '/^[[:space:]]*$/d' | head -1 | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')"
 # 봇이 채운 "26.10.19(월) 14:05"처럼 요일·시간이 붙어 있어도 날짜만 읽는다
 DATE_OVERRIDE="$(printf '%s' "$DATE_OVERRIDE" | sed -E 's/[[:space:]]+[0-9]{1,2}:[0-9]{2}$//; s/[[:space:]]*\([^)]*\)$//')"
 # 261007 / 26-10-07 / 26.10.07 / 2026-10-07 모두 받아서 2026-10-07 형식으로 맞춘다. 그 외 형식은 무시(올린 날짜 사용)
