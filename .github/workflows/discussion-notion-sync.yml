@@ -39,7 +39,7 @@ jobs:
           client-id: ${{ vars.DISCUSSION_BOT_CLIENT_ID }}
           private-key: ${{ secrets.DISCUSSION_BOT_PRIVATE_KEY }}
 
-      - name: 디스커션 본문에서 오전/오후·회의 시간·참여자·날짜·특이사항 추출
+      - name: 디스커션 본문에서 노션 카테고리·참여자·날짜·특이사항 추출
         id: fields
         env:
           BODY: ${{ github.event.discussion.body }}
@@ -48,14 +48,13 @@ jobs:
           RESULT=$(printf '%s' "$BODY" | bash .github/scripts/extract-meeting-fields.sh)
           {
             echo "note=$(echo "$RESULT" | jq -r '.note')"
-            echo "ampm=$(echo "$RESULT" | jq -r '.ampm')"
             echo "date_override=$(echo "$RESULT" | jq -r '.date_override')"
             echo "participants=$(echo "$RESULT" | jq -c '.participants')"
             echo "meeting_type=$(echo "$RESULT" | jq -r '.meeting_type')"
-            echo "meeting_time=$(echo "$RESULT" | jq -r '.meeting_time')"
+            echo "category=$(echo "$RESULT" | jq -r '.category')"
           } >> "$GITHUB_OUTPUT"
 
-      # 제목을 기본 문구 그대로 뒀을 때만 "[261019(월)] 데일리 스크럼"으로 바꿈 (직접 쓴 제목은 그대로, 노션에도 그 제목)
+      # 제목을 기본 문구 그대로 뒀을 때만 "[26.10.19(월)] 데일리 스크럼"으로 바꿈 (직접 쓴 제목은 그대로, 노션에도 그 제목)
       # 자동 제목이면 재연동 때 바뀐 날짜·회의 종류를 다시 반영함
       - name: 자동 제목 정하기
         id: title
@@ -67,7 +66,7 @@ jobs:
         run: |
           RESULT=$(bash .github/scripts/build-meeting-title.sh)
           AUTO_TITLE=$(echo "$RESULT" | jq -r '.title')
-          AUTO_PATTERN='^\[[0-9]{2}-?[0-9]{2}-?[0-9]{2}\([^)]+\)\]( (데일리 스크럼|정기 회의|비정기 회의))?$'
+          AUTO_PATTERN='^\[[0-9]{2}[.-]?[0-9]{2}[.-]?[0-9]{2}\([^)]+\)\]( (데일리 스크럼|정기 회의|비정기 회의))?$'
           CURRENT=$(printf '%s' "$CURRENT_TITLE" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')
           if [[ "$CURRENT" == "$PLACEHOLDER_TITLE" || "$CURRENT" =~ $AUTO_PATTERN ]]; then
             TITLE="$AUTO_TITLE"
@@ -98,7 +97,7 @@ jobs:
             -f discussionId="$DISCUSSION_NODE_ID" \
             -f title="$TITLE"
 
-      # 날짜(요일)·시간 칸을 비워 두고 올리면 GitHub가 글 올린 날짜·시간(예 261019(월) 14:05)으로 채워 둔다
+      # 날짜(요일)·시간 칸을 비워 두고 올리면 GitHub가 글 올린 날짜·시간(예 26.10.19(월) 14:05)으로 채워 둔다
       - name: 비워 둔 날짜 칸 채우고 칸 사이 구분선 넣기
         continue-on-error: true
         env:
@@ -173,7 +172,7 @@ jobs:
           DISCUSSION_URL: ${{ github.event.discussion.html_url }}
           AUTHOR: ${{ github.event.discussion.user.login }}
           NOTE: ${{ steps.fields.outputs.note }}
-          AMPM: ${{ steps.fields.outputs.ampm }}
+          CATEGORY: ${{ steps.fields.outputs.category }}
           PARTICIPANTS: ${{ steps.fields.outputs.participants }}
           # GitHub 아이디 → 노션 사용자 ID 대응표(JSON). 글 올린 사람을 노션 "서기"(사람 속성)에 넣고, 대응표에 없으면 비워 둔다
           NOTION_USER_MAP: ${{ vars.NOTION_USER_MAP }}
@@ -181,7 +180,6 @@ jobs:
           NOTION_PARTICIPANT_MAP: ${{ vars.NOTION_PARTICIPANT_MAP }}
           MEETING_TYPE: ${{ steps.fields.outputs.meeting_type }}
           DATE_LABEL: ${{ steps.title.outputs.date_label }}
-          MEETING_TIME: ${{ steps.fields.outputs.meeting_time }}
         run: |
           # 본문을 노션 블록으로 바꿔 넣음 (비운 항목·속성으로 들어간 항목은 뺌)
           # 노션 본문 맨 위에 연동 기록 한 줄(GitHub 연동 댓글과 같은 시각)
@@ -197,7 +195,7 @@ jobs:
             --arg date "$DATE_ONLY" \
             --arg author "$AUTHOR" \
             --arg note "$NOTE" \
-            --arg ampm "$AMPM" \
+            --arg category "$CATEGORY" \
             --arg meeting_type "$MEETING_TYPE" \
             --argjson participants "${PARTICIPANTS:-[]}" \
             '{
@@ -206,10 +204,9 @@ jobs:
                 "회의록": {title: [{text: {content: $title}}]},
                 "날짜": {date: {start: $date}},
                 "특징": {select: {name: (if $meeting_type == "정기 회의" or $meeting_type == "비정기 회의" then $meeting_type else "스크럼" end)}},
-                "카테고리": {multi_select: [{name: "[미정]"}]},
+                "카테고리": {multi_select: [{name: $category}]},
                 "특이사항": {rich_text: (if $note == "" then [] else [{text: {content: $note}}] end)}
               }
-              + (if $ampm == "" then {} else {"오전/오후": {select: {name: $ampm}}} end)
               + (if ($participants | length) == 0 then {} else {"참여자 명단": {multi_select: ($participants | map({name: .}))}} end)
               + (if $usermap[$author] then {"서기": {people: [{id: $usermap[$author]}]}} else {} end)
               + ([$participants[] | $pmap[.] | select(. != null) | {id: .}] as $people
@@ -367,7 +364,7 @@ jobs:
           OLD_CREATED_AT="$(echo "$OLD" | jq -r '.data.node.createdAt // empty')" \
           MODE=meta bash .github/scripts/build-sync-comment.sh >> "$GITHUB_OUTPUT"
 
-      - name: 디스커션 본문에서 오전/오후·회의 시간·참여자·날짜·특이사항 추출
+      - name: 디스커션 본문에서 노션 카테고리·참여자·날짜·특이사항 추출
         id: fields
         env:
           BODY: ${{ github.event.discussion.body }}
@@ -375,11 +372,10 @@ jobs:
           RESULT=$(printf '%s' "$BODY" | bash .github/scripts/extract-meeting-fields.sh)
           {
             echo "note=$(echo "$RESULT" | jq -r '.note')"
-            echo "ampm=$(echo "$RESULT" | jq -r '.ampm')"
             echo "date_override=$(echo "$RESULT" | jq -r '.date_override')"
             echo "participants=$(echo "$RESULT" | jq -c '.participants')"
             echo "meeting_type=$(echo "$RESULT" | jq -r '.meeting_type')"
-            echo "meeting_time=$(echo "$RESULT" | jq -r '.meeting_time')"
+            echo "category=$(echo "$RESULT" | jq -r '.category')"
           } >> "$GITHUB_OUTPUT"
 
       # 제목 정하기 (위 create job과 같음)
@@ -393,7 +389,7 @@ jobs:
         run: |
           RESULT=$(bash .github/scripts/build-meeting-title.sh)
           AUTO_TITLE=$(echo "$RESULT" | jq -r '.title')
-          AUTO_PATTERN='^\[[0-9]{2}-?[0-9]{2}-?[0-9]{2}\([^)]+\)\]( (데일리 스크럼|정기 회의|비정기 회의))?$'
+          AUTO_PATTERN='^\[[0-9]{2}[.-]?[0-9]{2}[.-]?[0-9]{2}\([^)]+\)\]( (데일리 스크럼|정기 회의|비정기 회의))?$'
           CURRENT=$(printf '%s' "$CURRENT_TITLE" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')
           if [[ "$CURRENT" == "$PLACEHOLDER_TITLE" || "$CURRENT" =~ $AUTO_PATTERN ]]; then
             TITLE="$AUTO_TITLE"
@@ -424,7 +420,7 @@ jobs:
             -f discussionId="$DISCUSSION_NODE_ID" \
             -f title="$TITLE"
 
-      # 날짜(요일)·시간 칸을 비워 두고 올리면 GitHub가 글 올린 날짜·시간(예 261019(월) 14:05)으로 채워 둔다
+      # 날짜(요일)·시간 칸을 비워 두고 올리면 GitHub가 글 올린 날짜·시간(예 26.10.19(월) 14:05)으로 채워 둔다
       - name: 비워 둔 날짜 칸 채우고 칸 사이 구분선 넣기
         continue-on-error: true
         env:
@@ -457,6 +453,7 @@ jobs:
           PAGE_URL: ${{ steps.find_page.outputs.page_url }}
           TITLE_PROP: 회의록
           TITLE: ${{ steps.title.outputs.title }}
+          CATEGORY: ${{ steps.fields.outputs.category }}
         run: bash .github/scripts/ensure-notion-page.sh >> "$GITHUB_OUTPUT"
 
       - name: 노션 페이지 속성 덮어쓰기
@@ -465,7 +462,7 @@ jobs:
           PAGE_ID: ${{ steps.page.outputs.page_id }}
           TITLE: ${{ steps.title.outputs.title }}
           NOTE: ${{ steps.fields.outputs.note }}
-          AMPM: ${{ steps.fields.outputs.ampm }}
+          CATEGORY: ${{ steps.fields.outputs.category }}
           # 날짜를 직접 정하지 않았으면 기존 페이지 날짜는 그대로 두고, 페이지를 새로 만들었을 때만 자동 날짜를 넣는다
           DATE_OVERRIDE: ${{ steps.fields.outputs.date_override || (steps.page.outputs.created == 'true' && steps.title.outputs.date) || '' }}
           PARTICIPANTS: ${{ steps.fields.outputs.participants }}
@@ -475,11 +472,11 @@ jobs:
           NOTION_PARTICIPANT_MAP: ${{ vars.NOTION_PARTICIPANT_MAP }}
           MEETING_TYPE: ${{ steps.fields.outputs.meeting_type }}
         run: |
-          # 재연동은 지금 글 상태를 그대로 반영하므로, 오전/오후·참여자가 비었어도 보내서 노션에서도 지워지게 함
+          # 재연동은 지금 글 상태를 그대로 반영하므로, 참여자가 비었어도 보내서 노션에서도 지워지게 함
           PAYLOAD=$(jq -n \
             --arg title "$TITLE" \
             --arg note "$NOTE" \
-            --arg ampm "$AMPM" \
+            --arg category "$CATEGORY" \
             --arg date "$DATE_OVERRIDE" \
             --arg author "$AUTHOR" \
             --arg meeting_type "$MEETING_TYPE" \
@@ -490,10 +487,10 @@ jobs:
               properties: ({
                 "회의록": {title: [{text: {content: $title}}]},
                 "특이사항": {rich_text: (if $note == "" then [] else [{text: {content: $note}}] end)},
-                "오전/오후": {select: (if $ampm == "" then null else {name: $ampm} end)},
                 "참여자 명단": {multi_select: ($participants | map({name: .}))}
               }
               + (if $date == "" then {} else {"날짜": {date: {start: $date}}} end)
+              + (if $category == "" or $category == "[미정]" then {} else {"카테고리": {multi_select: [{name: $category}]}} end)
               + (if $meeting_type == "" then {} else {"특징": {select: {name: (if $meeting_type == "정기 회의" or $meeting_type == "비정기 회의" then $meeting_type else "스크럼" end)}}} end)
               + (if $usermap[$author] then {"서기": {people: [{id: $usermap[$author]}]}} else {} end)
               + (if ($pmap | length) == 0 then {} else {"참여자": {people: [$participants[] | $pmap[.] | select(. != null) | {id: .}]}} end)
@@ -549,7 +546,6 @@ jobs:
           AUTHOR: ${{ github.event.discussion.user.login }}
           DISCUSSION_URL: ${{ github.event.discussion.html_url }}
           DATE_LABEL: ${{ steps.title.outputs.date_label }}
-          MEETING_TIME: ${{ steps.fields.outputs.meeting_time }}
         run: |
           SYNC_LINE=$(FIRST="$SYNC_FIRST" NOW="$SYNC_NOW" COUNT="$SYNC_COUNT" MODE=line bash .github/scripts/build-sync-comment.sh)
           BLOCKS=$(printf '%s' "$BODY" | EXTRA_NOTE="$SYNC_LINE" bash .github/scripts/build-notion-blocks.sh)

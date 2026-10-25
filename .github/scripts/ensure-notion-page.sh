@@ -49,8 +49,8 @@ else
   exit 1
 fi
 
-PAYLOAD=$(jq -n --arg db "$NOTION_DB_ID" --arg prop "$TITLE_PROP" --arg title "$TITLE" \
-  '{parent: {database_id: $db}, properties: {($prop): {title: [{text: {content: $title}}]}, "카테고리": {multi_select: [{name: "[미정]"}]}}}')
+PAYLOAD=$(jq -n --arg db "$NOTION_DB_ID" --arg prop "$TITLE_PROP" --arg title "$TITLE" --arg category "${CATEGORY:-[미정]}" \
+  '{parent: {database_id: $db}, properties: {($prop): {title: [{text: {content: $title}}]}, "카테고리": {multi_select: [{name: $category}]}}}')
 CREATED=$(notion POST pages "$PAYLOAD")
 if [[ "$(status "$CREATED")" != 200 ]]; then
   echo "::error::노션 페이지 새로 만들기 실패: $(body "$CREATED")" >&2
