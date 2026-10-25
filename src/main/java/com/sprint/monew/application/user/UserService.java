@@ -49,13 +49,14 @@ public class UserService implements IUserService {
 
     @Override
     public User login(String email, String password) {
-        User user =
-                repository
-                        .findUserByEmail(email)
-                        .orElseThrow(() -> new MonewException(UserErrorType.USER_LOGIN_FAILED));
+        User user = repository.findUserByEmail(email).orElseThrow(this::loginFailed);
         if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new MonewException(UserErrorType.USER_LOGIN_FAILED);
+            throw loginFailed();
         }
         return user;
+    }
+
+    private MonewException loginFailed() {
+        return new MonewException(UserErrorType.USER_LOGIN_FAILED);
     }
 }
