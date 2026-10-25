@@ -30,8 +30,15 @@ jobs:
               deploy: "[Deploy]", y: "[Deploy]",
             };
 
-            // 이미 변환된 제목이면 그대로 통과 (재실행 시 무한 반복 방지)
-            if (Object.values(map).some((prefix) => title.startsWith(prefix))) {
+            const emoji = {
+              "[Feat]": "✨", "[Fix]": "🛠️", "[Refactor]": "♻️", "[Docs]": "🗂️",
+              "[Chore]": "⚙️", "[Test]": "📝", "[Batch]": "⏰", "[Deploy]": "🚀",
+            };
+            const typed = (text) => text.match(/^[^\[\w]*(\[(?:Feat|Fix|Refactor|Docs|Chore|Test|Batch|Deploy)\])([\s\S]*)$/);
+            const withEmoji = (m) => `${emoji[m[1]]} ${m[1]}${m[2]}`;
+
+            const head = typed(title);
+            if (head && withEmoji(head) === title) {
               console.log(`이미 변환된 제목입니다: "${title}"`);
               return;
             }
@@ -39,10 +46,12 @@ jobs:
             // 콜론(:)은 한글 키보드에서 Shift가 필요해서 세미콜론(;)도 같이 허용
             const matched = title.match(/^(feat|fix|refactor|docs|chore|test|batch|deploy|f|x|r|d|c|t|b|y)\s*[:;]\s*(.+)$/);
             let newTitle;
-            if (matched) {
+            if (head) {
+              newTitle = withEmoji(head);
+            } else if (matched) {
               const [, type, description] = matched;
               // 커밋 메시지에서 온 제목이면 끝에 [#번호]가 붙어 있음 — PR 제목엔 이슈 번호를 안 넣으므로 뗌
-              newTitle = `${map[type]} : ${description.replace(/\s*\[#\d+\]\s*$/, "")}`;
+              newTitle = `${emoji[map[type]]} ${map[type]} : ${description.replace(/\s*\[#\d+\]\s*$/, "")}`;
             } else {
               // 커밋이 2개 이상이면 GitHub이 브랜치 이름("Chore/999 commit practice")을 제목으로 채움 —
               // 브랜치({타입}/{이슈번호}-{키워드})의 이슈 번호로 이슈 제목을 가져와 PR 제목으로 쓴다
@@ -61,14 +70,15 @@ jobs:
                   console.log(`이슈 #${issueNumber}를 찾지 못했습니다: ${e.message}`);
                 }
               }
-              if (!Object.values(map).some((prefix) => issueTitle.startsWith(prefix))) {
+              const issueHead = typed(issueTitle);
+              if (!issueHead) {
                 core.setFailed(
                   `PR 제목 형식이 올바르지 않습니다: "${title}"\n` +
                   `예: feat: 관심사 등록 API 추가 (또는 단축키 f: 관심사 등록 API 추가)`
                 );
                 return;
               }
-              newTitle = issueTitle;
+              newTitle = withEmoji(issueHead);
             }
             await github.rest.pulls.update({
               owner: context.repo.owner,

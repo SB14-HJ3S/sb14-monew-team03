@@ -47,6 +47,7 @@ case "$FIRST_LINE" in
   "Revert "*)
     INNER=$(printf '%s' "$FIRST_LINE" | sed -E \
       -e 's/^Revert "(.*)"$/\1/' \
+      -e 's/^[^A-Za-z[]*\[/[/' \
       -e "s/^($TYPES)(\((red|green|blue)\))?[[:space:]]*:[[:space:]]*//" \
       -e 's/^\[[A-Za-z]+\][[:space:]]*:[[:space:]]*//' \
       -e 's/[[:space:]]*(\[#[0-9]+\]|\(#[0-9]+\))[[:space:]]*$//')
