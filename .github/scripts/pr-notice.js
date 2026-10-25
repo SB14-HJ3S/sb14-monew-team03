@@ -188,38 +188,45 @@ async function coverageNotice({ github, context, core }) {
     return;
   }
   const { execSync } = require('child_process');
-  const diff = execSync(
-    `git -c core.quotePath=false diff -U0 --no-color "origin/${process.env.BASE_REF}...HEAD" -- src/main/java`,
-    { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 },
-  );
-  const changed = changedLines(diff);
+  const git = (args) =>
+    execSync(`git -c core.quotePath=false ${args}`, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  const range = `"origin/${process.env.BASE_REF}...HEAD"`;
+  const changed = changedLines(git(`diff -U0 --no-color ${range} -- src/main/java`));
+  const testChanged = git(`diff --name-only ${range} -- src/test/java`).trim() !== '';
   const report = coverageReport(fs.readFileSync(reportPath, 'utf8'));
 
   const rows = [];
+  let allTested = true;
   for (const [file, lines] of changed) {
     const info = report.files.get(file);
     if (!info || lines.size === 0) continue;
     const missed = ranges([...lines].filter((n) => info.uncovered.has(n)));
+    if (missed.length > 0) allTested = false;
     const shown = missed.length > 15 ? [...missed.slice(0, 15), `외 ${missed.length - 15}곳`] : missed;
     const pct = info.percent === null ? '-' : `${info.percent.toFixed(1)}%`;
     rows.push(`| \`${path.basename(file)}\` | ${pct} | ${shown.length ? shown.join(', ') : '✅ 없음'} |`);
   }
-  if (rows.length === 0) {
-    core.info('커버리지를 계산하는 본 코드가 바뀌지 않아 안내를 건너뛰어요');
+  if (rows.length === 0 && !testChanged) {
+    core.info('본 코드와 테스트 코드가 바뀌지 않아 안내를 건너뛰어요');
     return;
   }
 
   const total = report.total === null ? '-' : `${report.total.toFixed(1)}%`;
   const mark = report.total !== null && report.total >= COVERAGE_TARGET ? '✅' : '📊';
-  const body = [
-    `### ${mark} 테스트 커버리지 ${total} (목표 ${COVERAGE_TARGET}%)`,
-    '',
-    '이번 PR에서 바뀐 파일',
-    '',
-    '| 파일 | 커버리지 | 테스트 안 된 줄 (이번에 바꾼 줄 중) |',
-    '|---|---|---|',
-    ...rows,
-  ].join('\n');
+  const heading = `### ${mark} 테스트 커버리지 ${total} (목표 ${COVERAGE_TARGET}%)`;
+  const body =
+    rows.length === 0
+      ? [heading, '', '이번 PR에서 바뀐 본 코드가 없어 전체 커버리지만 보여 줘요'].join('\n')
+      : [
+          heading,
+          '',
+          ...(allTested ? ['✅ 이번에 바꾼 줄은 모두 테스트됐어요', ''] : []),
+          '이번 PR에서 바뀐 파일',
+          '',
+          '| 파일 | 커버리지 | 테스트 안 된 줄 (이번에 바꾼 줄 중) |',
+          '|---|---|---|',
+          ...rows,
+        ].join('\n');
 
   await upsertNotice(
     { github, context },
