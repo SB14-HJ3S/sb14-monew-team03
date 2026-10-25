@@ -24,11 +24,17 @@ jobs:
           BEFORE: ${{ github.event.before }}
           AFTER: ${{ github.event.after }}
         run: |
-          INFO=$(gh api "repos/$REPO/commits/$AFTER" --jq '"\(.parents|length)|\(.parents[0].sha)|\(.commit.message|split("\n")[0])"' 2>/dev/null) || exit 0
-          IFS='|' read -r NP P1 TITLE <<< "$INFO"
-          if [ "$NP" -ge 2 ] && [ "$P1" = "$BEFORE" ] && [[ "$TITLE" == "merge : "* ]]; then
+          INFO=$(gh api "repos/$REPO/commits/$AFTER" --jq '"\(.parents|length)|\(.parents[0].sha)|\(.parents[1].sha)|\(.commit.message|split("\n")[0])"' 2>/dev/null) || exit 0
+          IFS='|' read -r NP P1 P2 TITLE <<< "$INFO"
+          if [ "$NP" -ne 2 ] || [ "$P1" != "$BEFORE" ] || [[ "$TITLE" != "merge : "* ]]; then exit 0; fi
+          git init -q "$RUNNER_TEMP/merge-check" && cd "$RUNNER_TEMP/merge-check"
+          git fetch -q "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" "$AFTER" || exit 0
+          AUTO=$(git merge-tree --write-tree --name-only --no-messages "$P1" "$P2" 2>/dev/null) || AUTO=conflict
+          if [ "$AUTO" = "$(git rev-parse "$AFTER^{tree}")" ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
             echo "::notice::develop 반영(merge :) 커밋만 올라와서 자동 리뷰를 건너뜁니다."
+          else
+            echo "::notice::머지하면서 충돌을 풀거나 코드를 고쳐서 자동 리뷰를 실행합니다."
           fi
 
       - name: Checkout repository
