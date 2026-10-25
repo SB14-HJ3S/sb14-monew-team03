@@ -5,6 +5,7 @@ import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.CommonErrorType;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 
 public record PageResult<T>(
@@ -41,6 +42,10 @@ public record PageResult<T>(
         T last = content.get(content.size() - 1);
         String nextCursor = cursorExtractor.apply(last);
         Instant nextAfter = last.getCreatedAt();
+
+        if (Objects.isNull(nextCursor) && Objects.isNull(nextAfter)) {
+            throw new MonewException(CommonErrorType.INVALID_REQUEST);
+        }
 
         return new PageResult<>(
                 content, nextCursor, nextAfter, content.size(), totalElements, true);
