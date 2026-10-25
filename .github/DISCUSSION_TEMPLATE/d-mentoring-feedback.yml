@@ -1,4 +1,4 @@
-# 제목을 그대로 두면 "[261019(월)] 강사님 피드백"처럼 자동 제목으로 바뀐다
+# 제목을 그대로 두면 "[26.10.19(월)] 강사님 피드백"처럼 자동 제목으로 바뀐다
 # ⚠️ 아래 title 문구를 바꾸면 워크플로의 PLACEHOLDER_TITLE도 같이 바꿀 것
 title: "제목을 수정하지 않으면 자동 제목으로 채워집니다"
 labels: ["question:질문"]
@@ -8,6 +8,20 @@ body:
       value: |
         ## 멘토링·피드백
         작성하면 노션 "멘토링" DB에 자동으로 동기화됩니다. `question:질문`과 피드백 종류(`강사님`/`멘토님`/`etc:기타`) 라벨이 자동으로 붙고, 다른 라벨은 필요하면 직접 붙이거나 떼면 됩니다.
+  - type: dropdown
+    id: notion_category
+    attributes:
+      label: 🗂️ 노션 카테고리
+      description: 노션 "멘토링" DB의 카테고리에 들어갑니다. 정해지지 않았으면 [미정] 그대로 두세요.
+      options:
+        - "[미정]"
+        - "[1차] 멘토링"
+        - "[2차] 멘토링"
+        - "[3차] 멘토링"
+        - "[4차] 멘토링"
+      default: 0
+    validations:
+      required: false
   - type: dropdown
     id: feedback_type
     attributes:
@@ -23,7 +37,7 @@ body:
     id: datetime
     attributes:
       label: 📆 날짜·시간
-      description: 비워두면 이 글을 올린 날짜·시간이 들어갑니다. 다르면 "261019 14:00"처럼 적어주세요. (시간은 빼도 됨)
+      description: 비워두면 이 글을 올린 날짜·시간이 들어갑니다. 다르면 "26.10.19 14:00"처럼 적어주세요. (시간은 빼도 됨)
     validations:
       required: false
   - type: dropdown

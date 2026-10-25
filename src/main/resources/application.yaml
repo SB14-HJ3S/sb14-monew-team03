@@ -21,6 +21,10 @@ spring:
   jackson:
     time-zone: Asia/Seoul # 응답 날짜의 시간대 (단, Instant 타입은 항상 UTC로 나감)
 
+  data:
+    mongodb:
+      auto-index-creation: true
+
   batch:
     job:
       # Spring Batch 기본값은 "앱이 뜰 때 Job을 전부 한 번 실행"이라 꺼 둠 — 실행은 Scheduler나 수동으로만

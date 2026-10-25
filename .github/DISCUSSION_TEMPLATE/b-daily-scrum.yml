@@ -1,4 +1,4 @@
-# 제목을 그대로 두면 "[261019(월)] 데일리 스크럼"처럼 자동 제목으로 바뀐다
+# 제목을 그대로 두면 "[26.10.19(월)] 데일리 스크럼"처럼 자동 제목으로 바뀐다
 # ⚠️ 아래 title 문구를 바꾸면 워크플로의 PLACEHOLDER_TITLE도 같이 바꿀 것
 title: "제목을 수정하지 않으면 자동 제목으로 채워집니다"
 labels: ["scrum:데일리스크럼"]
@@ -9,6 +9,20 @@ body:
         ## 회의록
         작성하면 노션 "회의록" DB에 자동으로 동기화됩니다. 작성자는 자동으로 기록되니 따로 안 적어도 됩니다.
         수정 후 다시 반영하려면 이 디스커션에 `resync:재연동` 라벨을 붙여주세요.
+  - type: dropdown
+    id: notion_category
+    attributes:
+      label: 🗂️ 노션 카테고리
+      description: 노션 "회의록" DB의 카테고리에 들어갑니다. 정해지지 않았으면 [미정] 그대로 두세요.
+      options:
+        - "[미정]"
+        - "[1차] 팀 미팅"
+        - "[2차] 팀 미팅"
+        - "[3차] 팀 미팅"
+        - "[4차] 팀 미팅"
+      default: 0
+    validations:
+      required: false
   - type: dropdown
     id: meeting_type
     attributes:
@@ -24,26 +38,8 @@ body:
   - type: input
     id: date
     attributes:
-      label: 📆 날짜(요일)·시간
-      description: 비워두면 이 글을 올린 날짜·시간이 자동으로 채워집니다. 다른 날짜로 기록하려면 261007처럼 적어주세요.
-    validations:
-      required: false
-  - type: dropdown
-    id: meeting_ampm
-    attributes:
-      label: 🕘 오전/오후
-      description: 노션 "오전/오후" 속성에 들어갑니다.
-      options:
-        - 오전
-        - 오후
-      default: 0
-    validations:
-      required: false
-  - type: input
-    id: meeting_time
-    attributes:
-      label: ⏰ 회의 시간
-      description: 선택 사항이에요. 적으면 노션에 "오전 11시"처럼 오전/오후와 같이 들어갑니다. (예 11시, 11:00)
+      label: 📆 회의 날짜(요일) · 회의 시간
+      description: 비워두면 이 글을 올린 날짜·시간이 자동으로 채워집니다. 다른 날짜로 기록하려면 26.10.07처럼 적어주세요.
     validations:
       required: false
   - type: dropdown
@@ -108,5 +104,23 @@ body:
     attributes:
       label: 📑 기타
       description: 팀 회의 메모 / 멘토링 / 강사님 피드백 등
+    validations:
+      required: false
+  - type: textarea
+    id: comment_template
+    attributes:
+      label: 📝 댓글 양식 (복사해서 쓰세요)
+      description: 위 칸에 못 적은 사람은 글이 올라간 뒤 이 양식을 복사해서 댓글로 남겨 주세요. 그대로 두면 됩니다.
+      value: |
+        ```markdown
+        **1. 한 것**
+        -
+
+        **2. 할 것**
+        -
+
+        **3. 기타 사항** (막히는 점, 도움이 필요한 점 등)
+        -
+        ```
     validations:
       required: false
