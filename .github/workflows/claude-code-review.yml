@@ -15,12 +15,30 @@ jobs:
       id-token: write
 
     steps:
+      - name: develop 반영 커밋만 올라왔는지 확인
+        id: skip
+        if: github.event.action == 'synchronize'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.event.after }}
+        run: |
+          TITLES=$(gh api "repos/$REPO/compare/$BEFORE...$AFTER" --jq '.commits[].commit.message | split("\n")[0]' 2>/dev/null) || exit 0
+          [ -n "$TITLES" ] || exit 0
+          if ! printf '%s\n' "$TITLES" | grep -qv '^merge : '; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::develop 반영(merge :) 커밋만 올라와서 자동 리뷰를 건너뜁니다."
+          fi
+
       - name: Checkout repository
+        if: steps.skip.outputs.skip != 'true'
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 1
 
       - name: Run Claude Code Review
+        if: steps.skip.outputs.skip != 'true'
         id: claude-review
         uses: anthropics/claude-code-action@f27be6b65a4652f08a2ba3cff79114829b588967 # v1
         with:
