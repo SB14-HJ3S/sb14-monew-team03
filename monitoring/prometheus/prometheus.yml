@@ -1,0 +1,18 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: monew-app
+    metrics_path: /actuator/prometheus
+    # Cloud Map SRV 레코드(IP+포트)로 앱을 찾아서, 포트가 바뀌어도 동작 (A 레코드만 있으면 대상 0개)
+    dns_sd_configs:
+      - names:
+          - app.monew.local
+        type: SRV
+        refresh_interval: 30s
+
+  - job_name: prometheus
+    static_configs:
+      - targets:
+          - localhost:9090
