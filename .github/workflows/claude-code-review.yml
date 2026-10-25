@@ -24,9 +24,9 @@ jobs:
           BEFORE: ${{ github.event.before }}
           AFTER: ${{ github.event.after }}
         run: |
-          TITLES=$(gh api "repos/$REPO/compare/$BEFORE...$AFTER" --jq '.commits[].commit.message | split("\n")[0]' 2>/dev/null) || exit 0
-          [ -n "$TITLES" ] || exit 0
-          if ! printf '%s\n' "$TITLES" | grep -qv '^merge : '; then
+          INFO=$(gh api "repos/$REPO/commits/$AFTER" --jq '"\(.parents|length)|\(.parents[0].sha)|\(.commit.message|split("\n")[0])"' 2>/dev/null) || exit 0
+          IFS='|' read -r NP P1 TITLE <<< "$INFO"
+          if [ "$NP" -ge 2 ] && [ "$P1" = "$BEFORE" ] && [[ "$TITLE" == "merge : "* ]]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
             echo "::notice::develop 반영(merge :) 커밋만 올라와서 자동 리뷰를 건너뜁니다."
           fi
