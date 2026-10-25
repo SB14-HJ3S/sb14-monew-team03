@@ -9,8 +9,9 @@ import com.sprint.monew.global.annotation.RestWebAdapter;
 import com.sprint.monew.global.pagination.PageResult;
 import com.sprint.monew.global.pagination.SortDirection;
 import jakarta.validation.Valid;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -37,7 +38,9 @@ public class InterestController {
             @RequestParam(name = "orderBy", required = true) InterestQuery.SortOrder sortOrder,
             @RequestParam(name = "direction", required = true) SortDirection sortDirection,
             @RequestParam(name = "cursor", required = false) String cursor,
-            @RequestParam(name = "after", required = false) LocalDateTime after,
+            @RequestParam(name = "after", required = false)
+                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                    Instant after,
             @RequestParam(name = "limit", required = true) int limit) {
         InterestQuery query =
                 InterestQuery.of(keyword, sortOrder, sortDirection, cursor, after, limit);

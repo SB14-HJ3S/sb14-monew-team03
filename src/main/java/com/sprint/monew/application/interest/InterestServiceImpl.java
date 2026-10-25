@@ -57,12 +57,7 @@ public class InterestServiceImpl implements InterestService {
         return PageResult.of(
                 repository.findByQuery(query),
                 repository.countByQuery(query),
-                query,
-                interest ->
-                        switch (query.orderBy()) {
-                            case NAME -> interest.getName();
-                            case SUBSCRIBER_COUNT -> interest.getSubscriberCount().toString();
-                        },
-                Interest::getCreatedAt);
+                query.orderBy(),
+                query.limit());
     }
 }
