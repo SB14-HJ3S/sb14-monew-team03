@@ -150,12 +150,71 @@ jobs:
           fi
 
       - name: Deploy to ECS
+        id: deploy
         uses: aws-actions/amazon-ecs-deploy-task-definition@a00d4d57ac0de1a99b39fe469f3d898d38717c2b # v2
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
           service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
+
+      - name: 배포 실패 원인 출력
+        if: ${{ failure() && steps.deploy.outcome == 'failure' }}
+        shell: bash
+        run: |
+          set +e
+          echo "::group::ECS 서비스 최근 이벤트 (10개)"
+          aws ecs describe-services --cluster "$ECS_CLUSTER" --services "$ECS_SERVICE" \
+            --query 'services[0].events[:10].[createdAt,message]' --output text
+          echo "::endgroup::"
+
+          echo "::group::멈춘 태스크 사유 (최근 5개)"
+          TASKS=$(aws ecs list-tasks --cluster "$ECS_CLUSTER" --service-name "$ECS_SERVICE" \
+            --desired-status STOPPED --max-items 5 --query 'taskArns' --output text)
+          if [ -n "$TASKS" ] && [ "$TASKS" != "None" ]; then
+            aws ecs describe-tasks --cluster "$ECS_CLUSTER" --tasks $TASKS \
+              --query 'tasks[].{stoppedAt:stoppedAt,reason:stoppedReason,containers:containers[].{name:name,exitCode:exitCode,reason:reason}}' \
+              --output json
+          else
+            echo "멈춘 태스크가 없습니다."
+          fi
+          echo "::endgroup::"
+
+          echo "::group::앱 로그 (최근 20분)"
+          LOG_GROUP=$(jq -r '.containerDefinitions[] | select(.name == "monew-app") | .logConfiguration.options["awslogs-group"] // empty' task-definition.json)
+          if [ -n "$LOG_GROUP" ]; then
+            START=$(( ($(date +%s) - 1200) * 1000 ))
+            aws logs filter-log-events --log-group-name "$LOG_GROUP" --start-time "$START" \
+              --query 'events[-200:].message' --output text | tr '\t' '\n'
+          else
+            echo "태스크 정의에서 로그 그룹을 찾지 못했습니다."
+          fi
+          echo "::endgroup::"
+
+      - name: 배포 요약표
+        if: ${{ always() }}
+        env:
+          TARGET_SHA: ${{ needs.check-latest.outputs.sha }}
+          TASK_DEF_ARN: ${{ steps.deploy.outputs.task-definition-arn }}
+          DEPLOY_OUTCOME: ${{ steps.deploy.outcome }}
+        run: |
+          case "$DEPLOY_OUTCOME" in
+            success) RESULT="✅ 성공" ;;
+            failure) RESULT="❌ 실패 (원인은 '배포 실패 원인 출력' 단계 로그)" ;;
+            cancelled) RESULT="⏹️ 취소" ;;
+            *) RESULT="⏭️ 배포 단계까지 가지 않음" ;;
+          esac
+          {
+            echo "### 🚀 배포 요약"
+            echo ""
+            echo "| 항목 | 값 |"
+            echo "| --- | --- |"
+            echo "| 결과 | $RESULT |"
+            echo "| 커밋 | \`${TARGET_SHA:0:7}\` |"
+            echo "| 이미지 태그 | \`${TARGET_SHA}\` |"
+            echo "| 태스크 정의 | \`${TASK_DEF_ARN##*/}\` |"
+            echo "| 클러스터 / 서비스 | \`$ECS_CLUSTER\` / \`$ECS_SERVICE\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: 오래된 ECR 이미지 정리 (최신 2개만 보존)
         # 배포 성공(wait-for-service-stability) 이후에만 실행. 배포 전에 지우면, 배포가
