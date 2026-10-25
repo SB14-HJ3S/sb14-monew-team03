@@ -292,7 +292,7 @@ async function syncMerge({ github, context, exec }) {
   const number = context.payload.issue.number;
   const ref = process.env.HEAD_REF;
   const issue = issueOf(ref);
-  const title = `chore : develop 최신 내용 반영${issue ? ` [#${issue}]` : ''}`;
+  const title = `merge : develop 최신 내용 반영${issue ? ` [#${issue}]` : ''}`;
 
   await git(exec, ['config', 'user.name', PUSH_BOT_NAME]);
   await git(exec, ['config', 'user.email', PUSH_BOT_EMAIL]);
