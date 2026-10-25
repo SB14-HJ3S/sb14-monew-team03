@@ -28,8 +28,7 @@ public record ArticleQuery(
         @NotNull SortDirection direction,
         String cursor,
         Instant after,
-        @Min(1) int limit,
-        @NotNull UUID requestId)
+        @Min(1) int limit)
         implements SortedPageQuery<Article, ArticleQuery.SortOrder> {
     public static ArticleQuery of(
             String keyword,
@@ -41,8 +40,7 @@ public record ArticleQuery(
             SortDirection direction,
             String cursor,
             LocalDateTime after,
-            int limit,
-            UUID requestId) {
+            int limit) {
         return new ArticleQuery(
                 keyword,
                 interestId,
@@ -53,8 +51,7 @@ public record ArticleQuery(
                 direction,
                 cursor,
                 Objects.nonNull(after) ? after.atZone(ZoneId.systemDefault()).toInstant() : null,
-                limit,
-                requestId);
+                limit);
     }
 
     @Getter
