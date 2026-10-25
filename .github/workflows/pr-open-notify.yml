@@ -2,7 +2,7 @@ name: PR Open Notification (Channel)
 
 on:
   pull_request:
-    types: [opened]
+    types: [opened, ready_for_review]
     branches: [dev, develop, main]
 
 permissions: {}
