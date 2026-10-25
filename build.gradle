@@ -169,12 +169,18 @@ tasks.register('externalTest', Test) {
 def jacocoExcludes = [
 	'**/dto/**',               // DTO(record): 필드만 담는 그릇, 테스트할 로직 없음
 	'**/config/**',            // 설정 클래스: 빈 등록만 함
-	'**/*Application.class',   // 메인 클래스: main()뿐
+	'**/MonewApplication.class', // 메인 클래스: main()뿐
+	'**/event/*Event.class',
 	// 공통 코드: 테스트는 각자 자기 도메인만 짜기로 해서, 커버리지를 도메인 코드만으로 계산
 	'**/global/**',
 	// QueryDSL이 자동 생성하는 Q클래스 — 그냥 'Q*'로 쓰면 QuestionService 같은 클래스까지 빠져서 entity 경로로 한정
 	// 주의: entity 패키지에 Q로 시작하는 진짜 엔티티(예: QuizResult)를 만들면 같이 빠지니 그런 이름은 피할 것
 	'**/entity/Q*.class',
+]
+
+def jacocoIncludes = [
+	'**/global/util/similarity/StringSimilarityUtils*.class',
+	'**/global/web/RequestIdInterceptor*.class',
 ]
 
 jacocoTestReport {
@@ -186,7 +192,7 @@ jacocoTestReport {
 	}
 	afterEvaluate {
 		classDirectories.setFrom(files(classDirectories.files.collect {
-			fileTree(dir: it, exclude: jacocoExcludes)
+			[fileTree(dir: it, exclude: jacocoExcludes), fileTree(dir: it, include: jacocoIncludes)]
 		}))
 	}
 }
@@ -197,7 +203,7 @@ jacocoTestCoverageVerification {
 	dependsOn jacocoTestReport
 	afterEvaluate {
 		classDirectories.setFrom(files(classDirectories.files.collect {
-			fileTree(dir: it, exclude: jacocoExcludes)
+			[fileTree(dir: it, exclude: jacocoExcludes), fileTree(dir: it, include: jacocoIncludes)]
 		}))
 	}
 	violationRules {
