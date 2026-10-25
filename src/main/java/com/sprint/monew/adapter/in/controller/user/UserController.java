@@ -33,7 +33,9 @@ public class UserController {
 
     @PostMapping("/login")
     public UserDto login(@Valid @RequestBody UserLoginRequest request) {
+        log.info("로그인 요청");
         UserResult result = userUseCase.login(request.email(), request.password());
+        log.info("로그인 성공: userId={}", result.id());
         return UserDto.from(result);
     }
 }
