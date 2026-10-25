@@ -1,0 +1,159 @@
+name: Develop Sync
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
+    branches: [develop]
+  push:
+    branches: [develop]
+  issue_comment:
+    types: [edited]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  status:
+    if: github.event_name != 'issue_comment'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: develop-sync-status-${{ github.event.pull_request.number || 'develop' }}
+      cancel-in-progress: true
+    outputs:
+      builds: ${{ steps.check.outputs.builds }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
+      - name: PR 상태 확인
+        id: check
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            const sync = require('./.github/scripts/develop-sync.js');
+            await sync.status({ github, context, core, exec });
+
+  build:
+    needs: status
+    if: needs.status.outputs.builds != '' && needs.status.outputs.builds != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        pr: ${{ fromJSON(needs.status.outputs.builds) }}
+    concurrency:
+      group: develop-sync-build-${{ matrix.pr.number }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
+      - name: PR과 최신 develop 합치기
+        id: merge
+        continue-on-error: true
+        env:
+          HEAD_SHA: ${{ matrix.pr.sha }}
+        run: |
+          git config user.name 'monew-discussion-bot[bot]'
+          git config user.email '344808795+monew-discussion-bot[bot]@users.noreply.github.com'
+          git fetch -q origin +refs/heads/develop:refs/remotes/origin/develop "$HEAD_SHA"
+          git checkout -q --detach "$HEAD_SHA"
+          git merge --no-edit --no-ff origin/develop
+
+      - name: JDK 17 설정
+        if: steps.merge.outcome == 'success'
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: 합친 상태로 빌드·테스트
+        id: build
+        if: steps.merge.outcome == 'success'
+        continue-on-error: true
+        run: |
+          chmod +x gradlew
+          ./gradlew build
+
+      - name: 결과를 안내 댓글에 반영
+        if: ${{ !cancelled() }}
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        env:
+          PR_NUMBER: ${{ matrix.pr.number }}
+          FILES: ${{ toJSON(matrix.pr.files) }}
+          MERGE_OUTCOME: ${{ steps.merge.outcome }}
+          BUILD_OUTCOME: ${{ steps.build.outcome }}
+        with:
+          script: |
+            const sync = require('./.github/scripts/develop-sync.js');
+            await sync.buildResult({ github, context });
+
+  sync:
+    if: >-
+      github.event_name == 'issue_comment' &&
+      github.event.issue.pull_request &&
+      github.event.sender.type != 'Bot' &&
+      contains(github.event.comment.body, '<!-- develop-sync -->')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: develop-sync-merge-${{ github.event.issue.number }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          sparse-checkout: .github/scripts
+
+      - name: 체크박스 확인
+        id: check
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            const sync = require('./.github/scripts/develop-sync.js');
+            await sync.syncCheck({ github, context, core });
+
+      - name: 봇 토큰 발급
+        id: bot
+        if: steps.check.outputs.ok == 'true'
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.DISCUSSION_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.DISCUSSION_BOT_PRIVATE_KEY }}
+
+      - name: PR 브랜치 받기
+        if: steps.check.outputs.ok == 'true'
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ steps.check.outputs.ref }}
+          token: ${{ steps.bot.outputs.token }}
+          fetch-depth: 0
+          path: pr
+
+      - name: 최신 develop 반영
+        if: steps.check.outputs.ok == 'true'
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        env:
+          HEAD_REF: ${{ steps.check.outputs.ref }}
+        with:
+          script: |
+            const sync = require('./.github/scripts/develop-sync.js');
+            process.chdir('pr');
+            await sync.syncMerge({ github, context, exec });
+
+      - name: 반영 실패 안내
+        if: ${{ failure() && steps.check.outputs.ok == 'true' }}
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: context.issue.number,
+              body: `최신 develop을 반영하지 못했어요. [실행 기록](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})을 확인해 주세요`,
+            });
