@@ -1,0 +1,28 @@
+name: CodeRabbit Limit Cleanup
+
+on:
+  issue_comment:
+    types: [created, edited]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  cleanup:
+    if: >-
+      github.event.issue.pull_request &&
+      github.event.comment.user.login == 'coderabbitai[bot]' &&
+      (contains(github.event.comment.body, 'Review limit reached') ||
+       contains(github.event.comment.body, 'Review rate limited') ||
+       contains(github.event.comment.body, 'Rate limit exceeded')) &&
+      !contains(github.event.comment.body, 'walkthrough_start')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: 한도 초과 댓글 지우기
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+        run: gh api -X DELETE "repos/$REPO/issues/comments/$COMMENT_ID"

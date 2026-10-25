@@ -55,16 +55,17 @@ jobs:
             echo "participants=$(echo "$RESULT" | jq -c '.participants')"
             echo "feedback_type=$(echo "$RESULT" | jq -r '.feedback_type')"
             echo "note=$(echo "$RESULT" | jq -r '.note')"
+            echo "category=$(echo "$RESULT" | jq -r '.category')"
           } >> "$GITHUB_OUTPUT"
 
-      # 제목을 기본 문구 그대로 뒀을 때만 "[261019(월)] 강사님 피드백"으로 바꿈 (직접 쓴 제목은 그대로, 노션에도 그 제목)
+      # 제목을 기본 문구 그대로 뒀을 때만 "[26.10.19(월)] 강사님 피드백"으로 바꿈 (직접 쓴 제목은 그대로, 노션에도 그 제목)
       - name: 자동 제목 정하기
         id: title
         env:
           CURRENT_TITLE: ${{ github.event.discussion.title }}
           AUTO_TITLE: ${{ steps.fields.outputs.title }}
         run: |
-          AUTO_PATTERN='^\[[0-9]{6}\([^)]+\)\]( (강사님|멘토님|기타) 피드백)?$'
+          AUTO_PATTERN='^\[([0-9]{6}|[0-9]{2}\.[0-9]{2}\.[0-9]{2})\([^)]+\)\]( (강사님|멘토님|기타) 피드백)?$'
           CURRENT=$(printf '%s' "$CURRENT_TITLE" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')
           if [[ "$CURRENT" == "$PLACEHOLDER_TITLE" || "$CURRENT" =~ $AUTO_PATTERN ]]; then
             TITLE="$AUTO_TITLE"
@@ -115,7 +116,7 @@ jobs:
               }' -f labelableId="$DISCUSSION_NODE_ID" "${LABEL_ARGS[@]}"
           fi
 
-      # 날짜·시간 칸을 비워 두고 올리면 GitHub가 "_No response_"로 남기므로, 글 올린 날짜·시간(예 261019(월) 14:00)으로 채워 둔다
+      # 날짜·시간 칸을 비워 두고 올리면 GitHub가 "_No response_"로 남기므로, 글 올린 날짜·시간(예 26.10.19(월) 14:00)으로 채워 둔다
       - name: 비워 둔 날짜·시간 칸 채우고 칸 사이 구분선 넣기
         continue-on-error: true
         env:
@@ -153,9 +154,10 @@ jobs:
           NOTION_USER_MAP: ${{ vars.NOTION_USER_MAP }}
           FEEDBACK_TYPE: ${{ steps.fields.outputs.feedback_type }}
           NOTE: ${{ steps.fields.outputs.note }}
+          CATEGORY: ${{ steps.fields.outputs.category }}
           # 회의록과 같은 스크립트로 본문을 만들되 멘토링 항목 기준 (속성으로 들어가는 항목은 본문에서 뺌)
-          NOTION_FIELDS: '["🧑‍🏫 피드백 종류","📆 날짜·시간","😄 질문자 및 참여자","⚠️ 특이사항","📝 내용"]'
-          NOTION_SKIP: '["🧑‍🏫 피드백 종류","📆 날짜·시간","😄 질문자 및 참여자"]'
+          NOTION_FIELDS: '["🗂️ 노션 카테고리","🧑‍🏫 피드백 종류","📆 날짜·시간","😄 질문자 및 참여자","⚠️ 특이사항","📝 내용"]'
+          NOTION_SKIP: '["🗂️ 노션 카테고리","🧑‍🏫 피드백 종류","📆 날짜·시간","😄 질문자 및 참여자"]'
         run: |
           # 노션 본문 맨 위에 연동 기록 한 줄(GitHub 연동 댓글과 같은 시각)
           SYNCED_AT=$(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M')
@@ -167,6 +169,7 @@ jobs:
             --arg author "$AUTHOR" \
             --arg feedback_type "$FEEDBACK_TYPE" \
             --arg note "$NOTE" \
+            --arg category "$CATEGORY" \
             --arg db_id "$NOTION_DB_ID" \
             --argjson blocks "$BLOCKS" \
             --argjson pmap "${NOTION_PARTICIPANT_MAP:-{\}}" \
@@ -178,7 +181,7 @@ jobs:
               properties: ({
                 "내용": {title: [{text: {content: $title}}]},
                 "날짜": {date: {start: $date}},
-                "카테고리": {multi_select: [{name: "[미정]"}]},
+                "카테고리": {multi_select: [{name: $category}]},
                 "특이사항": {rich_text: (if $note == "" then [] else [{text: {content: $note}}] end)}
               }
               + (if $feedback_type == "" then {} else {"특징": {select: {name: $feedback_type}}} end)
@@ -349,6 +352,7 @@ jobs:
             echo "participants=$(echo "$RESULT" | jq -c '.participants')"
             echo "feedback_type=$(echo "$RESULT" | jq -r '.feedback_type')"
             echo "note=$(echo "$RESULT" | jq -r '.note')"
+            echo "category=$(echo "$RESULT" | jq -r '.category')"
           } >> "$GITHUB_OUTPUT"
 
       # 제목 정하기 (위 create job과 같음)
@@ -358,7 +362,7 @@ jobs:
           CURRENT_TITLE: ${{ github.event.discussion.title }}
           AUTO_TITLE: ${{ steps.fields.outputs.title }}
         run: |
-          AUTO_PATTERN='^\[[0-9]{6}\([^)]+\)\]( (강사님|멘토님|기타) 피드백)?$'
+          AUTO_PATTERN='^\[([0-9]{6}|[0-9]{2}\.[0-9]{2}\.[0-9]{2})\([^)]+\)\]( (강사님|멘토님|기타) 피드백)?$'
           CURRENT=$(printf '%s' "$CURRENT_TITLE" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')
           if [[ "$CURRENT" == "$PLACEHOLDER_TITLE" || "$CURRENT" =~ $AUTO_PATTERN ]]; then
             TITLE="$AUTO_TITLE"
@@ -384,7 +388,7 @@ jobs:
               }' -f discussionId="$DISCUSSION_NODE_ID" -f title="$TITLE"
           fi
 
-      # 날짜·시간 칸을 비워 두고 올리면 글 올린 날짜·시간(예 261019(월) 14:00)으로 채워 둔다
+      # 날짜·시간 칸을 비워 두고 올리면 글 올린 날짜·시간(예 26.10.19(월) 14:00)으로 채워 둔다
       - name: 비워 둔 날짜·시간 칸 채우고 칸 사이 구분선 넣기
         continue-on-error: true
         env:
@@ -415,6 +419,7 @@ jobs:
           PAGE_URL: ${{ steps.find_page.outputs.page_url }}
           TITLE_PROP: 내용
           TITLE: ${{ steps.title.outputs.title }}
+          CATEGORY: ${{ steps.fields.outputs.category }}
         run: bash .github/scripts/ensure-notion-page.sh >> "$GITHUB_OUTPUT"
 
       - name: 노션 페이지 속성 덮어쓰기
@@ -427,6 +432,7 @@ jobs:
           PARTICIPANTS: ${{ steps.fields.outputs.participants }}
           FEEDBACK_TYPE: ${{ steps.fields.outputs.feedback_type }}
           NOTE: ${{ steps.fields.outputs.note }}
+          CATEGORY: ${{ steps.fields.outputs.category }}
           AUTHOR: ${{ github.event.discussion.user.login }}
           NOTION_USER_MAP: ${{ vars.NOTION_USER_MAP }}
           NOTION_PARTICIPANT_MAP: ${{ vars.NOTION_PARTICIPANT_MAP }}
@@ -440,6 +446,7 @@ jobs:
             --arg date "$NOTION_DATE" \
             --arg feedback_type "$FEEDBACK_TYPE" \
             --arg note "$NOTE" \
+            --arg category "$CATEGORY" \
             --argjson participants "${PARTICIPANTS:-[]}" \
             '{
               properties: ({
@@ -449,6 +456,7 @@ jobs:
                 "특징": {select: (if $feedback_type == "" then null else {name: $feedback_type} end)},
                 "참여자": {people: [$participants[] | $pmap[.] | select(. != null) | {id: .}]}
               }
+              + (if $category == "" or $category == "[미정]" then {} else {"카테고리": {multi_select: [{name: $category}]}} end)
               + (if $usermap[$author] then {"서기": {people: [{id: $usermap[$author]}]}} else {} end)
               )
             }')
@@ -502,8 +510,8 @@ jobs:
           AUTHOR: ${{ github.event.discussion.user.login }}
           DISCUSSION_URL: ${{ github.event.discussion.html_url }}
           DATE_LABEL: ${{ steps.fields.outputs.date_label }}
-          NOTION_FIELDS: '["🧑‍🏫 피드백 종류","📆 날짜·시간","😄 질문자 및 참여자","⚠️ 특이사항","📝 내용"]'
-          NOTION_SKIP: '["🧑‍🏫 피드백 종류","📆 날짜·시간","😄 질문자 및 참여자"]'
+          NOTION_FIELDS: '["🗂️ 노션 카테고리","🧑‍🏫 피드백 종류","📆 날짜·시간","😄 질문자 및 참여자","⚠️ 특이사항","📝 내용"]'
+          NOTION_SKIP: '["🗂️ 노션 카테고리","🧑‍🏫 피드백 종류","📆 날짜·시간","😄 질문자 및 참여자"]'
         run: |
           SYNC_LINE=$(FIRST="$SYNC_FIRST" NOW="$SYNC_NOW" COUNT="$SYNC_COUNT" MODE=line bash .github/scripts/build-sync-comment.sh)
           BLOCKS=$(printf '%s' "$BODY" | EXTRA_NOTE="$SYNC_LINE" bash .github/scripts/build-notion-blocks.sh)
