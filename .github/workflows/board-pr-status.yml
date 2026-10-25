@@ -39,7 +39,23 @@ jobs:
               core.warning('PROJECTS_PAT이 없어 보드 상태를 옮기지 않습니다.');
               return;
             }
-            const board = getOctokit(process.env.PROJECTS_PAT);
+            const board = {
+              graphql: async (query, variables) => {
+                const res = await fetch('https://api.github.com/graphql', {
+                  method: 'POST',
+                  headers: {
+                    Authorization: `bearer ${process.env.PROJECTS_PAT}`,
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({ query, variables }),
+                });
+                const json = await res.json();
+                if (!res.ok || json.errors) {
+                  throw new Error(`보드 API 실패 (${res.status}): ${JSON.stringify(json.errors || json)}`);
+                }
+                return json.data;
+              },
+            };
 
             const setStatus = async (contentId, status, label) => {
               const added = await board.graphql(
