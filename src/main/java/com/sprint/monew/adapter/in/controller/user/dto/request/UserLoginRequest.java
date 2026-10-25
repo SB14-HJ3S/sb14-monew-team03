@@ -1,7 +1,7 @@
 package com.sprint.monew.adapter.in.controller.user.dto.request;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 public record UserLoginRequest(
-        @NotBlank String email, // 로그인 이메일
-        @NotBlank String password) {} // 로그인 비밀번호
+        @NotBlank @Email(message = "이메일 형식이 올바르지 않습니다") String email, @NotBlank String password) {}

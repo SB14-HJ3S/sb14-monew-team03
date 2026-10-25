@@ -33,6 +33,7 @@ public class UserController {
 
     @PostMapping("/login")
     public UserDto login(@Valid @RequestBody UserLoginRequest request) {
-        return null;
+        UserResult result = userUseCase.login(request.email(), request.password());
+        return UserDto.from(result);
     }
 }
