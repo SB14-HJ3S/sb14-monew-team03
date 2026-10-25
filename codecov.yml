@@ -13,7 +13,8 @@ coverage:
         informational: true
 comment:
   # PR 댓글은 커버리지가 몇 %인지 한 줄만 보여 준다
-  layout: "condensed_header"
+  layout: "header"
+  hide_project_coverage: false
   behavior: default
   # 커버리지가 바뀐 PR에만 댓글을 단다 — 워크플로·문서·설정만 바꾼 PR에는 달지 않음 (#113)
   require_changes: true
