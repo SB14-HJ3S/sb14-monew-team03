@@ -34,10 +34,14 @@ jobs:
               "[Feat]": "✨", "[Fix]": "🛠️", "[Refactor]": "♻️", "[Docs]": "🗂️",
               "[Chore]": "⚙️", "[Test]": "📝", "[Batch]": "⏰", "[Deploy]": "🚀",
             };
-            const typed = (text) => text.match(/^[^\[\w]*(\[(?:Feat|Fix|Refactor|Docs|Chore|Test|Batch|Deploy)\])([\s\S]*)$/);
+            const typed = (text) => text.match(/^(?:\p{Extended_Pictographic}️?\s*)?(\[(?:Feat|Fix|Refactor|Docs|Chore|Test|Batch|Deploy)\])([\s\S]*)$/u);
             const withEmoji = (m) => `${emoji[m[1]]} ${m[1]}${m[2]}`;
 
             const head = typed(title);
+            if (!head && /\[(?:Feat|Fix|Refactor|Docs|Chore|Test|Batch|Deploy)\]/.test(title)) {
+              core.setFailed(`[타입] 앞에 다른 글자가 있어 제목을 바꾸지 않았어요: "${title}"`);
+              return;
+            }
             if (head && withEmoji(head) === title) {
               console.log(`이미 변환된 제목입니다: "${title}"`);
               return;

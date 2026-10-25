@@ -1,6 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 
+const MAX_BODY = 65000;
+
 function nowKst() {
   const p = Object.fromEntries(
     new Intl.DateTimeFormat('ko-KR', {
@@ -31,7 +33,13 @@ async function upsertNotice({ github, context }, { marker, legacyMarkers = [], p
 
   const prev = existing ? Number((existing.body.match(/재수정 (\d+)회/) || [0, 0])[1]) : 0;
   const footer = existing ? `재수정 ${prev + 1}회, 수정된 시각 ${nowKst()}` : `작성 시각 ${nowKst()}`;
-  const body = [marker, problem ? problemBody.trim() : okBody, '', `<sub>${footer}</sub>`].join('\n');
+  const tail = ['', `<sub>${footer}</sub>`].join('\n');
+  let main = [marker, problem ? problemBody.trim() : okBody].join('\n');
+  const cut = '\n\n…(길어서 생략했어요. Checks 탭에서 전부 볼 수 있어요)';
+  if (main.length + tail.length > MAX_BODY) {
+    main = main.slice(0, MAX_BODY - tail.length - cut.length) + cut;
+  }
+  const body = `${main}\n${tail}`;
 
   if (existing) {
     await github.rest.issues.updateComment({ ...context.repo, comment_id: existing.id, body });

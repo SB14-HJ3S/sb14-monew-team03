@@ -39,7 +39,7 @@ jobs:
 
   build:
     needs: status
-    if: needs.status.outputs.builds != '' && needs.status.outputs.builds != '[]'
+    if: ${{ !cancelled() && needs.status.outputs.builds != '' && needs.status.outputs.builds != '[]' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
@@ -87,13 +87,14 @@ jobs:
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         env:
           PR_NUMBER: ${{ matrix.pr.number }}
+          HEAD_SHA: ${{ matrix.pr.sha }}
           FILES: ${{ toJSON(matrix.pr.files) }}
           MERGE_OUTCOME: ${{ steps.merge.outcome }}
           BUILD_OUTCOME: ${{ steps.build.outcome }}
         with:
           script: |
             const sync = require('./.github/scripts/develop-sync.js');
-            await sync.buildResult({ github, context });
+            await sync.buildResult({ github, context, core });
 
   sync:
     if: >-

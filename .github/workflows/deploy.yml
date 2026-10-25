@@ -170,10 +170,10 @@ jobs:
 
           echo "::group::멈춘 태스크 사유 (최근 5개)"
           TASKS=$(aws ecs list-tasks --cluster "$ECS_CLUSTER" --service-name "$ECS_SERVICE" \
-            --desired-status STOPPED --max-items 5 --query 'taskArns' --output text)
+            --desired-status STOPPED --query 'taskArns[:100]' --output text)
           if [ -n "$TASKS" ] && [ "$TASKS" != "None" ]; then
             aws ecs describe-tasks --cluster "$ECS_CLUSTER" --tasks $TASKS \
-              --query 'tasks[].{stoppedAt:stoppedAt,reason:stoppedReason,containers:containers[].{name:name,exitCode:exitCode,reason:reason}}' \
+              --query 'reverse(sort_by(tasks, &stoppedAt))[:5].{stoppedAt:stoppedAt,reason:stoppedReason,containers:containers[].{name:name,exitCode:exitCode,reason:reason}}' \
               --output json
           else
             echo "멈춘 태스크가 없습니다."
@@ -185,7 +185,7 @@ jobs:
           if [ -n "$LOG_GROUP" ]; then
             START=$(( ($(date +%s) - 1200) * 1000 ))
             aws logs filter-log-events --log-group-name "$LOG_GROUP" --start-time "$START" \
-              --query 'events[-200:].message' --output text | tr '\t' '\n'
+              --output json | jq -s -r '[.[].events[]] | sort_by(.timestamp) | .[-200:][].message'
           else
             echo "태스크 정의에서 로그 그룹을 찾지 못했습니다."
           fi

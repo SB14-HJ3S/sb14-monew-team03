@@ -1,8 +1,8 @@
 name: Board PR Status
 
 on:
-  pull_request:
-    types: [opened, reopened, ready_for_review, converted_to_draft, closed]
+  pull_request_target:
+    types: [opened, reopened, edited, ready_for_review, converted_to_draft, closed]
   issues:
     types: [closed]
 
@@ -71,6 +71,7 @@ jobs:
             const pr = context.payload.pull_request;
             const action = context.payload.action;
             if (action === 'closed' && pr.merged) return;
+            if (action === 'edited' && (pr.state !== 'open' || !context.payload.changes?.body)) return;
 
             let prStatus;
             let issueStatus;

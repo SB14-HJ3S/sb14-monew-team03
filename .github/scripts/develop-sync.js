@@ -211,15 +211,20 @@ async function status({ github, context, core, exec }) {
   await git(exec, ['config', 'user.email', PUSH_BOT_EMAIL]);
 
   const builds = [];
+  const failed = [];
   for (const pr of prs) {
     try {
       const b = await evaluateOne({ github, repo, exec, pr });
       if (b) builds.push(b);
     } catch (e) {
+      failed.push(pr.number);
       core.warning(`PR #${pr.number} 확인 실패: ${e.message}`);
     }
   }
   core.setOutput('builds', JSON.stringify(builds));
+  if (failed.length > 0) {
+    core.setFailed(`PR ${failed.map((n) => `#${n}`).join(', ')} 확인에 실패했어요`);
+  }
 }
 
 function failedTests(dir) {
@@ -238,14 +243,19 @@ function failedTests(dir) {
   return names;
 }
 
-async function buildResult({ github, context }) {
+async function buildResult({ github, context, core }) {
   const repo = context.repo;
   const number = Number(process.env.PR_NUMBER);
   const files = JSON.parse(process.env.FILES || '[]');
   const outcome = process.env.MERGE_OUTCOME === 'failure' ? 'conflict' : process.env.BUILD_OUTCOME;
 
+  const { data: pr } = await github.rest.pulls.get({ ...repo, pull_number: number });
+  if (pr.state !== 'open' || pr.head.sha !== process.env.HEAD_SHA) {
+    core.info(`PR #${number}에 새 커밋이 올라와 이번 결과는 반영하지 않아요`);
+    return;
+  }
+
   if (outcome === 'conflict') {
-    const { data: pr } = await github.rest.pulls.get({ ...repo, pull_number: number });
     await upsert(github, repo, number, TEXT.conflict([], pr.head.ref));
     await setLabel(github, repo, number, 'conflict');
   } else if (outcome === 'success') {
