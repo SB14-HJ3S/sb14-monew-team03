@@ -102,6 +102,12 @@ if [ -n "$TITLE_LINE" ]; then
     -e "${TITLE_LINE}s/^(($TYPES)(\((red|green|blue)\))?)[[:space:]]*[:;][[:space:]]*/\1 : /" \
     "$COMMIT_MSG_FILE" && rm -f "${COMMIT_MSG_FILE}.bak"
 
+  sed -i.bak -E \
+    -e "${TITLE_LINE}s/[[:space:]]+;[[:space:]]*c[[:space:]]*\$/ (클로드 리뷰 반영 수정)/" \
+    -e "${TITLE_LINE}s/[[:space:]]+;[[:space:]]*r[[:space:]]*\$/ (코드래빗 리뷰 반영 수정)/" \
+    -e "${TITLE_LINE}s/[[:space:]]+;[[:space:]]*t[[:space:]]*\$/ (팀원 피드백 반영 수정)/" \
+    "$COMMIT_MSG_FILE" && rm -f "${COMMIT_MSG_FILE}.bak"
+
   # 브랜치명({타입}/{이슈번호}-{키워드})에서 이슈번호를 추출해 제목 끝에 자동으로 붙임
   # 이미 [#번호]가 있으면 중복으로 안 붙임. develop/main처럼 이슈번호가 없는 브랜치면 조용히 건너뜀
   BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null)
@@ -133,6 +139,11 @@ print_examples() {
   echo "  f1 : 관심사 등록 구현              → feat(green) : …"
   echo "  x1 : 중복 저장 오류 수정           → fix(green) : …"
   echo "  r1 : 관심사 서비스 정리            → refactor(blue) : …"
+  echo ""
+  echo "리뷰 반영 단축키 (제목 맨 끝에 띄어쓰기 + ;c / ;r / ;t, \"; c\"처럼 띄어 써도 됨):"
+  echo "  c : 설정파일 수정 ;c → chore : 설정파일 수정 (클로드 리뷰 반영 수정)"
+  echo "  f : 관심사 등록 ;r   → feat : 관심사 등록 (코드래빗 리뷰 반영 수정)"
+  echo "  x : 중복 저장 수정 ;t → fix : 중복 저장 수정 (팀원 피드백 반영 수정)"
   echo ""
   echo "이슈 번호는 현재 브랜치명에서 자동으로 추출해 제목 끝에 붙습니다 (직접 안 적어도 됨):"
   echo "  t1 : 관심사 등록 실패 테스트 추가  →  test(red) : 관심사 등록 실패 테스트 추가 [#30]"
