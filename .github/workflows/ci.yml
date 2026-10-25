@@ -111,59 +111,34 @@ jobs:
           REPORT_URL: ${{ steps.junit.outputs.report_url }}
         with:
           script: |
-            const MARKER = '<!-- test-result-notice -->';
+            const { upsertNotice } = require('./.github/scripts/pr-notice.js');
             const failed = Number(process.env.FAILED || 0);
-            const issue_number = context.payload.pull_request.number;
-
-            const comments = await github.paginate(github.rest.issues.listComments, {
-              ...context.repo,
-              issue_number,
-              per_page: 100,
+            await upsertNotice({ github, context }, {
+              marker: '<!-- test-result-notice -->',
+              problem: failed > 0,
+              problemBody: [
+                `### ❌ 테스트 실패 ${failed}건 (전체 ${process.env.TOTAL}개)`,
+                '',
+                process.env.DETAIL || '',
+                '',
+                `[자세히 보기](${process.env.REPORT_URL})`,
+              ].join('\n'),
+              okBody: `### ✅ 테스트 모두 통과 (전체 ${process.env.TOTAL}개)`,
             });
-            const existing = comments.find((c) => c.body && c.body.includes(MARKER));
 
-            if (!existing && failed === 0) return;
+      - name: 패키지 규칙 검사 (경고만)
+        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
+        continue-on-error: true
+        run: ./gradlew archTest
 
-            const prevCount = existing ? Number((existing.body.match(/재수정 (\d+)회/) || [0, 0])[1]) : 0;
-            const editCount = existing ? prevCount + 1 : 0;
-
-            const parts = Object.fromEntries(
-              new Intl.DateTimeFormat('ko-KR', {
-                timeZone: 'Asia/Seoul',
-                month: 'numeric',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hourCycle: 'h23',
-              }).formatToParts(new Date()).map((p) => [p.type, p.value]),
-            );
-            const time = `${parts.month}월 ${parts.day}일 ${parts.hour}시 ${parts.minute}분 ${parts.second}초`;
-            const editLine = editCount > 0 ? `재수정 ${editCount}회, 수정된 시각 ${time}` : `작성 시각 ${time}`;
-
-            const body = failed > 0
-              ? [
-                  MARKER,
-                  `### ❌ 테스트 실패 ${failed}건 (전체 ${process.env.TOTAL}개)`,
-                  '',
-                  process.env.DETAIL || '',
-                  '',
-                  `[자세히 보기](${process.env.REPORT_URL})`,
-                  '',
-                  `<sub>${editLine}</sub>`,
-                ].join('\n')
-              : [
-                  MARKER,
-                  `### ✅ 테스트 모두 통과 (전체 ${process.env.TOTAL}개)`,
-                  '',
-                  `<sub>${editLine}</sub>`,
-                ].join('\n');
-
-            if (existing) {
-              await github.rest.issues.updateComment({ ...context.repo, comment_id: existing.id, body });
-            } else {
-              await github.rest.issues.createComment({ ...context.repo, issue_number, body });
-            }
+      - name: 패키지 규칙 위반 경고·알림 댓글
+        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
+        continue-on-error: true
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            const { archNotice } = require('./.github/scripts/pr-notice.js');
+            await archNotice({ github, context, core });
 
       - name: 테스트 실패 시 테스트 리포트 첨부
         if: failure()
@@ -203,24 +178,24 @@ jobs:
           git -c core.quotePath=false diff -U0 --no-color "origin/$BASE_REF...HEAD" > pr.diff
           python3 .github/scripts/checkstyle-report.py >> "$GITHUB_OUTPUT"
 
-      - name: Checkstyle 위반 알림 댓글 (이 PR에서 생긴 위반이 있을 때만, PR당 1개 고정)
-        if: >-
-          github.event_name == 'pull_request' &&
-          steps.checkstyle-count.outputs.pr_count != '' &&
-          steps.checkstyle-count.outputs.pr_count != '0'
-        continue-on-error: true   # 포크 PR 등 토큰 권한이 부족해 실패해도 후속 단계는 계속 진행
-        uses: marocchino/sticky-pull-request-comment@773744901bac0e8cbb5a0dc842800d45e9b2b405 # v2
+      - name: Checkstyle 위반 알림 댓글 (PR당 1개, 수정 방식)
+        if: github.event_name == 'pull_request' && steps.checkstyle-count.outputs.pr_count != ''
+        continue-on-error: true
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        env:
+          PR_COUNT: ${{ steps.checkstyle-count.outputs.pr_count }}
         with:
-          header: checkstyle-notice
-          path: checkstyle-comment.md
-
-      - name: 이 PR에서 생긴 Checkstyle 위반 없음 (기존 알림 댓글 제거)
-        if: github.event_name == 'pull_request' && steps.checkstyle-count.outputs.pr_count == '0'
-        continue-on-error: true   # 포크 PR 등 토큰 권한이 부족해 실패해도 후속 단계는 계속 진행
-        uses: marocchino/sticky-pull-request-comment@773744901bac0e8cbb5a0dc842800d45e9b2b405 # v2
-        with:
-          header: checkstyle-notice
-          delete: true
+          script: |
+            const fs = require('fs');
+            const { upsertNotice } = require('./.github/scripts/pr-notice.js');
+            const count = Number(process.env.PR_COUNT || 0);
+            await upsertNotice({ github, context }, {
+              marker: '<!-- checkstyle-notice -->',
+              legacyMarkers: ['Sticky Pull Request Commentcheckstyle-notice'],
+              problem: count > 0,
+              problemBody: count > 0 ? fs.readFileSync('checkstyle-comment.md', 'utf8') : '',
+              okBody: '### ✅ 이 PR에서 생긴 Checkstyle 위반 없어요',
+            });
 
       # Codecov는 외부 서비스라 토큰 누락·장애로 실패해도 CI(그리고 CI 성공이 조건인 배포)를 막지 않는다.
       # 업로드를 건너뛰고 경고만 남긴다

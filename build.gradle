@@ -124,19 +124,31 @@ dependencies {
 	testImplementation 'org.testcontainers:junit-jupiter'
 	testImplementation 'org.testcontainers:postgresql'
 	testImplementation 'org.testcontainers:mongodb'  // Mongo도 가짜 대신 실제 컨테이너로 테스트
+	testImplementation 'com.tngtech.archunit:archunit-junit5:1.4.1'
 }
 
 tasks.named('test') {
 	// 실제 외부 서비스(네이버 API·RSS·S3)를 부르는 테스트는 @Tag("external-api")를 붙여 평소 테스트·CI에서 제외
 	// — 외부 장애·호출 한도·CI에 키 없음 같은 외부 사정으로 CI가 실패하지 않게
 	useJUnitPlatform {
-		excludeTags 'external-api'
+		excludeTags 'external-api', 'architecture'
 	}
 	// GitHub Actions 서버는 UTC라, 날짜를 계산하는 테스트가 로컬(한국 시간)과 다르게 동작하지 않도록 고정
 	jvmArgs '-Duser.timezone=Asia/Seoul'
 	// 메인 application.yaml 위에 application-test.yaml만 덮어쓰도록 test 프로파일을 켠다
 	systemProperty 'spring.profiles.active', 'test'
 	finalizedBy jacocoTestReport   // 테스트 끝나면 바로 커버리지 리포트 생성
+}
+
+tasks.register('archTest', Test) {
+	description = '패키지 규칙 테스트(@Tag("architecture"))만 실행합니다. 위반이 있어도 빌드는 실패하지 않습니다.'
+	group = 'verification'
+	testClassesDirs = sourceSets.test.output.classesDirs
+	classpath = sourceSets.test.runtimeClasspath
+	useJUnitPlatform {
+		includeTags 'architecture'
+	}
+	ignoreFailures = true
 }
 
 // 외부 호출 테스트(@Tag("external-api"))만 따로 실행: ./gradlew externalTest (로컬 .env에 키 필요)
