@@ -24,6 +24,7 @@ import com.sprint.monew.domain.comment.event.CommentLikedEvent;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.context.RequestIdContext;
 import com.sprint.monew.global.exception.MonewException;
+import com.sprint.monew.global.exception.errortype.ArticleErrorType;
 import com.sprint.monew.global.exception.errortype.CommentErrorType;
 import com.sprint.monew.global.exception.errortype.UserErrorType;
 import java.time.Instant;
@@ -35,6 +36,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -348,6 +350,70 @@ class CommentApplicationTest {
                     .extracting("errorType")
                     .isEqualTo(CommentErrorType.COMMENT_NOT_FOUND);
             verifyNoInteractions(commentLikeRepository, commentEventPublisher);
+        }
+    }
+
+    @Nested
+    @DisplayName("댓글 등록")
+    class Register {
+
+        @Test
+        @DisplayName("기사에 댓글을 등록하면 저장되고, 작성자 닉네임과 좋아요 0·내 좋아요 아님이 담긴 결과를 돌려준다")
+        void success() {
+            User author = author();
+            given(author.getNickname()).willReturn("작성자");
+            Article article = mock(Article.class);
+            given(article.getId()).willReturn(articleId);
+            given(userService.getActiveUser(authorId)).willReturn(author);
+            given(articleService.findById(articleId)).willReturn(article);
+            // 저장하면 DB가 id·생성일을 채워 주는 것처럼 직접 넣는다
+            given(commentRepository.save(any(Comment.class)))
+                    .willAnswer(
+                            invocation -> {
+                                Comment saved = invocation.getArgument(0);
+                                ReflectionTestUtils.setField(saved, "id", commentId);
+                                ReflectionTestUtils.setField(saved, "createdAt", createdAt);
+                                return saved;
+                            });
+
+            CommentResult result = commentApplication.register(authorId, articleId, "첫 댓글");
+
+            ArgumentCaptor<Comment> saved = ArgumentCaptor.forClass(Comment.class);
+            verify(commentRepository).save(saved.capture());
+            assertThat(saved.getValue().getUser()).isSameAs(author);
+            assertThat(saved.getValue().getArticle()).isSameAs(article);
+            assertThat(result)
+                    .isEqualTo(
+                            new CommentResult(
+                                    commentId, articleId, authorId, "작성자", "첫 댓글", 0L, false,
+                                    createdAt));
+        }
+
+        @Test
+        @DisplayName("없거나 탈퇴한 사용자면 USER_NOT_FOUND 예외가 나고 기사 조회·저장을 하지 않는다")
+        void notExistUser() {
+            given(userService.getActiveUser(authorId))
+                    .willThrow(new MonewException(UserErrorType.USER_NOT_FOUND));
+
+            assertThatThrownBy(() -> commentApplication.register(authorId, articleId, "첫 댓글"))
+                    .isInstanceOf(MonewException.class)
+                    .extracting("errorType")
+                    .isEqualTo(UserErrorType.USER_NOT_FOUND);
+            verifyNoInteractions(articleService, commentRepository);
+        }
+
+        @Test
+        @DisplayName("없거나 삭제된 기사면 ARTICLE_NOT_FOUND 예외가 나고 저장하지 않는다")
+        void notExistArticle() {
+            given(userService.getActiveUser(authorId)).willReturn(mock(User.class));
+            given(articleService.findById(articleId))
+                    .willThrow(new MonewException(ArticleErrorType.ARTICLE_NOT_FOUND));
+
+            assertThatThrownBy(() -> commentApplication.register(authorId, articleId, "첫 댓글"))
+                    .isInstanceOf(MonewException.class)
+                    .extracting("errorType")
+                    .isEqualTo(ArticleErrorType.ARTICLE_NOT_FOUND);
+            verifyNoInteractions(commentRepository);
         }
     }
 }
