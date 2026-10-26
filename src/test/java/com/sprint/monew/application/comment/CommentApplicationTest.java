@@ -15,7 +15,7 @@ import com.sprint.monew.application.comment.provided.dto.CommentResult;
 import com.sprint.monew.application.comment.required.CommentEventPublisherPort;
 import com.sprint.monew.application.comment.required.CommentLikeRepositoryPort;
 import com.sprint.monew.application.comment.required.CommentRepositoryPort;
-import com.sprint.monew.application.user.provided.UserUseCase;
+import com.sprint.monew.application.user.IUserService;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.comment.entity.Comment;
 import com.sprint.monew.domain.comment.entity.CommentLike;
@@ -35,7 +35,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -45,14 +44,24 @@ class CommentApplicationTest {
 
     @Mock private CommentRepositoryPort commentRepository;
     @Mock private CommentLikeRepositoryPort commentLikeRepository;
-    @Mock private UserUseCase userUseCase;
+    @Mock private IUserService userService;
     @Mock private CommentEventPublisherPort commentEventPublisher;
-    @InjectMocks private CommentApplication commentApplication;
+    private CommentApplication commentApplication;
 
     private final UUID commentId = UUID.randomUUID();
     private final UUID authorId = UUID.randomUUID();
     private final UUID articleId = UUID.randomUUID();
     private final Instant createdAt = Instant.parse("2026-10-21T00:00:00Z");
+
+    // CommentService는 진짜로 쓰고 DB 포트만 가짜로 둔다 — 조립(Application)과 댓글 DB 처리(Service)를 함께 검증한다
+    @BeforeEach
+    void setUp() {
+        commentApplication =
+                new CommentApplication(
+                        new CommentService(commentRepository, commentLikeRepository),
+                        userService,
+                        commentEventPublisher);
+    }
 
     // 단위 테스트에선 인터셉터가 안 돌아서 요청자 ID를 직접 넣는다 — 다른 테스트에 남지 않게 지운다
     @AfterEach
@@ -247,7 +256,7 @@ class CommentApplicationTest {
             Comment likedComment = savedComment(author, article);
             ReflectionTestUtils.setField(likedComment, "likeCount", 1L);
             User liker = liker();
-            given(userUseCase.getActiveUser(requestUserId)).willReturn(liker);
+            given(userService.getActiveUser(requestUserId)).willReturn(liker);
             given(commentRepository.findById(commentId))
                     .willReturn(Optional.of(comment), Optional.of(likedComment));
             given(commentLikeRepository.existsByCommentIdAndUserId(commentId, requestUserId))
@@ -282,7 +291,10 @@ class CommentApplicationTest {
         @DisplayName("이미 좋아요한 댓글이면 COMMENT_LIKE_DUPLICATED 예외가 나고 저장·알림이 없다")
         void duplicated() {
             Comment comment = savedComment(mock(User.class), mock(Article.class));
-            given(userUseCase.getActiveUser(requestUserId)).willReturn(mock(User.class));
+            // 중복 확인을 서비스가 사용자 객체의 id로 하므로 id를 채운다
+            User liker = mock(User.class);
+            given(liker.getId()).willReturn(requestUserId);
+            given(userService.getActiveUser(requestUserId)).willReturn(liker);
             given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
             given(commentLikeRepository.existsByCommentIdAndUserId(commentId, requestUserId))
                     .willReturn(true);
@@ -299,7 +311,7 @@ class CommentApplicationTest {
         @Test
         @DisplayName("없거나 탈퇴한 사용자면 USER_NOT_FOUND 예외가 나고 댓글·좋아요를 건드리지 않는다")
         void notExistUser() {
-            given(userUseCase.getActiveUser(requestUserId))
+            given(userService.getActiveUser(requestUserId))
                     .willThrow(new MonewException(UserErrorType.USER_NOT_FOUND));
 
             assertThatThrownBy(() -> commentApplication.like(commentId))
