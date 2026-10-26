@@ -12,4 +12,6 @@ public interface InterestService {
     PageResult<Interest> findPageByQuery(InterestQuery query);
 
     Interest update(UUID interestId, List<String> keywords);
+
+    void deleteById(UUID interestId);
 }

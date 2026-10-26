@@ -71,4 +71,17 @@ public class InterestServiceImpl implements InterestService {
                                 () -> new MonewException(InterestErrorType.INTEREST_NOT_FOUND));
         return updating.updateKeywords(keywords);
     }
+
+    @Override
+    public void deleteById(UUID id) {
+        Interest deleting =
+                repository
+                        .findById(id)
+                        .orElseThrow(
+                                () ->
+                                        new MonewException(
+                                                InterestErrorType.INTEREST_NOT_FOUND,
+                                                Map.of("id", id)));
+        repository.delete(deleting);
+    }
 }

@@ -16,4 +16,8 @@ public interface InterestRepository {
     long countByQuery(InterestQuery query);
 
     Optional<Interest> findByIdWithKeywords(UUID interestId);
+
+    void delete(Interest entity);
+
+    Optional<Interest> findById(UUID id);
 }
