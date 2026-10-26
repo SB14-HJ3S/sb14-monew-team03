@@ -54,11 +54,7 @@ public class Interest extends BaseEntity {
     }
 
     public static Interest create(String name, List<String> keywords) {
-        if (CollectionUtils.isEmpty(keywords) || keywords.size() > MAX_KEYWORDS_SIZE) {
-            throw new MonewException(
-                    InterestErrorType.INVALID_INTEREST_KEYWORD,
-                    Collections.singletonMap("keywords", keywords));
-        }
+        validateInterestKeywords(keywords);
         Interest creating = new Interest(name);
         List<InterestKeyword> interestKeywords =
                 keywords.stream()
@@ -66,5 +62,36 @@ public class Interest extends BaseEntity {
                         .toList();
         creating.keywords.addAll(interestKeywords);
         return creating;
+    }
+
+    public Interest updateKeywords(List<String> newKeywords) {
+        validateInterestKeywords(newKeywords);
+
+        List<InterestKeyword> addingKeywords = getAddingKeywords(newKeywords);
+
+        removeKeywordsIfNotInNewKeywords(newKeywords);
+        keywords.addAll(addingKeywords);
+        return this;
+    }
+
+    private List<InterestKeyword> getAddingKeywords(List<String> newKeywords) {
+        List<String> existingKeywords = keywords.stream().map(InterestKeyword::getKeyword).toList();
+
+        return newKeywords.stream()
+                .filter(newKeyword -> !existingKeywords.contains(newKeyword))
+                .map(keyword -> InterestKeyword.create(this, keyword))
+                .toList();
+    }
+
+    private void removeKeywordsIfNotInNewKeywords(List<String> newKeywords) {
+        keywords.removeIf(existing -> !newKeywords.contains(existing.getKeyword()));
+    }
+
+    private static void validateInterestKeywords(List<String> keywords) {
+        if (CollectionUtils.isEmpty(keywords) || keywords.size() > MAX_KEYWORDS_SIZE) {
+            throw new MonewException(
+                    InterestErrorType.INVALID_INTEREST_KEYWORD,
+                    Collections.singletonMap("keywords", keywords));
+        }
     }
 }

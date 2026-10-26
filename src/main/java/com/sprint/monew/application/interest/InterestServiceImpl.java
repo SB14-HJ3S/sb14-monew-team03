@@ -9,6 +9,7 @@ import com.sprint.monew.global.pagination.PageResult;
 import com.sprint.monew.global.util.similarity.StringSimilarityUtils;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -59,5 +60,15 @@ public class InterestServiceImpl implements InterestService {
                 repository.countByQuery(query),
                 query.orderBy(),
                 query.limit());
+    }
+
+    @Override
+    public Interest update(UUID interestId, List<String> keywords) {
+        Interest updating =
+                repository
+                        .findByIdWithKeywords(interestId)
+                        .orElseThrow(
+                                () -> new MonewException(InterestErrorType.INTEREST_NOT_FOUND));
+        return updating.updateKeywords(keywords);
     }
 }
