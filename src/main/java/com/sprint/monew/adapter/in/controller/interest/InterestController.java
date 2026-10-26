@@ -15,6 +15,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -57,5 +58,11 @@ public class InterestController {
     public InterestDto updateKeyword(
             @PathVariable UUID interestId, @Valid @RequestBody InterestUpdateRequest request) {
         return InterestDto.from(interestUseCase.update(interestId, request.keywords()));
+    }
+
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/{interestId}")
+    public void deleteInterest(@PathVariable UUID interestId) {
+        interestUseCase.delete(interestId);
     }
 }
