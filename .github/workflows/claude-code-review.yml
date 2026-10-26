@@ -59,7 +59,14 @@ jobs:
 
             리뷰 결과는 아래 형식의 요약 코멘트 하나에만 써. 요약 코멘트와 별개로 "리뷰 완료" 같은 확인 코멘트를 하나 더 달지는 마.
             이 PR의 첫 리뷰(이전 `<!-- claude-review -->` 댓글이 없음)는 지적이 하나도 없어도 요약 코멘트 1개를 반드시 남기고, 맨 아래에 "## ✅ 머지해도 됩니다"와 그 아랫줄 "Claude Code Review 완료 - 발견된 이슈 없음"을 써.
-            요약 코멘트는 `gh pr comment ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --body "<본문>"`로 남기고, 본문 맨 첫 줄에 `<!-- claude-review -->`를 넣어. 이전 리뷰는 `gh pr view ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --comments`에서 이 표시가 있는 댓글로 찾아.
+            요약 코멘트는 반드시 아래처럼 작은따옴표 heredoc으로 남겨. `--body "<본문>"`처럼 본문을 따옴표 안에 넣으면 줄바꿈 뒤 `#` 때문에 실행이 막혀.
+            ```
+            gh pr comment ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --body-file - <<'REVIEW_EOF'
+            <!-- claude-review -->
+            (리뷰 본문)
+            REVIEW_EOF
+            ```
+            본문 맨 첫 줄은 `<!-- claude-review -->`야. 이전 리뷰는 `gh pr view ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --comments`에서 이 표시가 있는 댓글로 찾아.
 
             다시 리뷰할 때 같은 말을 반복하지 마:
             - 직전 리뷰와 비교해서 새로 찾은 지적(🔴·🟠·🟡)이 없고, 고쳐진 항목도 없으면 요약 코멘트를 아예 남기지 마. 인라인 코멘트도 달지 마. 새 참고 거리만 있는 것도 댓글을 남길 이유가 아니야.
