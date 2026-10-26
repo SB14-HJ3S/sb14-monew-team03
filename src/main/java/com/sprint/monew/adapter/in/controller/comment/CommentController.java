@@ -1,5 +1,6 @@
 package com.sprint.monew.adapter.in.controller.comment;
 
+import com.sprint.monew.adapter.in.controller.comment.dto.request.CommentRegisterRequest;
 import com.sprint.monew.adapter.in.controller.comment.dto.request.CommentUpdateRequest;
 import com.sprint.monew.adapter.in.controller.comment.dto.response.CommentDto;
 import com.sprint.monew.adapter.in.controller.comment.dto.response.CommentLikeDto;
@@ -27,6 +28,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class CommentController {
 
     private final CommentUseCase commentUseCase;
+
+    // 댓글 등록만 요청자 ID를 헤더가 아니라 본문(userId)으로 받아서 @RequestId를 붙이지 않는다
+    @PostMapping
+    public ResponseEntity<CommentDto> register(@Valid @RequestBody CommentRegisterRequest request) {
+        return null;
+    }
 
     @RequestId
     @PatchMapping("/{commentId}")
