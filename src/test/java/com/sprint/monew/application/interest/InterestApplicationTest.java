@@ -1,8 +1,11 @@
 package com.sprint.monew.application.interest;
 
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.when;
 
 import com.sprint.monew.application.article.IArticleInterestService;
+import com.sprint.monew.domain.interest.entity.Interest;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,15 +29,18 @@ class InterestApplicationTest {
     void givenInterestId_whenDelete_thenDeleteRelationsBeforeInterest() {
         // given
         UUID interestId = UUID.randomUUID();
+        Interest deleting = Interest.create("관심사", List.of("키워드"));
+        when(interestService.getById(interestId)).thenReturn(deleting);
 
         // when
         interestApplication.delete(interestId);
 
         // then
-        InOrder inOrder = inOrder(articleInterestService, subscriptionService, interestService);
+        InOrder inOrder = inOrder(interestService, articleInterestService, subscriptionService);
+        inOrder.verify(interestService).getById(interestId);
         inOrder.verify(articleInterestService).deleteAllByInterestId(interestId);
         inOrder.verify(subscriptionService).deleteAllByInterestId(interestId);
-        inOrder.verify(interestService).deleteById(interestId);
+        inOrder.verify(interestService).delete(deleting);
         inOrder.verifyNoMoreInteractions();
     }
 }

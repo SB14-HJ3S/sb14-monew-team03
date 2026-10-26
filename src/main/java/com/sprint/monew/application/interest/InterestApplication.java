@@ -57,9 +57,10 @@ public class InterestApplication implements InterestUseCase {
     @Override
     @Transactional
     public void delete(UUID interestId) {
+        Interest deleting = interestService.getById(interestId);
         articleInterestService.deleteAllByInterestId(interestId);
         subscriptionService.deleteAllByInterestId(interestId);
-        interestService.deleteById(interestId);
+        interestService.delete(deleting);
     }
 
     @Override

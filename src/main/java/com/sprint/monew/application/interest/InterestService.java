@@ -13,5 +13,7 @@ public interface InterestService {
 
     Interest update(UUID interestId, List<String> keywords);
 
-    void deleteById(UUID interestId);
+    Interest getById(UUID interestId);
+
+    void delete(Interest deleting);
 }

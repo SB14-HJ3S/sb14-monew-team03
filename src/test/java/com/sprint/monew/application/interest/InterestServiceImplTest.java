@@ -121,8 +121,8 @@ class InterestServiceImplTest {
     }
 
     @Test
-    @DisplayName("존재하는 관심사를 삭제한다.")
-    void givenExistingInterest_whenDeleteById_thenDeleteInterest() {
+    @DisplayName("존재하는 관심사를 ID로 조회한다.")
+    void givenExistingInterest_whenGetById_thenReturnInterest() {
         // given
         UUID interestId = UUID.randomUUID();
         Interest interest = Interest.create("관심사", List.of("키워드"));
@@ -130,16 +130,29 @@ class InterestServiceImplTest {
         when(repository.findById(interestId)).thenReturn(Optional.of(interest));
 
         // when
-        service.deleteById(interestId);
+        Interest found = service.getById(interestId);
 
         // then
+        assertThat(found).isSameAs(interest);
         verify(repository).findById(interestId);
+    }
+
+    @Test
+    @DisplayName("관심사를 삭제한다.")
+    void givenInterest_whenDelete_thenDeleteInterest() {
+        // given
+        Interest interest = Interest.create("관심사", List.of("키워드"));
+
+        // when
+        service.delete(interest);
+
+        // then
         verify(repository).delete(interest);
     }
 
     @Test
-    @DisplayName("존재하지 않는 관심사를 삭제하면 예외를 던진다.")
-    void givenNonExistingInterest_whenDeleteById_thenThrowException() {
+    @DisplayName("존재하지 않는 관심사를 ID로 조회하면 예외를 던진다.")
+    void givenNonExistingInterest_whenGetById_thenThrowException() {
         // given
         UUID interestId = UUID.randomUUID();
 
@@ -147,7 +160,7 @@ class InterestServiceImplTest {
 
         // when
         MonewException thrown =
-                catchThrowableOfType(MonewException.class, () -> service.deleteById(interestId));
+                catchThrowableOfType(MonewException.class, () -> service.getById(interestId));
 
         // then
         assertThat(thrown.getErrorType()).isEqualTo(InterestErrorType.INTEREST_NOT_FOUND);
