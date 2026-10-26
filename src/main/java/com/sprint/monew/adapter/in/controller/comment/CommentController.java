@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -32,7 +33,9 @@ public class CommentController {
     // 댓글 등록만 요청자 ID를 헤더가 아니라 본문(userId)으로 받아서 @RequestId를 붙이지 않는다
     @PostMapping
     public ResponseEntity<CommentDto> register(@Valid @RequestBody CommentRegisterRequest request) {
-        return null;
+        CommentResult result =
+                commentUseCase.register(request.userId(), request.articleId(), request.content());
+        return ResponseEntity.status(HttpStatus.CREATED).body(CommentDto.from(result));
     }
 
     @RequestId
