@@ -14,4 +14,4 @@ USER spring:spring
 ENV JVM_OPTS=""
 # 컨테이너 기본 시간대가 UTC라 배치 실행 시각·날짜 경계가 한국 시간과 어긋나지 않게 맞춤
 # exec로 java가 종료 신호(SIGTERM)를 직접 받아 정상 종료되게 함
-ENTRYPOINT ["sh", "-c", "exec java $JVM_OPTS -Duser.timezone=Asia/Seoul -jar app.jar"]
+ENTRYPOINT ["sh", "-c", "exec java -XX:MaxRAMPercentage=70 $JVM_OPTS -Duser.timezone=Asia/Seoul -jar app.jar"]
