@@ -7,10 +7,13 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import com.sprint.monew.application.user.event.UserRegisteredEvent;
+import com.sprint.monew.application.user.required.UserEventPublisherPort;
 import com.sprint.monew.application.user.required.UserRepositoryPort;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.UserErrorType;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -18,10 +21,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.AdditionalAnswers;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -29,6 +34,8 @@ class UserServiceTest {
     @Mock private UserRepositoryPort repository;
 
     @Mock private PasswordEncoder passwordEncoder;
+
+    @Mock private UserEventPublisherPort userEventPublisher;
 
     @InjectMocks private UserService userService;
 
@@ -71,6 +78,27 @@ class UserServiceTest {
     }
 
     @Test
+    @DisplayName("가입이 끝나면 저장된 사용자 정보로 가입 이벤트를 보낸다")
+    void givenNewEmail_whenRegister_thenPublishRegisteredEvent() {
+        UUID userId = UUID.randomUUID();
+        Instant createdAt = Instant.parse("2026-10-26T00:00:00Z");
+        User saved = User.create("new@monew.com", "새사람", "암호화된비밀번호");
+        ReflectionTestUtils.setField(saved, "id", userId);
+        ReflectionTestUtils.setField(saved, "createdAt", createdAt);
+        given(repository.existsByEmail("new@monew.com")).willReturn(false);
+        given(passwordEncoder.encode("password1!")).willReturn("암호화된비밀번호");
+        given(repository.save(any(User.class))).willReturn(saved);
+
+        userService.register("new@monew.com", "새사람", "password1!");
+
+        ArgumentCaptor<UserRegisteredEvent> captor =
+                ArgumentCaptor.forClass(UserRegisteredEvent.class);
+        verify(userEventPublisher).publish(captor.capture());
+        assertThat(captor.getValue())
+                .isEqualTo(new UserRegisteredEvent(userId, "new@monew.com", "새사람", createdAt));
+    }
+
+    @Test
     @DisplayName("이미 있는 이메일이면 USER_EMAIL_DUPLICATED 예외가 나고 저장하지 않는다")
     void givenDuplicatedEmail_whenRegister_thenThrowEmailDuplicated() {
         given(repository.existsByEmail("dup@monew.com")).willReturn(true);
@@ -80,6 +108,7 @@ class UserServiceTest {
                 .extracting("errorType")
                 .isEqualTo(UserErrorType.USER_EMAIL_DUPLICATED);
         verify(repository, never()).save(any());
+        verify(userEventPublisher, never()).publish(any());
     }
 
     @Test
