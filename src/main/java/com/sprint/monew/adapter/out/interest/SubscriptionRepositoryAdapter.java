@@ -1,6 +1,6 @@
-package com.sprint.monew.adapter.out.user;
+package com.sprint.monew.adapter.out.interest;
 
-import com.sprint.monew.application.user.required.SubscriptionRepository;
+import com.sprint.monew.application.interest.required.SubscriptionRepository;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;

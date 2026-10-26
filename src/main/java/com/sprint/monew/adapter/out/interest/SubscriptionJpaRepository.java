@@ -1,4 +1,4 @@
-package com.sprint.monew.adapter.out.user;
+package com.sprint.monew.adapter.out.interest;
 
 import com.sprint.monew.domain.user.entity.Subscription;
 import java.util.List;
@@ -11,10 +11,10 @@ public interface SubscriptionJpaRepository extends JpaRepository<Subscription, U
 
     @Query(
             """
-        select s.interest.id
-        from Subscription s
-        where s.user.id = :requestId
-        and s.interest.id in :interestIds
-        """)
+            select s.interest.id
+            from Subscription s
+            where s.user.id = :requestId
+            and s.interest.id in :interestIds
+            """)
     Set<UUID> findSubscribedInterestIds(UUID requestId, List<UUID> interestIds);
 }

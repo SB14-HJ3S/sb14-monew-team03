@@ -3,7 +3,6 @@ package com.sprint.monew.application.interest;
 import com.sprint.monew.application.interest.provided.InterestUseCase;
 import com.sprint.monew.application.interest.provided.dto.InterestQuery;
 import com.sprint.monew.application.interest.provided.dto.InterestResult;
-import com.sprint.monew.application.user.ISubscriptionService;
 import com.sprint.monew.domain.interest.entity.Interest;
 import com.sprint.monew.global.annotation.ApplicationService;
 import com.sprint.monew.global.context.RequestIdContext;

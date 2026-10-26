@@ -1,4 +1,4 @@
-package com.sprint.monew.application.user.required;
+package com.sprint.monew.application.interest.required;
 
 import java.util.List;
 import java.util.Set;

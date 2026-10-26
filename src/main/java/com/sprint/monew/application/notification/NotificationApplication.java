@@ -1,6 +1,6 @@
 package com.sprint.monew.application.notification;
 
-import com.sprint.monew.application.interest.InterestService;
+import com.sprint.monew.application.interest.ISubscriptionService;
 import com.sprint.monew.application.notification.provided.NotificationUseCase;
 import com.sprint.monew.application.notification.provided.dto.NotificationQuery;
 import com.sprint.monew.application.user.IUserService;
@@ -21,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class NotificationApplication implements NotificationUseCase {
 
     private final NotificationService notificationService;
-    private final InterestService interestService;
+    private final ISubscriptionService interestService;
     private final IUserService userService;
 
     @Override
