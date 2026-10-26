@@ -64,14 +64,7 @@ public class UserService implements IUserService {
     @Override
     @Transactional
     public User updateNickname(UUID userId, String nickname) {
-        User user =
-                repository
-                        .findUser(userId)
-                        .orElseThrow(
-                                () ->
-                                        new MonewException(
-                                                UserErrorType.USER_NOT_FOUND,
-                                                Map.of("userId", userId)));
+        User user = getActiveUser(userId);
         user.changeNickname(nickname);
         return user;
     }
