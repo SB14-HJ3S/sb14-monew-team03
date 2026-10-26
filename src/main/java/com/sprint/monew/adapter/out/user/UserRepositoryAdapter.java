@@ -35,12 +35,12 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
     }
 
     @Override
-    public Optional<User> findActiveById(UUID id) {
+    public Optional<User> findUser(UUID id) {
         return jpaRepository.findByIdAndDeletedAtIsNull(id);
     }
 
     @Override
-    public Optional<User> findActiveByEmail(String email) {
+    public Optional<User> findUserByEmail(String email) {
         return jpaRepository.findByEmailAndDeletedAtIsNull(email);
     }
 
@@ -50,7 +50,7 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
     }
 
     @Override
-    public List<User> findAllActiveByIds(List<UUID> ids) {
+    public List<User> findUsers(List<UUID> ids) {
         return jpaRepository.findAllByIdInAndDeletedAtIsNull(ids);
     }
 }
