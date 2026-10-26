@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 public interface SubscriptionJpaRepository extends JpaRepository<Subscription, UUID> {
@@ -27,4 +28,12 @@ public interface SubscriptionJpaRepository extends JpaRepository<Subscription, U
             and s.user.deletedAt is null
             """)
     List<UUID> findSubscribersByInterestId(UUID interestId);
+
+    @Query(
+            """
+            delete from Subscription s
+            where s.interest.id = :interestId
+            """)
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    void deleteAllByInterestId(UUID interestId);
 }
