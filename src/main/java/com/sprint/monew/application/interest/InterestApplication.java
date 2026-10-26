@@ -1,5 +1,6 @@
 package com.sprint.monew.application.interest;
 
+import com.sprint.monew.application.article.IArticleInterestService;
 import com.sprint.monew.application.interest.provided.InterestUseCase;
 import com.sprint.monew.application.interest.provided.dto.InterestQuery;
 import com.sprint.monew.application.interest.provided.dto.InterestResult;
@@ -19,6 +20,7 @@ public class InterestApplication implements InterestUseCase {
 
     private final InterestService interestService;
     private final ISubscriptionService subscriptionService;
+    private final IArticleInterestService articleInterestService;
 
     @Override
     @Transactional(readOnly = true)
@@ -53,7 +55,12 @@ public class InterestApplication implements InterestUseCase {
     public void unsubscribe(UUID interestId, UUID requestId) {}
 
     @Override
-    public void delete(UUID interestId) {}
+    @Transactional
+    public void delete(UUID interestId) {
+        articleInterestService.deleteAllByInterestId(interestId);
+        subscriptionService.deleteAllByInterestId(interestId);
+        interestService.deleteById(interestId);
+    }
 
     @Override
     @Transactional
