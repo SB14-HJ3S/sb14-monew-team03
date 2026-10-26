@@ -118,10 +118,44 @@ async function removeLabel(github, repo, number, name) {
   }
 }
 
+function discordIdOf(login) {
+  return process.env[`DISCORD_ID_${login.toUpperCase().replace(/[^A-Z0-9]/g, '_')}`] || '';
+}
+
+async function discord(path, body) {
+  const res = await fetch(`https://discord.com/api/v10${path}`, {
+    method: 'POST',
+    headers: { Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`디스코드 응답 ${res.status}`);
+  return res.json();
+}
+
+async function dmConflict(github, repo, number) {
+  try {
+    const { data: pr } = await github.rest.pulls.get({ ...repo, pull_number: number });
+    const userId = discordIdOf(pr.user.login);
+    if (!process.env.DISCORD_BOT_TOKEN || !userId) {
+      console.log(`충돌 DM 건너뜀: ${pr.user.login}의 디스코드 ID나 봇 토큰이 없어요`);
+      return;
+    }
+    const channel = await discord('/users/@me/channels', { recipient_id: userId });
+    await discord(`/channels/${channel.id}/messages`, {
+      content: `⚠️ PR이 develop과 충돌이 나요. 충돌이 풀릴 때까지 CI·자동 리뷰가 돌지 않아요. 로컬에서 \`git merge origin/develop\`으로 해결해 주세요\n**${pr.title}**\n${pr.html_url}`,
+    });
+  } catch (e) {
+    console.log(`충돌 DM 실패: ${e.message}`);
+  }
+}
+
 async function setLabel(github, repo, number, state) {
   if (state === 'conflict') {
+    const { data: labels } = await github.rest.issues.listLabelsOnIssue({ ...repo, issue_number: number });
+    const isNew = !labels.some((l) => l.name === CONFLICT_LABEL);
     await addLabel(github, repo, number, CONFLICT_LABEL);
     await removeLabel(github, repo, number, LABEL);
+    if (isNew) await dmConflict(github, repo, number);
   } else if (state === 'must') {
     await addLabel(github, repo, number, LABEL);
     await removeLabel(github, repo, number, CONFLICT_LABEL);
@@ -346,4 +380,4 @@ async function conflictNotice({ github, context, core }) {
   await setLabel(github, repo, pr.number, 'conflict');
 }
 
-module.exports = { status, buildResult, syncCheck, syncMerge, conflictNotice, _test: { commentBody, statusOf, issueOf, failedTests, TEXT, fileList } };
+module.exports = { status, buildResult, syncCheck, syncMerge, conflictNotice, _test: { commentBody, statusOf, issueOf, failedTests, TEXT, fileList, discordIdOf } };
