@@ -7,6 +7,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import com.sprint.monew.application.user.event.UserNicknameUpdatedEvent;
 import com.sprint.monew.application.user.event.UserRegisteredEvent;
 import com.sprint.monew.application.user.required.UserEventPublisherPort;
 import com.sprint.monew.application.user.required.UserRepositoryPort;
@@ -193,5 +194,17 @@ class UserServiceTest {
                 .isInstanceOf(MonewException.class)
                 .extracting("errorType")
                 .isEqualTo(UserErrorType.USER_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("닉네임을 바꾸면 바뀐 닉네임으로 닉네임 수정 이벤트를 보낸다")
+    void givenActiveUser_whenUpdateNickname_thenPublishNicknameUpdatedEvent() {
+        UUID userId = UUID.randomUUID();
+        User user = User.create("me@monew.com", "옛닉네임", "암호화된비밀번호");
+        given(repository.findUser(userId)).willReturn(Optional.of(user));
+
+        userService.updateNickname(userId, "새닉네임");
+
+        verify(userEventPublisher).publish(new UserNicknameUpdatedEvent(userId, "새닉네임"));
     }
 }
