@@ -119,4 +119,41 @@ class InterestServiceImplTest {
 
         verify(repository).findByIdWithKeywords(interestId);
     }
+
+    @Test
+    @DisplayName("존재하는 관심사를 삭제한다.")
+    void givenExistingInterest_whenDeleteById_thenDeleteInterest() {
+        // given
+        UUID interestId = UUID.randomUUID();
+        Interest interest = Interest.create("관심사", List.of("키워드"));
+
+        when(repository.findById(interestId)).thenReturn(Optional.of(interest));
+
+        // when
+        service.deleteById(interestId);
+
+        // then
+        verify(repository).findById(interestId);
+        verify(repository).delete(interest);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 관심사를 삭제하면 예외를 던진다.")
+    void givenNonExistingInterest_whenDeleteById_thenThrowException() {
+        // given
+        UUID interestId = UUID.randomUUID();
+
+        when(repository.findById(interestId)).thenReturn(Optional.empty());
+
+        // when
+        MonewException thrown =
+                catchThrowableOfType(MonewException.class, () -> service.deleteById(interestId));
+
+        // then
+        assertThat(thrown.getErrorType()).isEqualTo(InterestErrorType.INTEREST_NOT_FOUND);
+        assertThat(thrown.getDetails()).containsEntry("id", interestId);
+
+        verify(repository).findById(interestId);
+        verifyNoMoreInteractions(repository);
+    }
 }
