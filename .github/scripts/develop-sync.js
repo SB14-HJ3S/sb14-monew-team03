@@ -24,6 +24,8 @@ const TEXT = {
     '🚨 이 PR은 반드시 최신 develop을 반영해야 해요. develop과 충돌이 나서 체크박스로는 반영할 수 없어요',
     files.length > 0 ? `충돌 파일: ${fileList(files, 10)}` : '',
     '',
+    '충돌이 풀릴 때까지 CI·자동 리뷰가 실행되지 않아요. GitHub 웹의 "Resolve conflicts" 버튼 대신 로컬에서 해결해 주세요',
+    '',
     '로컬에서 이렇게 해결해 주세요',
     '```bash',
     `git checkout ${branch}`,
@@ -35,7 +37,7 @@ const TEXT = {
     'git commit',
     'git push',
     '```',
-  ].filter((line, i) => line !== '' || i === 2).join('\n'),
+  ].filter((line, i) => line !== '' || i === 2 || i === 4).join('\n'),
   notAllowed: (user) => `@${user} 체크박스는 저장소 쓰기 권한이 있는 팀원만 쓸 수 있어요`,
   forkOrClosed: '열린 PR이 아니거나 다른 저장소에서 온 PR이라 체크박스로 반영할 수 없어요',
 };
@@ -332,4 +334,16 @@ async function syncMerge({ github, context, exec }) {
   await setLabel(github, repo, number, 'none');
 }
 
-module.exports = { status, buildResult, syncCheck, syncMerge, _test: { commentBody, statusOf, issueOf, failedTests, TEXT, fileList } };
+async function conflictNotice({ github, context, core }) {
+  const repo = context.repo;
+  const pr = await getPr(github, repo, context.payload.pull_request.number);
+  if (pr.state !== 'open' || pr.draft || !isSameRepoDevelopPr(pr, repo)) return;
+  if (pr.mergeable !== false) {
+    core.info(`PR #${pr.number}은 충돌이 없어요 (mergeable: ${pr.mergeable})`);
+    return;
+  }
+  await upsert(github, repo, pr.number, TEXT.conflict([], pr.head.ref));
+  await setLabel(github, repo, pr.number, 'conflict');
+}
+
+module.exports = { status, buildResult, syncCheck, syncMerge, conflictNotice, _test: { commentBody, statusOf, issueOf, failedTests, TEXT, fileList } };
