@@ -38,4 +38,14 @@ public class InterestRepositoryAdapter implements InterestRepository {
     public Optional<Interest> findByIdWithKeywords(UUID interestId) {
         return Optional.ofNullable(jpaRepository.findByIdWithKeywords(interestId));
     }
+
+    @Override
+    public void delete(Interest entity) {
+        jpaRepository.delete(entity);
+    }
+
+    @Override
+    public Optional<Interest> findById(UUID id) {
+        return jpaRepository.findById(id);
+    }
 }
