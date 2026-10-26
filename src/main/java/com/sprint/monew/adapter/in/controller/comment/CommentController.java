@@ -33,8 +33,11 @@ public class CommentController {
     // 댓글 등록만 요청자 ID를 헤더가 아니라 본문(userId)으로 받아서 @RequestId를 붙이지 않는다
     @PostMapping
     public ResponseEntity<CommentDto> register(@Valid @RequestBody CommentRegisterRequest request) {
+        // 댓글 내용은 개인 정보가 섞일 수 있어 로그에 남기지 않는다
+        log.info("댓글 등록 요청: articleId={}, userId={}", request.articleId(), request.userId());
         CommentResult result =
                 commentUseCase.register(request.userId(), request.articleId(), request.content());
+        log.info("댓글 등록 완료: commentId={}, articleId={}", result.id(), result.articleId());
         return ResponseEntity.status(HttpStatus.CREATED).body(CommentDto.from(result));
     }
 
