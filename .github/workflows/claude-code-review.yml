@@ -186,7 +186,6 @@ jobs:
         env:
           EXEC_FILE: ${{ steps.claude-review.outputs.execution_file }}
           STARTED_AT: ${{ steps.started.outputs.at }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         with:
           script: |
             const fs = require('fs');
@@ -194,7 +193,6 @@ jobs:
             const CHECK = '<!-- claude-review-check -->';
             const number = context.payload.pull_request.number;
             const started = new Date(process.env.STARTED_AT);
-            const sha = process.env.HEAD_SHA.slice(0, 7);
             const isBot = (c) => c.user && c.user.login === 'github-actions[bot]';
 
             const comments = await github.paginate(github.rest.issues.listComments, { ...context.repo, issue_number: number, per_page: 100 });
@@ -229,23 +227,35 @@ jobs:
               return;
             }
 
-            const base = last.body.split(CHECK)[0].trimEnd();
-            const prev = Number((last.body.match(/추가 확인 (\d+)회/) || [0, 0])[1]);
-            const p = Object.fromEntries(
-              new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
-                .formatToParts(new Date())
-                .map((x) => [x.type, x.value]),
-            );
-            const at = `${p.month}월 ${p.day}일 ${p.hour}:${p.minute}`;
+            const commits = await github.paginate(github.rest.pulls.listCommits, { ...context.repo, pull_number: number, per_page: 100 });
+            const shas = commits.map((c) => c.sha);
+            const lines = last.body.split(CHECK)[0].trimEnd().split('\n');
+            const headerAt = lines.findIndex((l) => /번째 리뷰/.test(l));
+            const oldCheckAt = lines.findIndex((l) => l.startsWith('> 🔁'));
+            const coveredLine = oldCheckAt >= 0 ? lines[oldCheckAt] : lines[headerAt] || '';
+            const coveredShas = [...coveredLine.matchAll(/`([0-9a-f]{7,40})`/g)].map((m) => m[1]);
+            const lastCovered = coveredShas.length ? coveredShas[coveredShas.length - 1] : '';
+            const from = Math.max(0, shas.findIndex((x) => lastCovered && x.startsWith(lastCovered)) + 1);
+            const short = (x) => `\`${x.slice(0, 7)}\``;
+            const range = from >= shas.length - 1
+              ? `${shas.length}번째 커밋(${short(shas[shas.length - 1])})`
+              : `${from + 1}~${shas.length}번째 커밋(${short(shas[from])} ~ ${short(shas[shas.length - 1])})`;
+            const reviewNo = Number(((lines[headerAt] || '').match(/(\d+)번째 리뷰/) || [0, 1])[1]);
+            const prevCheck = Number((last.body.match(/(\d+)번째 확인/) || [0, reviewNo])[1]);
+            const n = prevCheck + 1;
+            const checkLine = `> 🔁 **${n}번째 확인** · PR의 ${range} 검토 — 새 지적 없음`;
+            if (oldCheckAt >= 0) {
+              lines[oldCheckAt] = checkLine;
+            } else if (headerAt >= 0) {
+              lines.splice(headerAt + 1, 0, checkLine);
+            }
             const body = [
-              base,
+              ...lines,
               '',
               CHECK,
               '---',
               '',
-              `## 🔁 새 커밋 \`${sha}\`까지 확인했어요 · 새 지적 없음`,
-              '',
-              `<sub>추가 확인 ${prev + 1}회 · ${at} · 위 리뷰 내용과 달라진 게 없어서 새 댓글은 달지 않았어요</sub>`,
+              `## 🔁 ${n}번째 확인 · ${short(shas[shas.length - 1])} · 새 지적 없음 · 추가 댓글 달지 않음`,
             ].join('\n');
             await github.rest.issues.updateComment({ ...context.repo, comment_id: last.id, body });
-            core.info(`기존 리뷰 댓글에 확인 표시를 남겼어요 (${sha})`);
+            core.info(`기존 리뷰 댓글에 ${n}번째 확인 표시를 남겼어요`);
