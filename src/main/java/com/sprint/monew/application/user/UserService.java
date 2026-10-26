@@ -48,9 +48,7 @@ public class UserService implements IUserService {
         }
         String encodedPassword = passwordEncoder.encode(password);
         User user = repository.save(User.create(email, nickname, encodedPassword));
-        userEventPublisher.publish(
-                new UserRegisteredEvent(
-                        user.getId(), user.getEmail(), user.getNickname(), user.getCreatedAt()));
+        userEventPublisher.publish(UserRegisteredEvent.from(user));
         return user;
     }
 
