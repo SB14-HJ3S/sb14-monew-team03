@@ -37,6 +37,12 @@ public class CommentService implements ICommentService {
     }
 
     @Override
+    @Transactional
+    public Comment saveComment(Comment comment) {
+        return commentRepository.save(comment);
+    }
+
+    @Override
     public boolean isLikedBy(UUID commentId, UUID userId) {
         return commentLikeRepository.existsByCommentIdAndUserId(commentId, userId);
     }

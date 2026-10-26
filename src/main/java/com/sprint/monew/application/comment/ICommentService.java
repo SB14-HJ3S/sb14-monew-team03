@@ -10,6 +10,8 @@ public interface ICommentService {
 
     Comment getActiveComment(UUID commentId);
 
+    Comment saveComment(Comment comment);
+
     boolean isLikedBy(UUID commentId, UUID userId);
 
     CommentLike saveLike(User user, Comment comment);

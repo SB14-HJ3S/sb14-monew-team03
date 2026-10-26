@@ -7,6 +7,7 @@ import com.sprint.monew.application.comment.provided.dto.CommentQuery;
 import com.sprint.monew.application.comment.provided.dto.CommentResult;
 import com.sprint.monew.application.comment.required.CommentEventPublisherPort;
 import com.sprint.monew.application.user.IUserService;
+import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.comment.entity.Comment;
 import com.sprint.monew.domain.comment.entity.CommentLike;
 import com.sprint.monew.domain.comment.event.CommentLikedEvent;
@@ -28,8 +29,15 @@ public class CommentApplication implements CommentUseCase {
     private final CommentEventPublisherPort commentEventPublisher;
 
     @Override
+    @Transactional
     public CommentResult register(UUID userId, UUID articleId, String content) {
-        return null;
+        User user = userService.getActiveUser(userId);
+        Article article = articleService.findById(articleId);
+
+        Comment comment = commentService.saveComment(Comment.create(user, article, content));
+
+        // 방금 만든 댓글이라 아직 아무도 좋아요를 누르지 않았다
+        return CommentResult.of(comment, false);
     }
 
     @Override
