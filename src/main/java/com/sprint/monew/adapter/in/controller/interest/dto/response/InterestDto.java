@@ -9,7 +9,7 @@ public record InterestDto(
         String name, // 관심사 이름
         List<String> keywords, // 관련 키워드 목록
         Long subscriberCount, // 구독자 수
-        boolean subscribedByMe // 요청자의 구독 여부
+        Boolean subscribedByMe // 요청자의 구독 여부
         ) {
 
     public static InterestDto from(InterestResult result) {
