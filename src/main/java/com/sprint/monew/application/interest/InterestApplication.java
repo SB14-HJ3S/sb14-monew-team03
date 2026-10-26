@@ -59,9 +59,8 @@ public class InterestApplication implements InterestUseCase {
     @Transactional
     public InterestResult update(UUID interestId, List<String> keywords) {
         Interest updated = interestService.update(interestId, keywords);
-        // 아니 킹받는게 응답 필드에 subscribedByMe는 있는데 데모 페이지에 항상 null로 뜸
-        // interest patch 요청할 때 프론트에서 request-user-id를 아예 안주는듯
-        // 일단 맞춰서 null로 반환해놓음
+        // 응답 필드에 subscribedByMe는 있는데 데모 페이지에 항상 null로 뜸
+        // interest patch 요청할 때 프론트에서 request-user-id를 아예 안주므로 일단 맞춰서 null로 반환해놓음
         return InterestResult.of(updated, null);
     }
 }
