@@ -12,7 +12,10 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -87,11 +90,27 @@ public class Interest extends BaseEntity {
         keywords.removeIf(existing -> !newKeywords.contains(existing.getKeyword()));
     }
 
-    private static void validateInterestKeywords(List<String> keywords) {
-        if (CollectionUtils.isEmpty(keywords) || keywords.size() > MAX_KEYWORDS_SIZE) {
+    private static void validateInterestKeywords(List<String> newKeywords) {
+        validateKeywordsLength(newKeywords);
+        validateKeywordsInputUnique(newKeywords);
+    }
+
+    private static void validateKeywordsLength(List<String> newKeywords) {
+        if (CollectionUtils.isEmpty(newKeywords) || newKeywords.size() > MAX_KEYWORDS_SIZE) {
             throw new MonewException(
                     InterestErrorType.INVALID_INTEREST_KEYWORD,
-                    Collections.singletonMap("keywords", keywords));
+                    Collections.singletonMap("keywords", newKeywords));
+        }
+    }
+
+    private static void validateKeywordsInputUnique(List<String> newKeywords) {
+        Set<String> seen = new HashSet<>();
+        boolean isDuplicated = newKeywords.stream().anyMatch(keyword -> !seen.add(keyword));
+
+        if (isDuplicated) {
+            throw new MonewException(
+                    InterestErrorType.INVALID_INTEREST_KEYWORD,
+                    Map.of("keywords", "키워드 생성/수정 시 같은 중복되는 키워드 이름을 요청할 수 없습니다."));
         }
     }
 }
