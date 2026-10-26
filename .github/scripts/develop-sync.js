@@ -151,7 +151,11 @@ async function dmConflict(github, repo, number) {
 
 async function setLabel(github, repo, number, state) {
   if (state === 'conflict') {
-    const { data: labels } = await github.rest.issues.listLabelsOnIssue({ ...repo, issue_number: number });
+    const labels = await github.paginate(github.rest.issues.listLabelsOnIssue, {
+      ...repo,
+      issue_number: number,
+      per_page: 100,
+    });
     const isNew = !labels.some((l) => l.name === CONFLICT_LABEL);
     await addLabel(github, repo, number, CONFLICT_LABEL);
     await removeLabel(github, repo, number, LABEL);

@@ -33,12 +33,12 @@ jobs:
         id: check
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         env:
-          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
-          DISCORD_ID_LSC0869: ${{ secrets.DISCORD_ID_LSC0869 }}
-          DISCORD_ID_SWANHW: ${{ secrets.DISCORD_ID_SWANHW }}
-          DISCORD_ID_SSOOMNI52: ${{ secrets.DISCORD_ID_SSOOMNI52 }}
-          DISCORD_ID_MJDEVKIM: ${{ secrets.DISCORD_ID_MJDEVKIM }}
-          DISCORD_ID_HANNA_LOG: ${{ secrets.DISCORD_ID_HANNA_LOG }}
+          DISCORD_BOT_TOKEN: ${{ github.event_name == 'push' && secrets.DISCORD_BOT_TOKEN || '' }}
+          DISCORD_ID_LSC0869: ${{ github.event_name == 'push' && secrets.DISCORD_ID_LSC0869 || '' }}
+          DISCORD_ID_SWANHW: ${{ github.event_name == 'push' && secrets.DISCORD_ID_SWANHW || '' }}
+          DISCORD_ID_SSOOMNI52: ${{ github.event_name == 'push' && secrets.DISCORD_ID_SSOOMNI52 || '' }}
+          DISCORD_ID_MJDEVKIM: ${{ github.event_name == 'push' && secrets.DISCORD_ID_MJDEVKIM || '' }}
+          DISCORD_ID_HANNA_LOG: ${{ github.event_name == 'push' && secrets.DISCORD_ID_HANNA_LOG || '' }}
         with:
           script: |
             const sync = require('./.github/scripts/develop-sync.js');
@@ -98,12 +98,6 @@ jobs:
           FILES: ${{ toJSON(matrix.pr.files) }}
           MERGE_OUTCOME: ${{ steps.merge.outcome }}
           BUILD_OUTCOME: ${{ steps.build.outcome }}
-          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
-          DISCORD_ID_LSC0869: ${{ secrets.DISCORD_ID_LSC0869 }}
-          DISCORD_ID_SWANHW: ${{ secrets.DISCORD_ID_SWANHW }}
-          DISCORD_ID_SSOOMNI52: ${{ secrets.DISCORD_ID_SSOOMNI52 }}
-          DISCORD_ID_MJDEVKIM: ${{ secrets.DISCORD_ID_MJDEVKIM }}
-          DISCORD_ID_HANNA_LOG: ${{ secrets.DISCORD_ID_HANNA_LOG }}
         with:
           script: |
             const sync = require('./.github/scripts/develop-sync.js');
