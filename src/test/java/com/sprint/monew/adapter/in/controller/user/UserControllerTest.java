@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sprint.monew.adapter.in.controller.user.dto.request.UserLoginRequest;
 import com.sprint.monew.adapter.in.controller.user.dto.request.UserRegisterRequest;
 import com.sprint.monew.application.user.provided.UserUseCase;
 import com.sprint.monew.application.user.provided.dto.UserResult;
@@ -118,5 +119,45 @@ class UserControllerTest {
         mockMvc.perform(registerRequest("dup@monew.com", "중복", "password1!"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("USER_EMAIL_DUPLICATED"));
+    }
+
+    private MockHttpServletRequestBuilder loginRequest(String email, String password)
+            throws Exception {
+        return post("/api/users/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new UserLoginRequest(email, password)));
+    }
+
+    @Test
+    @DisplayName("로그인에 성공하면 200과 사용자 정보를 응답한다")
+    void givenCorrectPassword_whenLogin_thenOk() throws Exception {
+        given(userUseCase.login("login@monew.com", "password1!"))
+                .willReturn(userResult("login@monew.com", "로그인"));
+
+        mockMvc.perform(loginRequest("login@monew.com", "password1!"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(userId.toString()))
+                .andExpect(jsonPath("$.email").value("login@monew.com"))
+                .andExpect(jsonPath("$.password").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("로그인 이메일 형식이 아니면 400을 응답하고 유스케이스를 부르지 않는다")
+    void givenInvalidEmail_whenLogin_thenBadRequest() throws Exception {
+        mockMvc.perform(loginRequest("not-email", "password1!"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.email").exists());
+        verifyNoInteractions(userUseCase);
+    }
+
+    @Test
+    @DisplayName("이메일이나 비밀번호가 틀리면 401과 USER_LOGIN_FAILED를 응답한다")
+    void givenWrongPassword_whenLogin_thenUnauthorized() throws Exception {
+        given(userUseCase.login("login@monew.com", "wrong1!"))
+                .willThrow(new MonewException(UserErrorType.USER_LOGIN_FAILED));
+
+        mockMvc.perform(loginRequest("login@monew.com", "wrong1!"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("USER_LOGIN_FAILED"));
     }
 }

@@ -1,5 +1,6 @@
 package com.sprint.monew.adapter.in.controller.user;
 
+import com.sprint.monew.adapter.in.controller.user.dto.request.UserLoginRequest;
 import com.sprint.monew.adapter.in.controller.user.dto.request.UserRegisterRequest;
 import com.sprint.monew.adapter.in.controller.user.dto.response.UserDto;
 import com.sprint.monew.application.user.provided.UserUseCase;
@@ -27,6 +28,14 @@ public class UserController {
         UserResult result =
                 userUseCase.register(request.email(), request.nickname(), request.password());
         log.info("회원가입 완료: userId={}", result.id());
+        return UserDto.from(result);
+    }
+
+    @PostMapping("/login")
+    public UserDto login(@Valid @RequestBody UserLoginRequest request) {
+        log.info("로그인 요청");
+        UserResult result = userUseCase.login(request.email(), request.password());
+        log.info("로그인 성공: userId={}", result.id());
         return UserDto.from(result);
     }
 }

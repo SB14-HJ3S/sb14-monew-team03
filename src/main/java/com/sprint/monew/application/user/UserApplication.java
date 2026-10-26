@@ -23,4 +23,10 @@ public class UserApplication implements UserUseCase {
         User user = userService.register(email, nickname, password);
         return UserResult.from(user);
     }
+
+    @Override
+    public UserResult login(String email, String password) {
+        User user = userService.login(email, password);
+        return UserResult.from(user);
+    }
 }
