@@ -55,8 +55,7 @@ public class InterestController {
     @ResponseStatus(HttpStatus.OK)
     @PatchMapping("/{interestId}")
     public InterestDto updateKeyword(
-            @PathVariable @RequestParam UUID interestId,
-            @RequestBody InterestUpdateRequest request) {
+            @PathVariable UUID interestId, @Valid @RequestBody InterestUpdateRequest request) {
         return InterestDto.from(interestUseCase.update(interestId, request.keywords()));
     }
 }
