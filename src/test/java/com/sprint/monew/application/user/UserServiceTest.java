@@ -108,7 +108,7 @@ class UserServiceTest {
                 .extracting("errorType")
                 .isEqualTo(UserErrorType.USER_EMAIL_DUPLICATED);
         verify(repository, never()).save(any());
-        verify(userEventPublisher, never()).publish(any());
+        verify(userEventPublisher, never()).publish(any(UserRegisteredEvent.class));
     }
 
     @Test
