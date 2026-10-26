@@ -16,4 +16,9 @@ public class SubscriptionRepositoryAdapter implements SubscriptionRepository {
     public Set<UUID> findSubscribedInterestIds(UUID requestId, List<UUID> interestIds) {
         return repository.findSubscribedInterestIds(requestId, interestIds);
     }
+
+    @Override
+    public List<UUID> findSubscribersByInterestId(UUID interestId) {
+        return repository.findSubscribersByInterestId(interestId);
+    }
 }

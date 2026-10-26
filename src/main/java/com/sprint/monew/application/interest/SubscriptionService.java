@@ -20,6 +20,6 @@ public class SubscriptionService implements ISubscriptionService {
 
     @Override
     public List<UUID> findSubscriberIds(UUID interestId) {
-        return null;
+        return repository.findSubscribersByInterestId(interestId);
     }
 }

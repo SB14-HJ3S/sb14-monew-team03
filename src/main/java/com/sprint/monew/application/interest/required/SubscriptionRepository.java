@@ -6,4 +6,6 @@ import java.util.UUID;
 
 public interface SubscriptionRepository {
     Set<UUID> findSubscribedInterestIds(UUID requestId, List<UUID> interestIds);
+
+    List<UUID> findSubscribersByInterestId(UUID interestId);
 }
