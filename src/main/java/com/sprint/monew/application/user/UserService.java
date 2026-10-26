@@ -22,7 +22,7 @@ public class UserService implements IUserService {
     @Override
     public User getActiveUser(UUID userId) {
         return repository
-                .findActiveById(userId)
+                .findUser(userId)
                 .orElseThrow(
                         () ->
                                 new MonewException(
@@ -34,7 +34,7 @@ public class UserService implements IUserService {
         if (userIds.isEmpty()) {
             return List.of();
         }
-        return repository.findAllActiveByIds(userIds);
+        return repository.findUsers(userIds);
     }
 
     @Override
@@ -45,5 +45,18 @@ public class UserService implements IUserService {
         }
         String encodedPassword = passwordEncoder.encode(password);
         return repository.save(User.create(email, nickname, encodedPassword));
+    }
+
+    @Override
+    public User login(String email, String password) {
+        User user = repository.findUserByEmail(email).orElseThrow(this::loginFailed);
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw loginFailed();
+        }
+        return user;
+    }
+
+    private MonewException loginFailed() {
+        return new MonewException(UserErrorType.USER_LOGIN_FAILED);
     }
 }

@@ -1,10 +1,11 @@
 package com.sprint.monew.adapter.out.interest;
 
-import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.sprint.monew.application.interest.provided.dto.InterestQuery;
 import com.sprint.monew.application.interest.required.InterestRepository;
 import com.sprint.monew.domain.interest.entity.Interest;
-import com.sprint.monew.domain.interest.entity.QInterest;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -12,7 +13,6 @@ import org.springframework.stereotype.Repository;
 @RequiredArgsConstructor
 public class InterestRepositoryAdapter implements InterestRepository {
     private final InterestJpaRepository jpaRepository;
-    private final JPAQueryFactory queryFactory;
 
     @Override
     public Interest save(Interest entity) {
@@ -21,7 +21,21 @@ public class InterestRepositoryAdapter implements InterestRepository {
 
     @Override
     public List<String> findAllNames() {
-        QInterest interest = QInterest.interest;
-        return queryFactory.select(interest.name).from(interest).fetch();
+        return jpaRepository.findAllNames();
+    }
+
+    @Override
+    public List<Interest> findByQuery(InterestQuery query) {
+        return jpaRepository.findByQuery(query);
+    }
+
+    @Override
+    public long countByQuery(InterestQuery query) {
+        return jpaRepository.countByQuery(query);
+    }
+
+    @Override
+    public Optional<Interest> findByIdWithKeywords(UUID interestId) {
+        return Optional.ofNullable(jpaRepository.findByIdWithKeywords(interestId));
     }
 }

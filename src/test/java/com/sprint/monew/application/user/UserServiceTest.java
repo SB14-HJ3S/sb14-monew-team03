@@ -37,7 +37,7 @@ class UserServiceTest {
     void givenActiveUser_whenGetActiveUser_thenReturnUser() {
         UUID userId = UUID.randomUUID();
         User user = User.create("test@monew.com", "테스터", "password1!");
-        given(repository.findActiveById(userId)).willReturn(Optional.of(user));
+        given(repository.findUser(userId)).willReturn(Optional.of(user));
 
         User result = userService.getActiveUser(userId);
 
@@ -48,7 +48,7 @@ class UserServiceTest {
     @DisplayName("없거나 탈퇴한 사용자면 USER_NOT_FOUND 예외가 난다")
     void givenNoActiveUser_whenGetActiveUser_thenThrowUserNotFound() {
         UUID userId = UUID.randomUUID();
-        given(repository.findActiveById(userId)).willReturn(Optional.empty());
+        given(repository.findUser(userId)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.getActiveUser(userId))
                 .isInstanceOf(MonewException.class)
@@ -90,7 +90,7 @@ class UserServiceTest {
                 List.of(
                         User.create("a@monew.com", "에이", "암호화된비밀번호"),
                         User.create("b@monew.com", "비", "암호화된비밀번호"));
-        given(repository.findAllActiveByIds(userIds)).willReturn(users);
+        given(repository.findUsers(userIds)).willReturn(users);
 
         List<User> result = userService.getActiveUsers(userIds);
 
@@ -103,6 +103,42 @@ class UserServiceTest {
         List<User> result = userService.getActiveUsers(List.of());
 
         assertThat(result).isEmpty();
-        verify(repository, never()).findAllActiveByIds(any());
+        verify(repository, never()).findUsers(any());
+    }
+
+    @Test
+    @DisplayName("이메일과 비밀번호가 맞으면 그 사용자를 돌려준다")
+    void givenCorrectPassword_whenLogin_thenReturnUser() {
+        User user = User.create("login@monew.com", "로그인", "암호화된비밀번호");
+        given(repository.findUserByEmail("login@monew.com")).willReturn(Optional.of(user));
+        given(passwordEncoder.matches("password1!", "암호화된비밀번호")).willReturn(true);
+
+        User result = userService.login("login@monew.com", "password1!");
+
+        assertThat(result).isSameAs(user);
+    }
+
+    @Test
+    @DisplayName("비밀번호가 틀리면 USER_LOGIN_FAILED 예외가 난다")
+    void givenWrongPassword_whenLogin_thenThrowLoginFailed() {
+        User user = User.create("login@monew.com", "로그인", "암호화된비밀번호");
+        given(repository.findUserByEmail("login@monew.com")).willReturn(Optional.of(user));
+        given(passwordEncoder.matches("wrong1!", "암호화된비밀번호")).willReturn(false);
+
+        assertThatThrownBy(() -> userService.login("login@monew.com", "wrong1!"))
+                .isInstanceOf(MonewException.class)
+                .extracting("errorType")
+                .isEqualTo(UserErrorType.USER_LOGIN_FAILED);
+    }
+
+    @Test
+    @DisplayName("없거나 탈퇴한 사용자의 이메일이면 USER_LOGIN_FAILED 예외가 난다")
+    void givenNoActiveUser_whenLogin_thenThrowLoginFailed() {
+        given(repository.findUserByEmail("none@monew.com")).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userService.login("none@monew.com", "password1!"))
+                .isInstanceOf(MonewException.class)
+                .extracting("errorType")
+                .isEqualTo(UserErrorType.USER_LOGIN_FAILED);
     }
 }

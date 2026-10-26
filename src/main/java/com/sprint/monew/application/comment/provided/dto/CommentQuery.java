@@ -1,5 +1,6 @@
 package com.sprint.monew.application.comment.provided.dto;
 
+import com.sprint.monew.domain.comment.entity.Comment;
 import com.sprint.monew.global.pagination.SortDirection;
 import com.sprint.monew.global.pagination.SortedPageQuery;
 import jakarta.validation.constraints.NotNull;
@@ -8,6 +9,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Function;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +23,7 @@ public record CommentQuery(
         Instant after,
         @NotNull int limit,
         @NotNull UUID requestId)
-        implements SortedPageQuery<CommentQuery.SortOrder> {
+        implements SortedPageQuery<Comment, CommentQuery.SortOrder> {
     public static CommentQuery of(
             UUID articleId,
             CommentQuery.SortOrder orderBy,
@@ -43,10 +45,16 @@ public record CommentQuery(
     @Getter
     @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
     @RequiredArgsConstructor
-    public enum SortOrder implements com.sprint.monew.global.pagination.SortOrder {
-        CREATED_AT("createdAt"),
-        LIKE_COUNT("likeCount"),
+    public enum SortOrder implements com.sprint.monew.global.pagination.SortOrder<Comment> {
+        CREATED_AT("createdAt", comment -> String.valueOf(comment.getCreatedAt())),
+        LIKE_COUNT("likeCount", comment -> String.valueOf(comment.getLikeCount())),
         ;
         String value;
+        Function<Comment, String> cursorExtractor;
+
+        @Override
+        public String cursorToString(Comment cursor) {
+            return cursorExtractor.apply(cursor);
+        }
     }
 }

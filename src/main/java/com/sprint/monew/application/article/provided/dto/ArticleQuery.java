@@ -1,5 +1,6 @@
 package com.sprint.monew.application.article.provided.dto;
 
+import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.global.pagination.SortDirection;
 import com.sprint.monew.global.pagination.SortedPageQuery;
 import com.sprint.monew.global.type.ArticleSourceType;
@@ -11,6 +12,7 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Function;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +29,8 @@ public record ArticleQuery(
         String cursor,
         Instant after,
         @Min(1) int limit)
-        implements SortedPageQuery<ArticleQuery.SortOrder> {
+        implements SortedPageQuery<Article, ArticleQuery.SortOrder> {
+
     public static ArticleQuery of(
             String keyword,
             UUID interestId,
@@ -55,11 +58,17 @@ public record ArticleQuery(
     @Getter
     @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
     @RequiredArgsConstructor
-    public enum SortOrder implements com.sprint.monew.global.pagination.SortOrder {
-        PUBLISH_DATE("publishDate"),
-        COMMENT_COUNT("commentCount"),
-        VIEW_COUNT("viewCount"),
+    public enum SortOrder implements com.sprint.monew.global.pagination.SortOrder<Article> {
+        PUBLISH_DATE("publishDate", article -> String.valueOf(article.getPublishedAt())),
+        COMMENT_COUNT("commentCount", article -> String.valueOf(article.getCommentCount())),
+        VIEW_COUNT("viewCount", article -> String.valueOf(article.getViewCount())),
         ;
         String value;
+        Function<Article, String> cursorExtractor;
+
+        @Override
+        public String cursorToString(Article cursor) {
+            return cursorExtractor.apply(cursor);
+        }
     }
 }

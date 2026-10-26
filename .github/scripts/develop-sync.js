@@ -24,6 +24,8 @@ const TEXT = {
     '🚨 이 PR은 반드시 최신 develop을 반영해야 해요. develop과 충돌이 나서 체크박스로는 반영할 수 없어요',
     files.length > 0 ? `충돌 파일: ${fileList(files, 10)}` : '',
     '',
+    '충돌이 풀릴 때까지 CI·자동 리뷰가 실행되지 않아요. GitHub 웹의 "Resolve conflicts" 버튼 대신 로컬에서 해결해 주세요',
+    '',
     '로컬에서 이렇게 해결해 주세요',
     '```bash',
     `git checkout ${branch}`,
@@ -35,7 +37,7 @@ const TEXT = {
     'git commit',
     'git push',
     '```',
-  ].filter((line, i) => line !== '' || i === 2).join('\n'),
+  ].filter((line, i) => line !== '' || i === 2 || i === 4).join('\n'),
   notAllowed: (user) => `@${user} 체크박스는 저장소 쓰기 권한이 있는 팀원만 쓸 수 있어요`,
   forkOrClosed: '열린 PR이 아니거나 다른 저장소에서 온 PR이라 체크박스로 반영할 수 없어요',
 };
@@ -116,10 +118,48 @@ async function removeLabel(github, repo, number, name) {
   }
 }
 
+function discordIdOf(login) {
+  return process.env[`DISCORD_ID_${login.toUpperCase().replace(/[^A-Z0-9]/g, '_')}`] || '';
+}
+
+async function discord(path, body) {
+  const res = await fetch(`https://discord.com/api/v10${path}`, {
+    method: 'POST',
+    headers: { Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`디스코드 응답 ${res.status}`);
+  return res.json();
+}
+
+async function dmConflict(github, repo, number) {
+  try {
+    const { data: pr } = await github.rest.pulls.get({ ...repo, pull_number: number });
+    const userId = discordIdOf(pr.user.login);
+    if (!process.env.DISCORD_BOT_TOKEN || !userId) {
+      console.log(`충돌 DM 건너뜀: ${pr.user.login}의 디스코드 ID나 봇 토큰이 없어요`);
+      return;
+    }
+    const channel = await discord('/users/@me/channels', { recipient_id: userId });
+    await discord(`/channels/${channel.id}/messages`, {
+      content: `⚠️ PR이 develop과 충돌이 나요. 충돌이 풀릴 때까지 CI·자동 리뷰가 돌지 않아요. 로컬에서 \`git merge origin/develop\`으로 해결해 주세요\n**${pr.title}**\n${pr.html_url}`,
+    });
+  } catch (e) {
+    console.log(`충돌 DM 실패: ${e.message}`);
+  }
+}
+
 async function setLabel(github, repo, number, state) {
   if (state === 'conflict') {
+    const labels = await github.paginate(github.rest.issues.listLabelsOnIssue, {
+      ...repo,
+      issue_number: number,
+      per_page: 100,
+    });
+    const isNew = !labels.some((l) => l.name === CONFLICT_LABEL);
     await addLabel(github, repo, number, CONFLICT_LABEL);
     await removeLabel(github, repo, number, LABEL);
+    if (isNew) await dmConflict(github, repo, number);
   } else if (state === 'must') {
     await addLabel(github, repo, number, LABEL);
     await removeLabel(github, repo, number, CONFLICT_LABEL);
@@ -332,4 +372,16 @@ async function syncMerge({ github, context, exec }) {
   await setLabel(github, repo, number, 'none');
 }
 
-module.exports = { status, buildResult, syncCheck, syncMerge, _test: { commentBody, statusOf, issueOf, failedTests, TEXT, fileList } };
+async function conflictNotice({ github, context, core }) {
+  const repo = context.repo;
+  const pr = await getPr(github, repo, context.payload.pull_request.number);
+  if (pr.state !== 'open' || pr.draft || !isSameRepoDevelopPr(pr, repo)) return;
+  if (pr.mergeable !== false) {
+    core.info(`PR #${pr.number}은 충돌이 없어요 (mergeable: ${pr.mergeable})`);
+    return;
+  }
+  await upsert(github, repo, pr.number, TEXT.conflict([], pr.head.ref));
+  await setLabel(github, repo, pr.number, 'conflict');
+}
+
+module.exports = { status, buildResult, syncCheck, syncMerge, conflictNotice, _test: { commentBody, statusOf, issueOf, failedTests, TEXT, fileList, discordIdOf } };

@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.UUID;
 
 public record InterestResult(
-        UUID id, String name, List<String> keywords, Long subscriberCount, boolean subscribedByMe) {
-    public static InterestResult of(Interest interest, boolean isSubscribed) {
+        UUID id, String name, List<String> keywords, Long subscriberCount, Boolean subscribedByMe) {
+    public static InterestResult of(Interest interest, Boolean isSubscribed) {
         return new InterestResult(
                 interest.getId(),
                 interest.getName(),

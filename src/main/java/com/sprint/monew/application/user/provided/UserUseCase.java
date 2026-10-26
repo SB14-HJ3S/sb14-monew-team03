@@ -9,4 +9,6 @@ public interface UserUseCase {
     User getActiveUser(UUID userId);
 
     UserResult register(String email, String nickname, String password);
+
+    UserResult login(String email, String password);
 }
