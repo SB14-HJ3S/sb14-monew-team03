@@ -21,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class NotificationApplication implements NotificationUseCase {
 
     private final NotificationService notificationService;
-    private final ISubscriptionService interestService;
+    private final ISubscriptionService subscriptionService;
     private final IUserService userService;
 
     @Override
@@ -39,7 +39,7 @@ public class NotificationApplication implements NotificationUseCase {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void createArticleNotifications(UUID interestId, String interestName, int articleCount) {
         List<User> subscribers =
-                interestService.findSubscriberIds(interestId).stream()
+                subscriptionService.findSubscriberIds(interestId).stream()
                         .map(userService::getActiveUser)
                         .toList();
 
