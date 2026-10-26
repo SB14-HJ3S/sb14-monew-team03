@@ -61,6 +61,7 @@ jobs:
         with:
           client-id: ${{ vars.DISCUSSION_BOT_CLIENT_ID }}
           private-key: ${{ secrets.DISCUSSION_BOT_PRIVATE_KEY }}
+          permission-contents: write
 
       - name: 바꾼 커밋 올리기
         id: push
