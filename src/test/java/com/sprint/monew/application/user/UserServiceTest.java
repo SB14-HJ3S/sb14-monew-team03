@@ -170,4 +170,28 @@ class UserServiceTest {
                 .extracting("errorType")
                 .isEqualTo(UserErrorType.USER_LOGIN_FAILED);
     }
+
+    @Test
+    @DisplayName("닉네임을 바꾸면 닉네임이 바뀐다")
+    void givenActiveUser_whenUpdateNickname_thenChanged() {
+        UUID userId = UUID.randomUUID();
+        User user = User.create("me@monew.com", "옛닉네임", "암호화된비밀번호");
+        given(repository.findUser(userId)).willReturn(Optional.of(user));
+
+        User result = userService.updateNickname(userId, "새닉네임");
+
+        assertThat(result.getNickname()).isEqualTo("새닉네임");
+    }
+
+    @Test
+    @DisplayName("없거나 탈퇴한 사용자면 닉네임 수정 때 USER_NOT_FOUND 예외가 난다")
+    void givenNoActiveUser_whenUpdateNickname_thenThrowUserNotFound() {
+        UUID userId = UUID.randomUUID();
+        given(repository.findUser(userId)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userService.updateNickname(userId, "새닉네임"))
+                .isInstanceOf(MonewException.class)
+                .extracting("errorType")
+                .isEqualTo(UserErrorType.USER_NOT_FOUND);
+    }
 }
