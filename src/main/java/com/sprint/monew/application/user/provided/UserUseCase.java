@@ -11,4 +11,6 @@ public interface UserUseCase {
     UserResult register(String email, String nickname, String password);
 
     UserResult login(String email, String password);
+
+    UserResult updateNickname(UUID userId, String nickname);
 }

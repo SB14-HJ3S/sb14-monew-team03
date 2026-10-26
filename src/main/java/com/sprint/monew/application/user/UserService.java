@@ -61,6 +61,11 @@ public class UserService implements IUserService {
         return user;
     }
 
+    @Override
+    public User updateNickname(UUID userId, String nickname) {
+        return null;
+    }
+
     private MonewException loginFailed() {
         return new MonewException(UserErrorType.USER_LOGIN_FAILED);
     }
