@@ -3,16 +3,21 @@ package com.sprint.monew.adapter.out.interest;
 import static com.sprint.monew.domain.interest.entity.QInterest.interest;
 import static org.springframework.util.StringUtils.hasText;
 
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sprint.monew.application.interest.provided.dto.InterestQuery;
 import com.sprint.monew.domain.interest.entity.Interest;
+import com.sprint.monew.global.exception.MonewException;
+import com.sprint.monew.global.exception.errortype.CommonErrorType;
+import com.sprint.monew.global.exception.errortype.InterestErrorType;
 import com.sprint.monew.global.pagination.SortDirection;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -28,19 +33,51 @@ public class InterestQueryRepositoryImpl implements InterestQueryRepository {
 
     @Override
     public List<Interest> findByQuery(InterestQuery query) {
+        if (Objects.isNull(query.cursor()) != Objects.isNull(query.after())) {
+            throw new MonewException(CommonErrorType.INVALID_REQUEST);
+        }
+
         boolean descending = query.direction().equals(SortDirection.DESC);
+        InterestAnchor anchor = createAnchor(query.cursor());
+
         return queryFactory
                 .selectFrom(interest)
                 .where(containsKeyword(query.keyword()))
                 .where(
                         matchPaginationCondition(
-                                query.cursor(), query.after(), query.orderBy(), descending))
+                                query.cursor(), query.after(), query.orderBy(), descending, anchor))
                 .orderBy(
                         cursorOrder(query.orderBy(), descending),
                         createdAtOrder(descending),
                         idOrder(descending))
                 .limit(query.limit() + 1)
                 .fetch();
+    }
+
+    private InterestAnchor createAnchor(String cursor) {
+        if (Objects.isNull(cursor)) {
+            return null;
+        }
+
+        UUID cursorId;
+        try {
+            cursorId = UUID.fromString(cursor);
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new MonewException(CommonErrorType.INVALID_REQUEST, e);
+        }
+
+        Tuple row =
+                Optional.ofNullable(
+                                queryFactory
+                                        .select(interest.name, interest.subscriberCount)
+                                        .from(interest)
+                                        .where(interest.id.eq(cursorId))
+                                        .fetchOne())
+                        .orElseThrow(
+                                () -> new MonewException(InterestErrorType.INTEREST_NOT_FOUND));
+
+        return new InterestAnchor(
+                cursorId, row.get(interest.name), row.get(interest.subscriberCount));
     }
 
     @Override
@@ -66,34 +103,45 @@ public class InterestQueryRepositoryImpl implements InterestQueryRepository {
     }
 
     private BooleanExpression matchPaginationCondition(
-            String cursor, Instant after, InterestQuery.SortOrder sortOrder, boolean descending) {
-        if (Objects.isNull(cursor) || Objects.isNull(after)) {
+            String cursor,
+            Instant createdAt,
+            InterestQuery.SortOrder sortOrder,
+            boolean descending,
+            InterestAnchor anchor) {
+        if (Objects.isNull(cursor) && Objects.isNull(createdAt)) {
             return null;
         }
 
         BooleanExpression createdAtCondition =
-                descending ? interest.createdAt.lt(after) : interest.createdAt.gt(after);
+                descending ? interest.createdAt.lt(createdAt) : interest.createdAt.gt(createdAt);
+        BooleanExpression createdAtEqual = interest.createdAt.eq(createdAt);
+
+        BooleanExpression idCondition =
+                descending ? interest.id.lt(anchor.id()) : interest.id.gt(anchor.id());
 
         return switch (sortOrder) {
             case NAME -> {
-                String name = cursor;
-                yield descending ? interest.name.lt(name) : interest.name.gt(name);
+                BooleanExpression nameEqual = interest.name.eq(anchor.name());
+                BooleanExpression nameCondition =
+                        descending
+                                ? interest.name.lt(anchor.name())
+                                : interest.name.gt(anchor.name());
+
+                yield nameCondition
+                        .or(nameEqual.and(createdAtCondition))
+                        .or(nameEqual.and(createdAtEqual).and(idCondition));
             }
             case SUBSCRIBER_COUNT -> {
-                Long subscriberCount = Long.valueOf(cursor);
-                yield descending
-                        ? interest.subscriberCount
-                                .lt(subscriberCount)
-                                .or(
-                                        interest.subscriberCount
-                                                .eq(subscriberCount)
-                                                .and(createdAtCondition))
-                        : interest.subscriberCount
-                                .gt(subscriberCount)
-                                .or(
-                                        interest.subscriberCount
-                                                .eq(subscriberCount)
-                                                .and(createdAtCondition));
+                BooleanExpression subscriberCountEqual =
+                        interest.subscriberCount.eq(anchor.subscriberCount());
+                BooleanExpression subscriberCountCondition =
+                        descending
+                                ? interest.subscriberCount.lt(anchor.subscriberCount())
+                                : interest.subscriberCount.gt(anchor.subscriberCount());
+
+                yield subscriberCountCondition
+                        .or(subscriberCountEqual.and(createdAtCondition))
+                        .or(subscriberCountEqual.and(createdAtEqual).and(idCondition));
             }
         };
     }

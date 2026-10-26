@@ -5,7 +5,6 @@ import com.sprint.monew.global.pagination.SortDirection;
 import com.sprint.monew.global.pagination.SortedPageQuery;
 import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
-import java.util.function.Function;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -33,16 +32,14 @@ public record InterestQuery(
     @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
     @RequiredArgsConstructor
     public enum SortOrder implements com.sprint.monew.global.pagination.SortOrder<Interest> {
-        NAME("name", interest -> String.valueOf(interest.getName())),
-        SUBSCRIBER_COUNT(
-                "subscriberCount", interest -> String.valueOf(interest.getSubscriberCount())),
+        NAME("name"),
+        SUBSCRIBER_COUNT("subscriberCount"),
         ;
         String value;
-        Function<Interest, String> cursorExtractor;
 
         @Override
         public String cursorToString(Interest cursor) {
-            return cursorExtractor.apply(cursor);
+            return cursor.getId().toString();
         }
     }
 }
