@@ -30,6 +30,7 @@ public record ArticleQuery(
         Instant after,
         @Min(1) int limit)
         implements SortedPageQuery<Article, ArticleQuery.SortOrder> {
+
     public static ArticleQuery of(
             String keyword,
             UUID interestId,
