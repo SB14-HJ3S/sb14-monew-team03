@@ -14,6 +14,8 @@ import com.sprint.monew.domain.interest.entity.InterestKeyword;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.InterestErrorType;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -75,5 +77,46 @@ class InterestServiceImplTest {
 
         verify(repository).findAllNames();
         verifyNoMoreInteractions(repository);
+    }
+
+    @Test
+    @DisplayName("존재하는 관심사의 키워드를 수정하고 수정된 관심사를 반환한다.")
+    void givenExistingInterest_whenUpdate_thenUpdateKeywordsAndReturnInterest() {
+        // given
+        UUID interestId = UUID.randomUUID();
+        Interest interest = Interest.create("관심사", List.of("기존", "유지"));
+        List<String> newKeywords = List.of("유지", "추가");
+
+        when(repository.findByIdWithKeywords(interestId)).thenReturn(Optional.of(interest));
+
+        // when
+        Interest updated = service.update(interestId, newKeywords);
+
+        // then
+        assertThat(updated).isSameAs(interest);
+        assertThat(updated.getKeywords())
+                .extracting(InterestKeyword::getKeyword)
+                .containsExactly("유지", "추가");
+
+        verify(repository).findByIdWithKeywords(interestId);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 관심사의 키워드를 수정하면 예외를 던진다.")
+    void givenNonExistingInterest_whenUpdate_thenThrowException() {
+        // given
+        UUID interestId = UUID.randomUUID();
+
+        when(repository.findByIdWithKeywords(interestId)).thenReturn(Optional.empty());
+
+        // when
+        MonewException thrown =
+                catchThrowableOfType(
+                        MonewException.class, () -> service.update(interestId, List.of("새 키워드")));
+
+        // then
+        assertThat(thrown.getErrorType()).isEqualTo(InterestErrorType.INTEREST_NOT_FOUND);
+
+        verify(repository).findByIdWithKeywords(interestId);
     }
 }

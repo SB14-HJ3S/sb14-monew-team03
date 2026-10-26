@@ -1,6 +1,6 @@
-package com.sprint.monew.application.user;
+package com.sprint.monew.application.interest;
 
-import com.sprint.monew.application.user.required.SubscriptionRepository;
+import com.sprint.monew.application.interest.required.SubscriptionRepository;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -16,5 +16,10 @@ public class SubscriptionService implements ISubscriptionService {
     @Override
     public Set<UUID> findSubscribedInterestIds(UUID requestId, List<UUID> interestIds) {
         return repository.findSubscribedInterestIds(requestId, interestIds);
+    }
+
+    @Override
+    public List<UUID> findSubscriberIds(UUID interestId) {
+        return repository.findSubscribersByInterestId(interestId);
     }
 }

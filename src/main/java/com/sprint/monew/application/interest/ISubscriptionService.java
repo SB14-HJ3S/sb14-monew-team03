@@ -1,9 +1,11 @@
-package com.sprint.monew.application.user.required;
+package com.sprint.monew.application.interest;
 
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-public interface SubscriptionRepository {
+public interface ISubscriptionService {
     Set<UUID> findSubscribedInterestIds(UUID requestId, List<UUID> interestIds);
+
+    List<UUID> findSubscriberIds(UUID interestId);
 }
