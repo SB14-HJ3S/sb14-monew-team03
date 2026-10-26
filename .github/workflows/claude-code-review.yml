@@ -171,4 +171,4 @@ jobs:
             - 어떻게 고치면 되는지(**제안**)는 구체적으로 써 줘. 다만 "제가 수정하겠습니다", "말씀해 주시면 고쳐 드릴게요"처럼 직접 고쳐 주겠다는 말은 하지 마. 너는 이 저장소의 코드를 수정할 수 없고, 고치는 건 PR 작성자가 해.
 
             다시 한번 강조: 위 모든 코멘트는 한국어로 작성해야 해. 영어로 쓰지 마.
-          claude_args: '--allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr view:*)"'
+          claude_args: '--allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr view:*),Bash(gh pr diff:*)"'
