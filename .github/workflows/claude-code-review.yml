@@ -67,7 +67,7 @@ jobs:
             const last = reviews[reviews.length - 1];
             if (last) {
               const lines = last.body.split('\n');
-              const line = lines.find((l) => l.startsWith('> 🔁')) || lines.find((l) => /번째 리뷰/.test(l)) || '';
+              const line = lines.find((l) => l.startsWith('> 🔁') && /번째 확인/.test(l)) || lines.find((l) => /번째 리뷰/.test(l)) || '';
               const covered = [...line.matchAll(/`([0-9a-f]{7,40})`/g)].map((m) => m[1]).pop();
               const at = covered ? shas.findIndex((x) => x.startsWith(covered)) : -1;
               if (at >= 0) from = Math.min(at + 1, shas.length - 1);
@@ -259,7 +259,7 @@ jobs:
             const shas = commits.map((c) => c.sha);
             const lines = last.body.split(CHECK)[0].trimEnd().split('\n');
             const headerAt = lines.findIndex((l) => /번째 리뷰/.test(l));
-            const oldCheckAt = lines.findIndex((l) => l.startsWith('> 🔁'));
+            const oldCheckAt = lines.findIndex((l) => l.startsWith('> 🔁') && /번째 확인/.test(l));
             const coveredLine = oldCheckAt >= 0 ? lines[oldCheckAt] : lines[headerAt] || '';
             const coveredShas = [...coveredLine.matchAll(/`([0-9a-f]{7,40})`/g)].map((m) => m[1]);
             const lastCovered = coveredShas.length ? coveredShas[coveredShas.length - 1] : '';
