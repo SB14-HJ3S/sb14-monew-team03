@@ -95,6 +95,7 @@ public class InterestApplication implements InterestUseCase, UserDeletionSubscri
     }
 
     @Override
+    @Transactional
     public void cleanupSubscriberCountBeforeUserHardDeletion(UUID userId) {
         User user = userService.getDeactivatedUser(userId);
         List<UUID> interestIds = subscriptionService.findInterestIdsByUserId(user.getId());
