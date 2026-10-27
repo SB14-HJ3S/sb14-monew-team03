@@ -12,4 +12,8 @@ public interface IUserService {
     User register(String email, String nickname, String password);
 
     User login(String email, String password);
+
+    default User getDeactivatedUser(UUID userId) {
+        throw new UnsupportedOperationException();
+    }
 }

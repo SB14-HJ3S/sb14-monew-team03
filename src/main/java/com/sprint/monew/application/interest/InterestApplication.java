@@ -2,6 +2,7 @@ package com.sprint.monew.application.interest;
 
 import com.sprint.monew.application.article.IArticleInterestService;
 import com.sprint.monew.application.interest.provided.InterestUseCase;
+import com.sprint.monew.application.interest.provided.UserDeletionSubscriptionCleaner;
 import com.sprint.monew.application.interest.provided.dto.InterestQuery;
 import com.sprint.monew.application.interest.provided.dto.InterestResult;
 import com.sprint.monew.application.interest.provided.dto.SubscriptionResult;
@@ -20,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @ApplicationService
 @RequiredArgsConstructor
-public class InterestApplication implements InterestUseCase {
+public class InterestApplication implements InterestUseCase, UserDeletionSubscriptionCleaner {
 
     private final InterestService interestService;
     private final ISubscriptionService subscriptionService;
@@ -91,5 +92,12 @@ public class InterestApplication implements InterestUseCase {
         // 응답 필드에 subscribedByMe는 있는데 데모 페이지에 항상 null로 뜸
         // interest patch 요청할 때 프론트에서 request-user-id를 아예 안주므로 일단 맞춰서 null로 반환해놓음
         return InterestResult.of(updated, null);
+    }
+
+    @Override
+    public void cleanupSubscriberCountBeforeUserHardDeletion(UUID userId) {
+        User user = userService.getDeactivatedUser(userId);
+        List<UUID> interestIds = subscriptionService.findInterestIdsByUserId(user.getId());
+        interestService.decreaseSubscriberCount(interestIds);
     }
 }
