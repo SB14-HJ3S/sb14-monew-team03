@@ -6,6 +6,7 @@ import com.sprint.monew.domain.notification.entity.Notification;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.pagination.PageResult;
 import com.sprint.monew.global.type.ResourceType;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -52,5 +53,10 @@ public class NotificationServiceImpl implements NotificationService {
 
         return PageResult.of(
                 fetched, total, query, n -> n.getId().toString(), Notification::getCreatedAt);
+    }
+
+    @Override
+    public int markAllAsRead(UUID userId) {
+        return notificationRepository.markAllAsRead(userId, LocalDateTime.now());
     }
 }
