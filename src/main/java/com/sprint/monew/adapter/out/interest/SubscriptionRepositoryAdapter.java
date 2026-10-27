@@ -43,4 +43,9 @@ public class SubscriptionRepositoryAdapter implements SubscriptionRepository {
     public void delete(Subscription deleting) {
         repository.delete(deleting);
     }
+
+    @Override
+    public List<UUID> findInterestIdsByUserId(UUID userId) {
+        return repository.findInterestByUserId(userId);
+    }
 }

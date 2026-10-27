@@ -40,10 +40,17 @@ public interface SubscriptionJpaRepository extends JpaRepository<Subscription, U
 
     @Query(
             """
-        select s
-        from Subscription s
-        where s.user.id = :userId
-        and s.user.deletedAt is null
-        and s.interest.id = :interestId""")
+            select s
+            from Subscription s
+            where s.user.id = :userId
+            and s.user.deletedAt is null
+            and s.interest.id = :interestId""")
     Optional<Subscription> findByUserIdAndInterestId(UUID userId, UUID interestId);
+
+    @Query(
+            """
+            select s.interest.id
+            from Subscription s
+            where s.user.id = :userId""")
+    List<UUID> findInterestByUserId(UUID userId);
 }

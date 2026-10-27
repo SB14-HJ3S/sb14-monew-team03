@@ -18,4 +18,6 @@ public interface SubscriptionRepository {
     Optional<Subscription> findByUserIdAndInterestId(UUID userId, UUID interestId);
 
     void delete(Subscription deleting);
+
+    List<UUID> findInterestIdsByUserId(UUID userId);
 }
