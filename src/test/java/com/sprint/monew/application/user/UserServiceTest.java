@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.sprint.monew.application.user.event.UserNicknameUpdatedEvent;
 import com.sprint.monew.application.user.event.UserRegisteredEvent;
@@ -109,7 +110,7 @@ class UserServiceTest {
                 .extracting("errorType")
                 .isEqualTo(UserErrorType.USER_EMAIL_DUPLICATED);
         verify(repository, never()).save(any());
-        verify(userEventPublisher, never()).publish(any(UserRegisteredEvent.class));
+        verifyNoInteractions(userEventPublisher);
     }
 
     @Test
