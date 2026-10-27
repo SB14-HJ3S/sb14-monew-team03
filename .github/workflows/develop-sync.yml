@@ -135,20 +135,12 @@ jobs:
           client-id: ${{ vars.DISCUSSION_BOT_CLIENT_ID }}
           private-key: ${{ secrets.DISCUSSION_BOT_PRIVATE_KEY }}
 
-      - name: PR 브랜치 받기
-        if: steps.check.outputs.ok == 'true'
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with:
-          ref: ${{ steps.check.outputs.ref }}
-          token: ${{ steps.bot.outputs.token }}
-          fetch-depth: 0
-          path: pr
-
       - name: 최신 develop 반영
         if: steps.check.outputs.ok == 'true'
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         env:
           HEAD_REF: ${{ steps.check.outputs.ref }}
+          BOT_TOKEN: ${{ steps.bot.outputs.token }}
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
           DISCORD_ID_LSC0869: ${{ secrets.DISCORD_ID_LSC0869 }}
           DISCORD_ID_SWANHW: ${{ secrets.DISCORD_ID_SWANHW }}
@@ -158,8 +150,7 @@ jobs:
         with:
           script: |
             const sync = require('./.github/scripts/develop-sync.js');
-            process.chdir('pr');
-            await sync.syncMerge({ github, context, exec });
+            await sync.syncMerge({ github, context, getOctokit });
 
       - name: 반영 실패 안내
         if: ${{ failure() && steps.check.outputs.ok == 'true' }}

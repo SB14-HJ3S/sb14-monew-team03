@@ -30,7 +30,8 @@
 
 - 요청자 ID는 컨트롤러 메서드에 `@RequestId`를 붙이고, 필요한 곳에서 `RequestIdContext.get()`으로 꺼낸다. 변수 이름은 `requestUserId`
 - `RequestId`·`RequestIdContext`·`RequestIdInterceptor` 이름은 유지한다 (사용자 ID라는 건 변수 이름 `requestUserId`로 구분). 이름을 바꾸라고 제안하지 않는다
-- `get()` 뒤에 `null` 확인을 넣으라고 제안하지 않는다 (`/api/**`의 `@RequestId` 메서드는 인터셉터가 헤더를 먼저 검사해서 항상 값이 있음). 대신 `@RequestId` 누락을 지적한다
+- `get()` 뒤에 `null` 확인을 넣으라고 제안하지 않는다 (`/api/**`의 `@RequestId` 메서드는 인터셉터가 헤더를 먼저 검사해서 항상 값이 있음)
+- `@RequestId` 누락은 Swagger에 `Monew-Request-User-ID` 헤더가 있는 API에서만 지적한다. 헤더가 없는 API(예: 사용자 회원가입·로그인·닉네임 수정·탈퇴)에는 `@RequestId`나 본인 확인(403)을 넣으라고 제안하지 않는다. Swagger 응답 목록에 403이 있어도 마찬가지다
 
 ## 패키지 구조
 
