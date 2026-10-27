@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -19,6 +21,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -168,5 +171,91 @@ class InterestServiceImplTest {
 
         verify(repository).findById(interestId);
         verifyNoMoreInteractions(repository);
+    }
+
+    @Test
+    @DisplayName("관심사의 구독자 수를 증가시키고 변경된 관심사를 반환한다.")
+    void givenExistingInterest_whenIncreaseSubscriberCount_thenUpdateAndReturnInterest() {
+        // given
+        UUID interestId = UUID.randomUUID();
+        Interest interest = Interest.create("관심사", List.of("키워드"));
+        when(repository.findById(interestId)).thenReturn(Optional.of(interest));
+
+        // when
+        Interest result = service.increaseSubscriberCount(interestId);
+
+        // then
+        assertThat(result).isSameAs(interest);
+        InOrder inOrder = inOrder(repository);
+        inOrder.verify(repository).increaseSubscriberCount(interestId);
+        inOrder.verify(repository).findById(interestId);
+    }
+
+    @Test
+    @DisplayName("존재하는 관심사의 구독자 수를 감소시킨다.")
+    void givenExistingInterest_whenDecreaseSubscriberCount_thenUpdateCount() {
+        // given
+        UUID interestId = UUID.randomUUID();
+        when(repository.existsById(interestId)).thenReturn(true);
+
+        // when
+        service.decreaseSubscriberCount(interestId);
+
+        // then
+        InOrder inOrder = inOrder(repository);
+        inOrder.verify(repository).existsById(interestId);
+        inOrder.verify(repository).decreaseSubscriberCount(interestId);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 관심사의 구독자 수를 감소시키면 예외가 발생한다.")
+    void givenNonExistingInterest_whenDecreaseSubscriberCount_thenThrowException() {
+        // given
+        UUID interestId = UUID.randomUUID();
+        when(repository.existsById(interestId)).thenReturn(false);
+
+        // when
+        MonewException thrown =
+                catchThrowableOfType(
+                        MonewException.class, () -> service.decreaseSubscriberCount(interestId));
+
+        // then
+        assertThat(thrown.getErrorType()).isEqualTo(InterestErrorType.INTEREST_NOT_FOUND);
+        assertThat(thrown.getDetails()).containsEntry("id", interestId);
+        verify(repository, never()).decreaseSubscriberCount(interestId);
+    }
+
+    @Test
+    @DisplayName("모든 관심사가 존재하면 구독자 수를 일괄 감소시킨다.")
+    void givenExistingInterests_whenDecreaseSubscriberCounts_thenBulkUpdateCounts() {
+        // given
+        List<UUID> interestIds = List.of(UUID.randomUUID(), UUID.randomUUID());
+        when(repository.countByIdIn(interestIds)).thenReturn(interestIds.size());
+
+        // when
+        service.decreaseSubscriberCount(interestIds);
+
+        // then
+        InOrder inOrder = inOrder(repository);
+        inOrder.verify(repository).countByIdIn(interestIds);
+        inOrder.verify(repository).decreaseSubscriberCountIn(interestIds);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 관심사가 포함되면 구독자 수를 일괄 감소시키지 않는다.")
+    void givenSomeNonExistingInterests_whenDecreaseSubscriberCounts_thenThrowException() {
+        // given
+        List<UUID> interestIds = List.of(UUID.randomUUID(), UUID.randomUUID());
+        when(repository.countByIdIn(interestIds)).thenReturn(interestIds.size() - 1);
+
+        // when
+        MonewException thrown =
+                catchThrowableOfType(
+                        MonewException.class, () -> service.decreaseSubscriberCount(interestIds));
+
+        // then
+        assertThat(thrown.getErrorType()).isEqualTo(InterestErrorType.INTEREST_NOT_FOUND);
+        assertThat(thrown.getDetails()).containsEntry("id", interestIds);
+        verify(repository, never()).decreaseSubscriberCountIn(interestIds);
     }
 }

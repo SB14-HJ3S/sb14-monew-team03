@@ -84,4 +84,17 @@ class InterestTest {
 
         assertThat(thrown.getErrorType()).isEqualTo(InterestErrorType.INVALID_INTEREST_KEYWORD);
     }
+
+    @Test
+    @DisplayName("관심사의 키워드 이름을 등록 순서대로 반환한다")
+    void givenInterest_whenGetKeywordNames_thenReturnKeywordNamesInOrder() {
+        // given
+        Interest interest = Interest.create("관심사", List.of("첫 번째", "두 번째"));
+
+        // when
+        List<String> keywordNames = interest.getKeywordNames();
+
+        // then
+        assertThat(keywordNames).containsExactly("첫 번째", "두 번째");
+    }
 }
