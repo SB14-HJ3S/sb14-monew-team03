@@ -1,5 +1,6 @@
 package com.sprint.monew.application.user;
 
+import com.sprint.monew.application.user.event.UserNicknameUpdatedEvent;
 import com.sprint.monew.application.user.event.UserRegisteredEvent;
 import com.sprint.monew.application.user.required.UserEventPublisherPort;
 import com.sprint.monew.application.user.required.UserRepositoryPort;
@@ -58,6 +59,15 @@ public class UserService implements IUserService {
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw loginFailed();
         }
+        return user;
+    }
+
+    @Override
+    @Transactional
+    public User updateNickname(UUID userId, String nickname) {
+        User user = getActiveUser(userId);
+        user.changeNickname(nickname);
+        userEventPublisher.publish(new UserNicknameUpdatedEvent(userId, user.getNickname()));
         return user;
     }
 
