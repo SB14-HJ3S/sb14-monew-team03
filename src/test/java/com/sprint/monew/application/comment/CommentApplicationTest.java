@@ -390,6 +390,22 @@ class CommentApplicationTest {
         }
 
         @Test
+        @DisplayName("댓글을 등록하면 기사의 댓글 수를 1 늘린다")
+        void increaseArticleCommentCount() {
+            User author = author();
+            Article article = mock(Article.class);
+            given(article.getId()).willReturn(articleId);
+            given(userService.getActiveUser(authorId)).willReturn(author);
+            given(articleService.findById(articleId)).willReturn(article);
+            given(commentRepository.save(any(Comment.class)))
+                    .willAnswer(invocation -> invocation.getArgument(0));
+
+            commentApplication.register(authorId, articleId, "첫 댓글");
+
+            verify(articleService).increaseCommentCount(articleId);
+        }
+
+        @Test
         @DisplayName("없거나 탈퇴한 사용자면 USER_NOT_FOUND 예외가 나고 기사 조회·저장을 하지 않는다")
         void notExistUser() {
             given(userService.getActiveUser(authorId))
@@ -403,7 +419,7 @@ class CommentApplicationTest {
         }
 
         @Test
-        @DisplayName("없거나 삭제된 기사면 ARTICLE_NOT_FOUND 예외가 나고 저장하지 않는다")
+        @DisplayName("없거나 삭제된 기사면 ARTICLE_NOT_FOUND 예외가 나고 저장·댓글 수 증가를 하지 않는다")
         void notExistArticle() {
             given(userService.getActiveUser(authorId)).willReturn(mock(User.class));
             given(articleService.findById(articleId))
@@ -414,6 +430,7 @@ class CommentApplicationTest {
                     .extracting("errorType")
                     .isEqualTo(ArticleErrorType.ARTICLE_NOT_FOUND);
             verifyNoInteractions(commentRepository);
+            verify(articleService, never()).increaseCommentCount(any());
         }
     }
 }
