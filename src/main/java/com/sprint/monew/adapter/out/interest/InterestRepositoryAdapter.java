@@ -63,4 +63,14 @@ public class InterestRepositoryAdapter implements InterestRepository {
     public boolean existsById(UUID interestId) {
         return jpaRepository.existsById(interestId);
     }
+
+    @Override
+    public int countByIdIn(List<UUID> interestId) {
+        return jpaRepository.countByIdIn((interestId));
+    }
+
+    @Override
+    public void decreaseSubscriberCountIn(List<UUID> interestIds) {
+        jpaRepository.decreaseSubscriberCountIn(interestIds);
+    }
 }

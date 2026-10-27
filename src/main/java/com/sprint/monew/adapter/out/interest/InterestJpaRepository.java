@@ -1,6 +1,8 @@
 package com.sprint.monew.adapter.out.interest;
 
 import com.sprint.monew.domain.interest.entity.Interest;
+import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -21,4 +23,12 @@ public interface InterestJpaRepository
                     + " WHERE i.id = :interestId AND i.subscriberCount > 0")
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     void decreaseSubscriberCount(@Param("interestId") UUID interestId);
+
+    int countByIdIn(Collection<UUID> ids);
+
+    @Query(
+            "UPDATE Interest i SET i.subscriberCount = i.subscriberCount - 1"
+                    + " WHERE i.id in :interestIds AND i.subscriberCount > 0")
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    void decreaseSubscriberCountIn(List<UUID> interestIds);
 }

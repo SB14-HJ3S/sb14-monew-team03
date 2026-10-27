@@ -26,4 +26,8 @@ public interface InterestRepository {
     void decreaseSubscriberCount(UUID interestId);
 
     boolean existsById(UUID interestId);
+
+    int countByIdIn(List<UUID> interestId);
+
+    void decreaseSubscriberCountIn(List<UUID> interestIds);
 }

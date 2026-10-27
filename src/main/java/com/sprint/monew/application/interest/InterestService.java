@@ -21,5 +21,5 @@ public interface InterestService {
 
     void decreaseSubscriberCount(UUID interestId);
 
-    boolean existsById(UUID interestId);
+    void decreaseSubscriberCount(List<UUID> interestIds);
 }
