@@ -220,6 +220,7 @@ class UserServiceTest {
 
         assertThat(user.isDeleted()).isTrue();
         assertThat(user.getDeletedAt()).isNotNull();
+        verifyNoInteractions(userEventPublisher);
     }
 
     @Test
