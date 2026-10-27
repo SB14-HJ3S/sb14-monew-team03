@@ -1,5 +1,6 @@
 package com.sprint.monew.application.notification.required;
 
+import com.sprint.monew.application.notification.provided.dto.NotificationQuery;
 import com.sprint.monew.domain.notification.entity.Notification;
 import java.util.List;
 import java.util.Optional;
@@ -16,4 +17,8 @@ public interface NotificationRepositoryPort {
     List<Notification> findAll();
 
     void deleteById(UUID id);
+
+    List<Notification> findByQuery(UUID userId, NotificationQuery query);
+
+    long countByQuery(UUID userId, NotificationQuery query);
 }

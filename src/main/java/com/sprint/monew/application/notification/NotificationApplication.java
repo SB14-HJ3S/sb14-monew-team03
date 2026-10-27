@@ -6,6 +6,7 @@ import com.sprint.monew.application.notification.provided.dto.NotificationQuery;
 import com.sprint.monew.application.user.IUserService;
 import com.sprint.monew.domain.notification.entity.Notification;
 import com.sprint.monew.domain.user.entity.User;
+import com.sprint.monew.global.context.RequestIdContext;
 import com.sprint.monew.global.pagination.PageResult;
 import java.util.List;
 import java.util.UUID;
@@ -25,8 +26,10 @@ public class NotificationApplication implements NotificationUseCase {
     private final IUserService userService;
 
     @Override
+    @Transactional(readOnly = true)
     public PageResult<Notification> findByQuery(NotificationQuery query) {
-        return null;
+        UUID userId = RequestIdContext.get();
+        return notificationService.findUnread(userId, query);
     }
 
     @Override
