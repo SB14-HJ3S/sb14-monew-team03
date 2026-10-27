@@ -1,5 +1,7 @@
 package com.sprint.monew.application.user;
 
+import com.sprint.monew.application.user.event.UserRegisteredEvent;
+import com.sprint.monew.application.user.required.UserEventPublisherPort;
 import com.sprint.monew.application.user.required.UserRepositoryPort;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.exception.MonewException;
@@ -18,6 +20,7 @@ public class UserService implements IUserService {
 
     private final UserRepositoryPort repository;
     private final PasswordEncoder passwordEncoder;
+    private final UserEventPublisherPort userEventPublisher;
 
     @Override
     public User getActiveUser(UUID userId) {
@@ -44,7 +47,9 @@ public class UserService implements IUserService {
             throw new MonewException(UserErrorType.USER_EMAIL_DUPLICATED);
         }
         String encodedPassword = passwordEncoder.encode(password);
-        return repository.save(User.create(email, nickname, encodedPassword));
+        User user = repository.save(User.create(email, nickname, encodedPassword));
+        userEventPublisher.publish(UserRegisteredEvent.from(user));
+        return user;
     }
 
     @Override

@@ -1,10 +1,10 @@
 package com.sprint.monew.application.notification;
 
-import com.sprint.monew.application.interest.InterestService;
+import com.sprint.monew.application.interest.ISubscriptionService;
 import com.sprint.monew.application.notification.provided.NotificationUseCase;
 import com.sprint.monew.application.notification.provided.dto.NotificationQuery;
+import com.sprint.monew.application.notification.provided.dto.NotificationResult;
 import com.sprint.monew.application.user.IUserService;
-import com.sprint.monew.domain.notification.entity.Notification;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.context.RequestIdContext;
 import com.sprint.monew.global.pagination.PageResult;
@@ -22,14 +22,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class NotificationApplication implements NotificationUseCase {
 
     private final NotificationService notificationService;
-    private final InterestService interestService;
+    private final ISubscriptionService subscriptionService;
     private final IUserService userService;
 
     @Override
     @Transactional(readOnly = true)
-    public PageResult<Notification> findByQuery(NotificationQuery query) {
+    public PageResult<NotificationResult> findByQuery(NotificationQuery query) {
         UUID userId = RequestIdContext.get();
-        return notificationService.findUnread(userId, query);
+        return notificationService.findUnread(userId, query).map(NotificationResult::from);
     }
 
     @Override
@@ -42,7 +42,7 @@ public class NotificationApplication implements NotificationUseCase {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void createArticleNotifications(UUID interestId, String interestName, int articleCount) {
         List<User> subscribers =
-                interestService.findSubscriberIds(interestId).stream()
+                subscriptionService.findSubscriberIds(interestId).stream()
                         .map(userService::getActiveUser)
                         .toList();
 

@@ -1,6 +1,6 @@
 package com.sprint.monew.adapter.in.controller.notification.dto.response;
 
-import com.sprint.monew.domain.notification.entity.Notification;
+import com.sprint.monew.application.notification.provided.dto.NotificationResult;
 import com.sprint.monew.global.type.ResourceType;
 import java.time.Instant;
 import java.util.UUID;
@@ -15,15 +15,15 @@ public record NotificationDto(
         ResourceType resourceType, // 관련된 리소스 유형
         UUID resourceId) {
 
-    public static NotificationDto from(Notification notification) {
+    public static NotificationDto from(NotificationResult result) {
         return new NotificationDto(
-                notification.getId(),
-                notification.getCreatedAt(),
-                notification.getCreatedAt(),
-                notification.isRead(),
-                notification.getUser().getId(),
-                notification.getContent(),
-                notification.getResourceType(),
-                notification.getResourceId());
+                result.id(),
+                result.createdAt(),
+                result.createdAt(),
+                result.confirmed(),
+                result.userId(),
+                result.content(),
+                result.resourceType(),
+                result.resourceId());
     }
-} // 관련된 리소스 ID
+}

@@ -1,9 +1,9 @@
 package com.sprint.monew.application.interest;
 
+import com.sprint.monew.application.article.IArticleInterestService;
 import com.sprint.monew.application.interest.provided.InterestUseCase;
 import com.sprint.monew.application.interest.provided.dto.InterestQuery;
 import com.sprint.monew.application.interest.provided.dto.InterestResult;
-import com.sprint.monew.application.user.ISubscriptionService;
 import com.sprint.monew.domain.interest.entity.Interest;
 import com.sprint.monew.global.annotation.ApplicationService;
 import com.sprint.monew.global.context.RequestIdContext;
@@ -20,6 +20,7 @@ public class InterestApplication implements InterestUseCase {
 
     private final InterestService interestService;
     private final ISubscriptionService subscriptionService;
+    private final IArticleInterestService articleInterestService;
 
     @Override
     @Transactional(readOnly = true)
@@ -54,10 +55,20 @@ public class InterestApplication implements InterestUseCase {
     public void unsubscribe(UUID interestId, UUID requestId) {}
 
     @Override
-    public void delete(UUID interestId) {}
+    @Transactional
+    public void delete(UUID interestId) {
+        Interest deleting = interestService.getById(interestId);
+        articleInterestService.deleteAllByInterestId(interestId);
+        subscriptionService.deleteAllByInterestId(interestId);
+        interestService.delete(deleting);
+    }
 
     @Override
+    @Transactional
     public InterestResult update(UUID interestId, List<String> keywords) {
-        return null;
+        Interest updated = interestService.update(interestId, keywords);
+        // 응답 필드에 subscribedByMe는 있는데 데모 페이지에 항상 null로 뜸
+        // interest patch 요청할 때 프론트에서 request-user-id를 아예 안주므로 일단 맞춰서 null로 반환해놓음
+        return InterestResult.of(updated, null);
     }
 }

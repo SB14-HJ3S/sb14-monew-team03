@@ -15,6 +15,8 @@ FAILURE = "#E85D9E"
 COVERAGE_LOW = FAILURE
 UNKNOWN = "#A0A0A0"
 LABEL = "#475569"
+KEEP = object()
+WAIT_SECONDS = 300
 
 
 def badge(label, value, color):
@@ -64,15 +66,15 @@ def coverage_value(data):
 
 
 def fetch_coverage(repository, sha, token):
-    """해당 커밋의 처리 완료 수치를 재시도하며 조회하고 실패하면 None을 반환한다."""
+    """해당 커밋의 처리 완료 수치를 재시도하며 조회하고, 시간 안에 받지 못하면 KEEP을 반환한다."""
     if not token:
         print("::warning::CODECOV_API_TOKEN이 없어 커버리지 배지를 unknown으로 표시합니다.")
         return None
     owner, repo = repository.split("/", 1)
     url = f"https://api.codecov.io/api/v2/github/{owner}/repos/{repo}/commits/{sha}/"
     request = Request(url, headers={"Authorization": f"Bearer {token}", "Accept": "application/json"})
-    # Codecov는 비동기로 처리하므로 해당 커밋의 완료 결과를 요청 시간 초과를 포함해 최대 약 5분 기다린다.
-    for attempt in range(12):
+    deadline = time.monotonic() + WAIT_SECONDS
+    while True:
         try:
             with urlopen(request, timeout=15) as response:
                 value = coverage_value(json.load(response))
@@ -84,10 +86,11 @@ def fetch_coverage(repository, sha, token):
                 return None
         except (URLError, TimeoutError, ValueError):
             pass
-        if attempt < 11:
-            time.sleep(10)
-    print("::warning::해당 커밋의 Codecov 결과를 확인하지 못해 unknown으로 표시합니다.")
-    return None
+        if time.monotonic() + 10 >= deadline:
+            break
+        time.sleep(10)
+    print("::warning::해당 커밋의 Codecov 결과를 5분 안에 확인하지 못해 직전 커버리지 배지를 유지합니다.")
+    return KEEP
 
 
 def write_badges(directory, result, coverage):
@@ -100,9 +103,14 @@ def write_badges(directory, result, coverage):
         "skipped": ("skipped", UNKNOWN),
     }.get(result, ("unknown", UNKNOWN))
     (directory / "ci.svg").write_text(badge("CI", state, color))
+    coverage_path = directory / "codecov.svg"
+    if coverage is KEEP:
+        if coverage_path.exists():
+            return
+        coverage = None
     value = "unknown" if coverage is None else f"{coverage.quantize(Decimal('0.01'), rounding=ROUND_DOWN)}%"
     color = UNKNOWN if coverage is None else SUCCESS if coverage >= 80 else COVERAGE_LOW
-    (directory / "codecov.svg").write_text(badge("codecov", value, color))
+    coverage_path.write_text(badge("codecov", value, color))
 
 
 if __name__ == "__main__":

@@ -6,6 +6,7 @@ import com.sprint.monew.application.notification.provided.dto.NotificationQuery;
 import com.sprint.monew.global.annotation.RequestId;
 import com.sprint.monew.global.annotation.RestWebAdapter;
 import com.sprint.monew.global.pagination.PageResult;
+import jakarta.validation.constraints.Min;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -28,7 +29,9 @@ public class NotificationController {
             @RequestParam(name = "after", required = false)
                     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
                     Instant after,
-            @RequestParam(name = "limit", required = false) int limit) {
+            @RequestParam(name = "limit", required = true)
+                    @Min(value = 1, message = "limit은 1이상이어야 합니다.")
+                    int limit) {
         NotificationQuery query = NotificationQuery.of(cursor, after, limit);
 
         return notificationUseCase.findByQuery(query).map(NotificationDto::from);

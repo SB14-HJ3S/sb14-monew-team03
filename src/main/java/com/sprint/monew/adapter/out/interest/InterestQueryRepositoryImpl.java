@@ -161,4 +161,14 @@ public class InterestQueryRepositoryImpl implements InterestQueryRepository {
     private OrderSpecifier<?> idOrder(boolean descending) {
         return descending ? interest.id.desc() : interest.id.asc();
     }
+
+    @Override
+    public Interest findByIdWithKeywords(UUID interestId) {
+        return queryFactory
+                .selectFrom(interest)
+                .leftJoin(interest.keywords)
+                .fetchJoin()
+                .where(interest.id.eq(interestId))
+                .fetchOne();
+    }
 }
