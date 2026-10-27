@@ -20,4 +20,6 @@ public interface InterestRepository {
     void delete(Interest entity);
 
     Optional<Interest> findById(UUID id);
+
+    int increaseSubscriberCount(UUID interestId);
 }

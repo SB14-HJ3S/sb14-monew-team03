@@ -87,4 +87,10 @@ public class InterestServiceImpl implements InterestService {
     public void delete(Interest deleting) {
         repository.delete(deleting);
     }
+
+    @Override
+    public Interest increaseSubscriberCount(UUID interestId) {
+        repository.increaseSubscriberCount(interestId);
+        return getById(interestId);
+    }
 }

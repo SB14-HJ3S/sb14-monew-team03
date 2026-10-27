@@ -16,4 +16,6 @@ public interface InterestService {
     Interest getById(UUID interestId);
 
     void delete(Interest deleting);
+
+    Interest increaseSubscriberCount(UUID interestId);
 }

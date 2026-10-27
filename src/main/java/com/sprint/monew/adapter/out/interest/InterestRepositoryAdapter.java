@@ -48,4 +48,9 @@ public class InterestRepositoryAdapter implements InterestRepository {
     public Optional<Interest> findById(UUID id) {
         return jpaRepository.findById(id);
     }
+
+    @Override
+    public int increaseSubscriberCount(UUID interestId) {
+        return jpaRepository.increaseSubscriberCount(interestId);
+    }
 }

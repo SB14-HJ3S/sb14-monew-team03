@@ -3,6 +3,16 @@ package com.sprint.monew.adapter.out.interest;
 import com.sprint.monew.domain.interest.entity.Interest;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface InterestJpaRepository
-        extends JpaRepository<Interest, UUID>, InterestQueryRepository {}
+        extends JpaRepository<Interest, UUID>, InterestQueryRepository {
+
+    @Query(
+            "UPDATE Interest i SET i.subscriberCount = i.subscriberCount + 1"
+                    + " WHERE i.id = :interestId")
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    int increaseSubscriberCount(@Param("interestId") UUID interestId);
+}
