@@ -21,5 +21,9 @@ public interface InterestRepository {
 
     Optional<Interest> findById(UUID id);
 
-    int increaseSubscriberCount(UUID interestId);
+    void increaseSubscriberCount(UUID interestId);
+
+    void decreaseSubscriberCount(UUID interestId);
+
+    boolean existsById(UUID interestId);
 }

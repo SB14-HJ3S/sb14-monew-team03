@@ -93,4 +93,22 @@ public class InterestServiceImpl implements InterestService {
         repository.increaseSubscriberCount(interestId);
         return getById(interestId);
     }
+
+    @Override
+    public void decreaseSubscriberCount(UUID interestId) {
+        validateAlreadyExistsById(interestId);
+        repository.decreaseSubscriberCount(interestId);
+    }
+
+    @Override
+    public boolean existsById(UUID interestId) {
+        return repository.existsById(interestId);
+    }
+
+    private void validateAlreadyExistsById(UUID interestId) {
+        if (!existsById(interestId)) {
+            throw new MonewException(
+                    InterestErrorType.INTEREST_NOT_FOUND, Map.of("id", interestId));
+        }
+    }
 }

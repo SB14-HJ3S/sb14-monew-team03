@@ -66,7 +66,14 @@ public class InterestApplication implements InterestUseCase {
     }
 
     @Override
-    public void unsubscribe(UUID interestId) {}
+    @Transactional
+    public void unsubscribe(UUID interestId) {
+        UUID userId = RequestIdContext.get();
+        User user = userService.getActiveUser(userId);
+        Interest interest = interestService.getById(interestId);
+        subscriptionService.deleteByUserIdAndInterestId(user.getId(), interest.getId());
+        interestService.decreaseSubscriberCount(interestId);
+    }
 
     @Override
     @Transactional

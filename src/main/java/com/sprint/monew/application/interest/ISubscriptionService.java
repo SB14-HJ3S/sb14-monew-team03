@@ -13,4 +13,6 @@ public interface ISubscriptionService {
     void deleteAllByInterestId(UUID interestId);
 
     Subscription create(Subscription creating);
+
+    void deleteByUserIdAndInterestId(UUID userId, UUID interestId);
 }

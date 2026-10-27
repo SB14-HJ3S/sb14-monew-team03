@@ -3,6 +3,7 @@ package com.sprint.monew.adapter.out.interest;
 import com.sprint.monew.application.interest.required.SubscriptionRepository;
 import com.sprint.monew.domain.user.entity.Subscription;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -31,5 +32,15 @@ public class SubscriptionRepositoryAdapter implements SubscriptionRepository {
     @Override
     public Subscription save(Subscription creating) {
         return repository.save(creating);
+    }
+
+    @Override
+    public Optional<Subscription> findByUserIdAndInterestId(UUID userId, UUID interestId) {
+        return repository.findByUserIdAndInterestId(userId, interestId);
+    }
+
+    @Override
+    public void delete(Subscription deleting) {
+        repository.delete(deleting);
     }
 }

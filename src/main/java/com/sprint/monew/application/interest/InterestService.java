@@ -18,4 +18,8 @@ public interface InterestService {
     void delete(Interest deleting);
 
     Interest increaseSubscriberCount(UUID interestId);
+
+    void decreaseSubscriberCount(UUID interestId);
+
+    boolean existsById(UUID interestId);
 }

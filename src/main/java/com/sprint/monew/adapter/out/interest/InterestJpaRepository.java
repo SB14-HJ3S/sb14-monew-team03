@@ -14,5 +14,11 @@ public interface InterestJpaRepository
             "UPDATE Interest i SET i.subscriberCount = i.subscriberCount + 1"
                     + " WHERE i.id = :interestId")
     @Modifying(flushAutomatically = true, clearAutomatically = true)
-    int increaseSubscriberCount(@Param("interestId") UUID interestId);
+    void increaseSubscriberCount(@Param("interestId") UUID interestId);
+
+    @Query(
+            "UPDATE Interest i SET i.subscriberCount = i.subscriberCount - 1"
+                    + " WHERE i.id = :interestId AND i.subscriberCount > 0")
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    void decreaseSubscriberCount(@Param("interestId") UUID interestId);
 }

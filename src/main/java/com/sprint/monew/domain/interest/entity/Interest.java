@@ -19,6 +19,7 @@ import java.util.Set;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Check;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -27,6 +28,7 @@ import org.springframework.util.StringUtils;
         name = "interests",
         uniqueConstraints = {@UniqueConstraint(columnNames = {"name"})})
 @Getter
+@Check(constraints = "subscriber_count >= 0")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Interest extends BaseEntity {
     public static final int MAX_NAME_LENGTH = 50;
