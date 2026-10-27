@@ -67,6 +67,10 @@ public class Interest extends BaseEntity {
         return creating;
     }
 
+    public List<String> getKeywordNames() {
+        return keywords.stream().map(InterestKeyword::getKeyword).toList();
+    }
+
     public Interest updateKeywords(List<String> newKeywords) {
         validateInterestKeywords(newKeywords);
 
@@ -78,7 +82,7 @@ public class Interest extends BaseEntity {
     }
 
     private List<InterestKeyword> getAddingKeywords(List<String> newKeywords) {
-        List<String> existingKeywords = keywords.stream().map(InterestKeyword::getKeyword).toList();
+        List<String> existingKeywords = getKeywordNames();
 
         return newKeywords.stream()
                 .filter(newKeyword -> !existingKeywords.contains(newKeyword))

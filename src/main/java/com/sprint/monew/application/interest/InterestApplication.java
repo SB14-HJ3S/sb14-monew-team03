@@ -5,7 +5,10 @@ import com.sprint.monew.application.interest.provided.InterestUseCase;
 import com.sprint.monew.application.interest.provided.dto.InterestQuery;
 import com.sprint.monew.application.interest.provided.dto.InterestResult;
 import com.sprint.monew.application.interest.provided.dto.SubscriptionResult;
+import com.sprint.monew.application.user.IUserService;
 import com.sprint.monew.domain.interest.entity.Interest;
+import com.sprint.monew.domain.user.entity.Subscription;
+import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.annotation.ApplicationService;
 import com.sprint.monew.global.context.RequestIdContext;
 import com.sprint.monew.global.pagination.PageResult;
@@ -22,6 +25,7 @@ public class InterestApplication implements InterestUseCase {
     private final InterestService interestService;
     private final ISubscriptionService subscriptionService;
     private final IArticleInterestService articleInterestService;
+    private final IUserService userService;
 
     @Override
     @Transactional(readOnly = true)
@@ -48,8 +52,17 @@ public class InterestApplication implements InterestUseCase {
     }
 
     @Override
+    @Transactional
     public SubscriptionResult subscribe(UUID interestId) {
-        return null;
+        UUID userId = RequestIdContext.get();
+        User user = userService.getActiveUser(userId);
+        Interest interest = interestService.getById(interestId);
+
+        Subscription creating = Subscription.create(user, interest);
+        Subscription created = subscriptionService.create(creating);
+        Interest updatedInterest = interestService.increaseSubscriberCount(interestId);
+
+        return SubscriptionResult.of(updatedInterest, created);
     }
 
     @Override
