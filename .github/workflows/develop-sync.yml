@@ -150,7 +150,7 @@ jobs:
         with:
           script: |
             const sync = require('./.github/scripts/develop-sync.js');
-            await sync.syncMerge({ github, context, getOctokit });
+            await sync.syncMerge({ github, context });
 
       - name: 반영 실패 안내
         if: ${{ failure() && steps.check.outputs.ok == 'true' }}
