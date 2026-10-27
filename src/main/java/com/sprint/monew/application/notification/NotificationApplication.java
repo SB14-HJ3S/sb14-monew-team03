@@ -34,7 +34,7 @@ public class NotificationApplication implements NotificationUseCase {
 
     @Override
     @Transactional
-    public void markAllAsRead(UUID requestId) {
+    public void markAllAsRead() {
         UUID userId = RequestIdContext.get();
         userService.getActiveUser(userId);
 
@@ -43,7 +43,10 @@ public class NotificationApplication implements NotificationUseCase {
     }
 
     @Override
-    public void markAsRead(UUID notificationId, UUID requestId) {}
+    public void markAsRead(UUID notificationId) {
+        UUID userId = RequestIdContext.get();
+        notificationService.markAsRead(userId, notificationId);
+    }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)

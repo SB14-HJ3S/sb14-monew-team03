@@ -16,4 +16,6 @@ public interface NotificationService {
     PageResult<Notification> findUnread(UUID userId, NotificationQuery query);
 
     int markAllAsRead(UUID userId);
+
+    void markAsRead(UUID userId, UUID notificationId);
 }
