@@ -22,4 +22,9 @@ public class SubscriptionService implements ISubscriptionService {
     public List<UUID> findSubscriberIds(UUID interestId) {
         return repository.findSubscribersByInterestId(interestId);
     }
+
+    @Override
+    public void deleteAllByInterestId(UUID interestId) {
+        repository.deleteAllByInterestId(interestId);
+    }
 }
