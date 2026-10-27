@@ -13,6 +13,7 @@ permissions:
 
 jobs:
   create-feature-branch:
+    if: github.event.issue.state != 'closed'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

@@ -7,10 +7,13 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import com.sprint.monew.application.user.event.UserRegisteredEvent;
+import com.sprint.monew.application.user.required.UserEventPublisherPort;
 import com.sprint.monew.application.user.required.UserRepositoryPort;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.UserErrorType;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -18,10 +21,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.AdditionalAnswers;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -30,6 +35,8 @@ class UserServiceTest {
 
     @Mock private PasswordEncoder passwordEncoder;
 
+    @Mock private UserEventPublisherPort userEventPublisher;
+
     @InjectMocks private UserService userService;
 
     @Test
@@ -37,7 +44,7 @@ class UserServiceTest {
     void givenActiveUser_whenGetActiveUser_thenReturnUser() {
         UUID userId = UUID.randomUUID();
         User user = User.create("test@monew.com", "테스터", "password1!");
-        given(repository.findActiveById(userId)).willReturn(Optional.of(user));
+        given(repository.findUser(userId)).willReturn(Optional.of(user));
 
         User result = userService.getActiveUser(userId);
 
@@ -48,7 +55,7 @@ class UserServiceTest {
     @DisplayName("없거나 탈퇴한 사용자면 USER_NOT_FOUND 예외가 난다")
     void givenNoActiveUser_whenGetActiveUser_thenThrowUserNotFound() {
         UUID userId = UUID.randomUUID();
-        given(repository.findActiveById(userId)).willReturn(Optional.empty());
+        given(repository.findUser(userId)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.getActiveUser(userId))
                 .isInstanceOf(MonewException.class)
@@ -71,6 +78,27 @@ class UserServiceTest {
     }
 
     @Test
+    @DisplayName("가입이 끝나면 저장된 사용자 정보로 가입 이벤트를 보낸다")
+    void givenNewEmail_whenRegister_thenPublishRegisteredEvent() {
+        UUID userId = UUID.randomUUID();
+        Instant createdAt = Instant.parse("2026-10-26T00:00:00Z");
+        User saved = User.create("new@monew.com", "새사람", "암호화된비밀번호");
+        ReflectionTestUtils.setField(saved, "id", userId);
+        ReflectionTestUtils.setField(saved, "createdAt", createdAt);
+        given(repository.existsByEmail("new@monew.com")).willReturn(false);
+        given(passwordEncoder.encode("password1!")).willReturn("암호화된비밀번호");
+        given(repository.save(any(User.class))).willReturn(saved);
+
+        userService.register("new@monew.com", "새사람", "password1!");
+
+        ArgumentCaptor<UserRegisteredEvent> captor =
+                ArgumentCaptor.forClass(UserRegisteredEvent.class);
+        verify(userEventPublisher).publish(captor.capture());
+        assertThat(captor.getValue())
+                .isEqualTo(new UserRegisteredEvent(userId, "new@monew.com", "새사람", createdAt));
+    }
+
+    @Test
     @DisplayName("이미 있는 이메일이면 USER_EMAIL_DUPLICATED 예외가 나고 저장하지 않는다")
     void givenDuplicatedEmail_whenRegister_thenThrowEmailDuplicated() {
         given(repository.existsByEmail("dup@monew.com")).willReturn(true);
@@ -80,6 +108,7 @@ class UserServiceTest {
                 .extracting("errorType")
                 .isEqualTo(UserErrorType.USER_EMAIL_DUPLICATED);
         verify(repository, never()).save(any());
+        verify(userEventPublisher, never()).publish(any());
     }
 
     @Test
@@ -90,7 +119,7 @@ class UserServiceTest {
                 List.of(
                         User.create("a@monew.com", "에이", "암호화된비밀번호"),
                         User.create("b@monew.com", "비", "암호화된비밀번호"));
-        given(repository.findAllActiveByIds(userIds)).willReturn(users);
+        given(repository.findUsers(userIds)).willReturn(users);
 
         List<User> result = userService.getActiveUsers(userIds);
 
@@ -103,6 +132,42 @@ class UserServiceTest {
         List<User> result = userService.getActiveUsers(List.of());
 
         assertThat(result).isEmpty();
-        verify(repository, never()).findAllActiveByIds(any());
+        verify(repository, never()).findUsers(any());
+    }
+
+    @Test
+    @DisplayName("이메일과 비밀번호가 맞으면 그 사용자를 돌려준다")
+    void givenCorrectPassword_whenLogin_thenReturnUser() {
+        User user = User.create("login@monew.com", "로그인", "암호화된비밀번호");
+        given(repository.findUserByEmail("login@monew.com")).willReturn(Optional.of(user));
+        given(passwordEncoder.matches("password1!", "암호화된비밀번호")).willReturn(true);
+
+        User result = userService.login("login@monew.com", "password1!");
+
+        assertThat(result).isSameAs(user);
+    }
+
+    @Test
+    @DisplayName("비밀번호가 틀리면 USER_LOGIN_FAILED 예외가 난다")
+    void givenWrongPassword_whenLogin_thenThrowLoginFailed() {
+        User user = User.create("login@monew.com", "로그인", "암호화된비밀번호");
+        given(repository.findUserByEmail("login@monew.com")).willReturn(Optional.of(user));
+        given(passwordEncoder.matches("wrong1!", "암호화된비밀번호")).willReturn(false);
+
+        assertThatThrownBy(() -> userService.login("login@monew.com", "wrong1!"))
+                .isInstanceOf(MonewException.class)
+                .extracting("errorType")
+                .isEqualTo(UserErrorType.USER_LOGIN_FAILED);
+    }
+
+    @Test
+    @DisplayName("없거나 탈퇴한 사용자의 이메일이면 USER_LOGIN_FAILED 예외가 난다")
+    void givenNoActiveUser_whenLogin_thenThrowLoginFailed() {
+        given(repository.findUserByEmail("none@monew.com")).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userService.login("none@monew.com", "password1!"))
+                .isInstanceOf(MonewException.class)
+                .extracting("errorType")
+                .isEqualTo(UserErrorType.USER_LOGIN_FAILED);
     }
 }

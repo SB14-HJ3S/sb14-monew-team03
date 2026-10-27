@@ -16,6 +16,7 @@ public enum CommonErrorType implements ErrorType {
     FORBIDDEN(HttpStatus.FORBIDDEN, Level.WARN, "권한이 없습니다"),
     RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, Level.WARN, "요청한 리소스를 찾을 수 없습니다"),
     DUPLICATE_RESOURCE(HttpStatus.CONFLICT, Level.WARN, "이미 존재하는 데이터입니다"),
+    CONCURRENT_MODIFICATION(HttpStatus.CONFLICT, Level.WARN, "다른 요청과 동시에 수정되었습니다. 다시 시도해 주세요"),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, Level.WARN, "허용되지 않는 요청 방식입니다"),
     UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, Level.WARN, "지원하지 않는 요청 형식입니다"),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, Level.ERROR, "서버 내부 오류입니다"),

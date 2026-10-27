@@ -7,8 +7,6 @@ import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.ArticleErrorType;
 import com.sprint.monew.global.pagination.PageResult;
-import java.time.Instant;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,25 +33,11 @@ public class ArticleService implements IArticleService {
 
     @Override
     public PageResult<Article> findPageByQuery(ArticleQuery query) {
-        List<Article> articleList = repository.findByQuery(query);
-        long numArticles = repository.countByQuery(query);
-
-        boolean hasNext = articleList.size() > query.limit();
-
-        List<Article> content =
-                List.copyOf(hasNext ? articleList.subList(0, query.limit()) : articleList);
-
-        String nextCursor = null;
-        Instant nextAfter = null;
-
-        if (hasNext) {
-            Article lastArticle = content.get(content.size() - 1);
-            nextCursor = getCursorValue(lastArticle, query.orderBy());
-            nextAfter = lastArticle.getCreatedAt();
-        }
-
-        return new PageResult<>(
-                content, nextCursor, nextAfter, content.size(), numArticles, hasNext);
+        return PageResult.of(
+                repository.findByQuery(query),
+                repository.countByQuery(query),
+                query.orderBy(),
+                query.limit());
     }
 
     @Override

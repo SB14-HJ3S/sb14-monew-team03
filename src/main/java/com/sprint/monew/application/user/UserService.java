@@ -1,5 +1,7 @@
 package com.sprint.monew.application.user;
 
+import com.sprint.monew.application.user.event.UserRegisteredEvent;
+import com.sprint.monew.application.user.required.UserEventPublisherPort;
 import com.sprint.monew.application.user.required.UserRepositoryPort;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.exception.MonewException;
@@ -18,11 +20,12 @@ public class UserService implements IUserService {
 
     private final UserRepositoryPort repository;
     private final PasswordEncoder passwordEncoder;
+    private final UserEventPublisherPort userEventPublisher;
 
     @Override
     public User getActiveUser(UUID userId) {
         return repository
-                .findActiveById(userId)
+                .findUser(userId)
                 .orElseThrow(
                         () ->
                                 new MonewException(
@@ -34,7 +37,7 @@ public class UserService implements IUserService {
         if (userIds.isEmpty()) {
             return List.of();
         }
-        return repository.findAllActiveByIds(userIds);
+        return repository.findUsers(userIds);
     }
 
     @Override
@@ -44,6 +47,21 @@ public class UserService implements IUserService {
             throw new MonewException(UserErrorType.USER_EMAIL_DUPLICATED);
         }
         String encodedPassword = passwordEncoder.encode(password);
-        return repository.save(User.create(email, nickname, encodedPassword));
+        User user = repository.save(User.create(email, nickname, encodedPassword));
+        userEventPublisher.publish(UserRegisteredEvent.from(user));
+        return user;
+    }
+
+    @Override
+    public User login(String email, String password) {
+        User user = repository.findUserByEmail(email).orElseThrow(this::loginFailed);
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw loginFailed();
+        }
+        return user;
+    }
+
+    private MonewException loginFailed() {
+        return new MonewException(UserErrorType.USER_LOGIN_FAILED);
     }
 }

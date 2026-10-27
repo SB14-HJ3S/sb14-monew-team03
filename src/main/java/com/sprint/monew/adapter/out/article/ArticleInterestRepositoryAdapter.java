@@ -11,15 +11,20 @@ import org.springframework.stereotype.Repository;
 @RequiredArgsConstructor
 public class ArticleInterestRepositoryAdapter implements ArticleInterestRepositoryPort {
 
-    private final ArticleInterestJpaRepository jpaRepository;
+    private final ArticleInterestJpaRepository repository;
+
+    @Override
+    public void deleteAllByInterestId(UUID interestId) {
+        repository.deleteAllByInterestId(interestId);
+    }
 
     @Override
     public ArticleInterest save(ArticleInterest articleInterest) {
-        return jpaRepository.save(articleInterest);
+        return repository.save(articleInterest);
     }
 
     @Override
     public Optional<ArticleInterest> findByArticleIdAndInterestId(UUID articleId, UUID interestId) {
-        return jpaRepository.findByArticleIdAndInterestId(articleId, interestId);
+        return repository.findByArticleIdAndInterestId(articleId, interestId);
     }
 }

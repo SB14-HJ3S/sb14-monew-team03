@@ -17,6 +17,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
         run: |
           # merge 커밋(부모 2개 이상)은 빼고, 나머지 커밋을 한 줄씩(SHA + 제목) 모은다
           # 번호는 보통 commit-msg 훅이 브랜치명에서 자동으로 붙여주므로, 평소엔 이 검사에
@@ -24,55 +25,65 @@ jobs:
           # 않은 예외적인 경우의 안전망일 뿐이라, PR을 막으면 rebase/force-push가 필요해져서
           # 초보 팀원한텐 그게 더 위험함 — 경고로 낮춤
           COMMITS=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}/commits" --paginate \
-            --jq '.[] | select((.parents | length) < 2) | "\(.sha) \(.commit.message | split("\n")[0])"') || {
+            --jq '.[] | select((.parents | length) < 2) | "\(.sha)\u001f\(.author.login // "")\u001f\(.commit.message | split("\n")[0])"') || {
             echo "::warning::PR 커밋 목록을 가져오지 못해 이슈번호 검사를 건너뜁니다."
             echo "status=skipped" >> "$GITHUB_OUTPUT"
             exit 0
           }
 
           MISSING=""
-          while IFS= read -r line; do
-            [ -z "$line" ] && continue
-            SHA="${line%% *}"
-            TITLE="${line#* }"
-            if ! printf '%s' "$TITLE" | grep -qE '\[#[0-9]+\]'; then
+          OTHERS=""
+          OTHERS_COUNT=0
+          while IFS=$'\x1f' read -r SHA AUTHOR TITLE; do
+            [ -z "$SHA" ] && continue
+            TITLE="${TITLE//@/@​}"
+            if [ -n "$AUTHOR" ] && [ "$AUTHOR" != "$PR_AUTHOR" ]; then
+              OTHERS_COUNT=$((OTHERS_COUNT + 1))
+              if [ "$OTHERS_COUNT" -le 5 ]; then
+                OTHERS="${OTHERS}- \`${SHA:0:7}\` ${TITLE} (${AUTHOR})"$'\n'
+              fi
+              continue
+            fi
+            if ! printf '%s' "$TITLE" | grep -qE '\[#[0-9]+\]|\(#[0-9]+\)'; then
               MISSING="${MISSING}- \`${SHA:0:7}\` ${TITLE}"$'\n'
             fi
           done <<< "$COMMITS"
 
-          if [ -n "$MISSING" ]; then
-            echo "::warning::다음 커밋에 [#이슈번호]가 없습니다 — PR은 막히지 않지만, 브랜치명이 {타입}/{이슈번호}-{이름} 형식이면 commit-msg 훅이 자동으로 붙여주니 다음부터는 그 규칙으로 커밋해주세요:"
-            printf '%s' "$MISSING"
-            {
-              echo "### ⚠️ 이슈번호 누락 커밋"
-              printf '%s' "$MISSING"
-            } >> "$GITHUB_STEP_SUMMARY"
-            # Actions 화면·Checks 탭은 체크가 초록색이면 아무도 안 열어 봐서, PR 댓글로도 알림
-            {
-              echo "status=missing"
-              echo "list<<MISSING_EOF"
-              printf '%s' "$MISSING"
-              echo "MISSING_EOF"
-            } >> "$GITHUB_OUTPUT"
+          if [ -z "$MISSING" ] && [ "$OTHERS_COUNT" -eq 0 ]; then
+            echo "모든 커밋에 이슈번호가 있습니다."
+            echo "status=ok" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          echo "모든 커밋에 이슈번호가 있습니다."
-          echo "status=ok" >> "$GITHUB_OUTPUT"
+          BODY=""
+          if [ -n "$MISSING" ]; then
+            echo "::warning::[#이슈번호]가 없는 커밋이 있습니다."
+            printf '%s' "$MISSING"
+            BODY="⚠️ **커밋 제목에 \`[#이슈번호]\`가 없는 커밋이 있어요** (PR은 막히지 않아요)"$'\n\n'"${MISSING}"$'\n'"브랜치명이 \`{타입}/{이슈번호}-{이름}\` 형식(예: \`feat/26-user-signup\`)이면 커밋할 때 훅이 번호를 자동으로 붙여 줘요. 다음 커밋부터 그 규칙으로 커밋해 주세요."$'\n'
+          fi
+          if [ "$OTHERS_COUNT" -gt 0 ]; then
+            echo "::warning::PR 작성자가 아닌 사람의 커밋 ${OTHERS_COUNT}개가 섞여 있어 이슈번호 검사에서 뺐습니다."
+            [ -n "$BODY" ] && BODY="${BODY}"$'\n'
+            BODY="${BODY}🔀 **다른 사람의 커밋 ${OTHERS_COUNT}개가 이 PR에 섞여 있어요** (이슈번호 검사에서는 뺐어요)"$'\n\n'"${OTHERS}"
+            [ "$OTHERS_COUNT" -gt 5 ] && BODY="${BODY}- 외 $((OTHERS_COUNT - 5))개"$'\n'
+            BODY="${BODY}"$'\n'"develop에 이미 있는 커밋이 리베이스로 복사돼 들어왔을 수 있어요. 이미 푸시한 브랜치는 리베이스하지 말고, develop 최신 내용은 \`git merge origin/develop\`으로 받아 주세요."$'\n'
+          fi
+          printf '%s' "$BODY" >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo "status=warn"
+            echo "body<<BODY_EOF"
+            printf '%s' "$BODY"
+            echo "BODY_EOF"
+          } >> "$GITHUB_OUTPUT"
           exit 0
 
       - name: 이슈번호 누락 알림 댓글 (PR당 1개 고정, push할 때마다 내용 갱신)
-        if: steps.issue-ref.outputs.status == 'missing'
+        if: steps.issue-ref.outputs.status == 'warn'
         continue-on-error: true   # 포크 PR 등 토큰 권한이 부족해 실패해도 PR을 막지 않음
         uses: marocchino/sticky-pull-request-comment@773744901bac0e8cbb5a0dc842800d45e9b2b405 # v2
         with:
           header: commit-issue-ref
-          message: |
-            ⚠️ **커밋 제목에 `[#이슈번호]`가 없는 커밋이 있어요** (PR은 막히지 않아요)
-
-            ${{ steps.issue-ref.outputs.list }}
-
-            브랜치명이 `{타입}/{이슈번호}-{이름}` 형식(예: `feat/26-user-signup`)이면 커밋할 때 훅이 번호를 자동으로 붙여 줘요. 다음 커밋부터 그 규칙으로 커밋해 주세요.
+          message: ${{ steps.issue-ref.outputs.body }}
 
       - name: 이슈번호 누락 없음 (기존 알림 댓글 제거)
         if: steps.issue-ref.outputs.status == 'ok'

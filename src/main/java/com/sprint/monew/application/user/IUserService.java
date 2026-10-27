@@ -10,4 +10,6 @@ public interface IUserService {
     List<User> getActiveUsers(List<UUID> userIds);
 
     User register(String email, String nickname, String password);
+
+    User login(String email, String password);
 }

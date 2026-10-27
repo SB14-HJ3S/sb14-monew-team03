@@ -9,4 +9,6 @@ public interface ArticleInterestRepositoryPort {
     ArticleInterest save(ArticleInterest articleInterest);
 
     Optional<ArticleInterest> findByArticleIdAndInterestId(UUID articleId, UUID interestId);
+
+    void deleteAllByInterestId(UUID interestId);
 }

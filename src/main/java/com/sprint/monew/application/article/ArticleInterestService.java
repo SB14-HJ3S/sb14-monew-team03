@@ -4,6 +4,7 @@ import com.sprint.monew.application.article.required.ArticleInterestRepositoryPo
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.article.entity.ArticleInterest;
 import com.sprint.monew.domain.interest.entity.Interest;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,5 +21,10 @@ public class ArticleInterestService implements IArticleInterestService {
         return repository
                 .findByArticleIdAndInterestId(article.getId(), interest.getId())
                 .orElseGet(() -> repository.save(ArticleInterest.create(article, interest)));
+    }
+
+    @Override
+    public void deleteAllByInterestId(UUID interestId) {
+        repository.deleteAllByInterestId(interestId);
     }
 }
