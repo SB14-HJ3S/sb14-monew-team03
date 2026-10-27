@@ -20,4 +20,6 @@ public interface InterestRepository {
     void delete(Interest entity);
 
     Optional<Interest> findById(UUID id);
+
+    List<Interest> findSubscribedWithKeywords();
 }
