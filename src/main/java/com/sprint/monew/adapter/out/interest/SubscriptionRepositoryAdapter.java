@@ -1,6 +1,7 @@
 package com.sprint.monew.adapter.out.interest;
 
 import com.sprint.monew.application.interest.required.SubscriptionRepository;
+import com.sprint.monew.domain.user.entity.Subscription;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -25,5 +26,10 @@ public class SubscriptionRepositoryAdapter implements SubscriptionRepository {
     @Override
     public void deleteAllByInterestId(UUID interestId) {
         repository.deleteAllByInterestId(interestId);
+    }
+
+    @Override
+    public Subscription save(Subscription creating) {
+        return repository.save(creating);
     }
 }

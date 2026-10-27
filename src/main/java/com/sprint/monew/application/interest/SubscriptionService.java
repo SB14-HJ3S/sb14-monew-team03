@@ -1,6 +1,7 @@
 package com.sprint.monew.application.interest;
 
 import com.sprint.monew.application.interest.required.SubscriptionRepository;
+import com.sprint.monew.domain.user.entity.Subscription;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -26,5 +27,10 @@ public class SubscriptionService implements ISubscriptionService {
     @Override
     public void deleteAllByInterestId(UUID interestId) {
         repository.deleteAllByInterestId(interestId);
+    }
+
+    @Override
+    public Subscription create(Subscription creating) {
+        return repository.save(creating);
     }
 }

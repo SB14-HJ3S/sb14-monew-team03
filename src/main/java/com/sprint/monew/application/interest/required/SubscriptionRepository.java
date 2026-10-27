@@ -1,5 +1,6 @@
 package com.sprint.monew.application.interest.required;
 
+import com.sprint.monew.domain.user.entity.Subscription;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -10,4 +11,6 @@ public interface SubscriptionRepository {
     List<UUID> findSubscribersByInterestId(UUID interestId);
 
     void deleteAllByInterestId(UUID interestId);
+
+    Subscription save(Subscription creating);
 }
