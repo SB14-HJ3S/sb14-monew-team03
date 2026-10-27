@@ -3,6 +3,7 @@ package com.sprint.monew.adapter.in.controller.interest;
 import com.sprint.monew.adapter.in.controller.interest.dto.request.InterestRegisterRequest;
 import com.sprint.monew.adapter.in.controller.interest.dto.request.InterestUpdateRequest;
 import com.sprint.monew.adapter.in.controller.interest.dto.response.InterestDto;
+import com.sprint.monew.adapter.in.controller.interest.dto.response.SubscriptionDto;
 import com.sprint.monew.application.interest.provided.InterestUseCase;
 import com.sprint.monew.application.interest.provided.dto.InterestQuery;
 import com.sprint.monew.global.annotation.RequestId;
@@ -64,5 +65,19 @@ public class InterestController {
     @DeleteMapping("/{interestId}")
     public void deleteInterest(@PathVariable UUID interestId) {
         interestUseCase.delete(interestId);
+    }
+
+    @RequestId
+    @ResponseStatus(HttpStatus.OK)
+    @PostMapping("/{interestId}/subscriptions")
+    public SubscriptionDto subscribe(@PathVariable UUID interestId) {
+        return SubscriptionDto.from(interestUseCase.subscribe(interestId));
+    }
+
+    @RequestId
+    @ResponseStatus(HttpStatus.OK)
+    @DeleteMapping("/{interestId}/subscriptions")
+    public void unsubscribe(@PathVariable UUID interestId) {
+        interestUseCase.unsubscribe(interestId);
     }
 }

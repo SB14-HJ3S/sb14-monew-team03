@@ -4,6 +4,7 @@ import com.sprint.monew.application.article.IArticleInterestService;
 import com.sprint.monew.application.interest.provided.InterestUseCase;
 import com.sprint.monew.application.interest.provided.dto.InterestQuery;
 import com.sprint.monew.application.interest.provided.dto.InterestResult;
+import com.sprint.monew.application.interest.provided.dto.SubscriptionResult;
 import com.sprint.monew.domain.interest.entity.Interest;
 import com.sprint.monew.global.annotation.ApplicationService;
 import com.sprint.monew.global.context.RequestIdContext;
@@ -47,12 +48,12 @@ public class InterestApplication implements InterestUseCase {
     }
 
     @Override
-    public InterestResult subscribe(UUID interestId, UUID requestId) {
+    public SubscriptionResult subscribe(UUID interestId) {
         return null;
     }
 
     @Override
-    public void unsubscribe(UUID interestId, UUID requestId) {}
+    public void unsubscribe(UUID interestId) {}
 
     @Override
     @Transactional
