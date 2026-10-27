@@ -1,12 +1,15 @@
 package com.sprint.monew.adapter.out.interest;
 
 import com.sprint.monew.application.interest.provided.dto.InterestQuery;
+import com.sprint.monew.application.interest.required.DuplicateInterestNameException;
 import com.sprint.monew.application.interest.required.InterestRepository;
 import com.sprint.monew.domain.interest.entity.Interest;
+import com.sprint.monew.global.util.DatabaseConstraintUtils;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -16,7 +19,14 @@ public class InterestRepositoryAdapter implements InterestRepository {
 
     @Override
     public Interest save(Interest entity) {
-        return jpaRepository.save(entity);
+        try {
+            return jpaRepository.saveAndFlush(entity);
+        } catch (DataIntegrityViolationException e) {
+            if (DatabaseConstraintUtils.isUniqueConstraintViolation(e)) {
+                throw new DuplicateInterestNameException(e, entity.getId(), entity.getName());
+            }
+            throw e;
+        }
     }
 
     @Override

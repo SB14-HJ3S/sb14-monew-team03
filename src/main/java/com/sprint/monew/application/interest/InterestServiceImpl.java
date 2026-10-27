@@ -1,6 +1,7 @@
 package com.sprint.monew.application.interest;
 
 import com.sprint.monew.application.interest.provided.dto.InterestQuery;
+import com.sprint.monew.application.interest.required.DuplicateInterestNameException;
 import com.sprint.monew.application.interest.required.InterestRepository;
 import com.sprint.monew.domain.interest.entity.Interest;
 import com.sprint.monew.global.exception.MonewException;
@@ -24,9 +25,14 @@ public class InterestServiceImpl implements InterestService {
     @Override
     public Interest create(String name, List<String> keywords) {
         // name이 80% 이상 유사한 이름의 관심사가 있다면 등록할 수 없습니다.
-        validateSimilarNameDoesNotExist(name);
-        Interest interest = Interest.create(name, keywords);
-        return repository.save(interest);
+        try {
+            validateSimilarNameDoesNotExist(name);
+            Interest interest = Interest.create(name, keywords);
+            return repository.save(interest);
+        } catch (DuplicateInterestNameException e) {
+            throw new MonewException(
+                    InterestErrorType.SIMILAR_NAME_CONFLICT, Map.of("name", name), e);
+        }
     }
 
     private void validateSimilarNameDoesNotExist(String name) {
