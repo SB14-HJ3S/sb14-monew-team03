@@ -3,9 +3,10 @@ package com.sprint.monew.application.notification;
 import com.sprint.monew.application.interest.ISubscriptionService;
 import com.sprint.monew.application.notification.provided.NotificationUseCase;
 import com.sprint.monew.application.notification.provided.dto.NotificationQuery;
+import com.sprint.monew.application.notification.provided.dto.NotificationResult;
 import com.sprint.monew.application.user.IUserService;
-import com.sprint.monew.domain.notification.entity.Notification;
 import com.sprint.monew.domain.user.entity.User;
+import com.sprint.monew.global.context.RequestIdContext;
 import com.sprint.monew.global.pagination.PageResult;
 import java.util.List;
 import java.util.UUID;
@@ -25,8 +26,10 @@ public class NotificationApplication implements NotificationUseCase {
     private final IUserService userService;
 
     @Override
-    public PageResult<Notification> findByQuery(NotificationQuery query) {
-        return null;
+    @Transactional(readOnly = true)
+    public PageResult<NotificationResult> findByQuery(NotificationQuery query) {
+        UUID userId = RequestIdContext.get();
+        return notificationService.findUnread(userId, query).map(NotificationResult::from);
     }
 
     @Override

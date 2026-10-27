@@ -1,5 +1,6 @@
 package com.sprint.monew.adapter.out.notification;
 
+import com.sprint.monew.application.notification.provided.dto.NotificationQuery;
 import com.sprint.monew.application.notification.required.NotificationRepositoryPort;
 import com.sprint.monew.domain.notification.entity.Notification;
 import java.util.List;
@@ -37,5 +38,15 @@ public class NotificationRepositoryAdapter implements NotificationRepositoryPort
     @Override
     public void saveAll(List<Notification> notifications) {
         jpaRepository.saveAll(notifications);
+    }
+
+    @Override
+    public List<Notification> findByQuery(UUID userId, NotificationQuery query) {
+        return jpaRepository.findByQuery(userId, query);
+    }
+
+    @Override
+    public long countByQuery(UUID userId, NotificationQuery query) {
+        return jpaRepository.countByQuery(userId, query);
     }
 }
