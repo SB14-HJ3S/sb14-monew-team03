@@ -52,6 +52,7 @@ jobs:
 
       - name: 시작일이 비어 있으면 첫 커밋 날짜로 채우기
         if: steps.check.outputs.node != ''
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.PROJECTS_PAT }}
           REPO: ${{ github.repository }}
