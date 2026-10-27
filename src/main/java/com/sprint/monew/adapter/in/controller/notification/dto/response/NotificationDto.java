@@ -19,7 +19,7 @@ public record NotificationDto(
         return new NotificationDto(
                 result.id(),
                 result.createdAt(),
-                result.createdAt(),
+                result.updatedAt(),
                 result.confirmed(),
                 result.userId(),
                 result.content(),
