@@ -2,6 +2,7 @@ package com.sprint.monew.application.interest.provided;
 
 import com.sprint.monew.application.interest.provided.dto.InterestQuery;
 import com.sprint.monew.application.interest.provided.dto.InterestResult;
+import com.sprint.monew.application.interest.provided.dto.SubscriptionResult;
 import com.sprint.monew.domain.interest.entity.Interest;
 import com.sprint.monew.domain.interest.entity.InterestKeyword;
 import com.sprint.monew.global.pagination.PageResult;
@@ -20,9 +21,9 @@ public interface InterestUseCase {
                     List<@NotBlank @Size(min = 1, max = InterestKeyword.MAX_KEYWORD_LENGTH) String>
                             keywords);
 
-    InterestResult subscribe(UUID interestId, UUID requestId);
+    SubscriptionResult subscribe(UUID interestId);
 
-    void unsubscribe(UUID interestId, UUID requestId);
+    void unsubscribe(UUID interestId);
 
     void delete(UUID interestId);
 

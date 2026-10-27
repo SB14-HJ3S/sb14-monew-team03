@@ -19,6 +19,7 @@ import java.util.Set;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Check;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -27,6 +28,7 @@ import org.springframework.util.StringUtils;
         name = "interests",
         uniqueConstraints = {@UniqueConstraint(columnNames = {"name"})})
 @Getter
+@Check(constraints = "subscriber_count >= 0")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Interest extends BaseEntity {
     public static final int MAX_NAME_LENGTH = 50;
@@ -67,6 +69,10 @@ public class Interest extends BaseEntity {
         return creating;
     }
 
+    public List<String> getKeywordNames() {
+        return keywords.stream().map(InterestKeyword::getKeyword).toList();
+    }
+
     public Interest updateKeywords(List<String> newKeywords) {
         validateInterestKeywords(newKeywords);
 
@@ -78,7 +84,7 @@ public class Interest extends BaseEntity {
     }
 
     private List<InterestKeyword> getAddingKeywords(List<String> newKeywords) {
-        List<String> existingKeywords = keywords.stream().map(InterestKeyword::getKeyword).toList();
+        List<String> existingKeywords = getKeywordNames();
 
         return newKeywords.stream()
                 .filter(newKeyword -> !existingKeywords.contains(newKeyword))

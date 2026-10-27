@@ -16,4 +16,11 @@ public interface IUserService {
     User updateNickname(UUID userId, String nickname);
 
     void softDeleteUser(UUID userId);
+
+    default void validateDeactivatedUser(UUID userId) {
+        /*
+        해당 User가 soft deleted 상태가 아니면 예외를 던진다.
+         */
+        throw new UnsupportedOperationException();
+    }
 }
