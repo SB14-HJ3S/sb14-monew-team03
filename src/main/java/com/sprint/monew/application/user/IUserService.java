@@ -14,4 +14,11 @@ public interface IUserService {
     User login(String email, String password);
 
     User updateNickname(UUID userId, String nickname);
+
+    default void validateDeactivatedUser(UUID userId) {
+        /*
+        해당 User가 soft deleted 상태가 아니면 예외를 던진다.
+         */
+        throw new UnsupportedOperationException();
+    }
 }

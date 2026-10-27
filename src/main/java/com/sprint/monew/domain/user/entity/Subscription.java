@@ -8,6 +8,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -39,5 +40,13 @@ public class Subscription extends BaseEntity {
 
     public static Subscription create(User user, Interest interest) {
         return new Subscription(user, interest);
+    }
+
+    public UUID getUserId() {
+        return user.getId();
+    }
+
+    public UUID getInterestId() {
+        return interest.getId();
     }
 }
