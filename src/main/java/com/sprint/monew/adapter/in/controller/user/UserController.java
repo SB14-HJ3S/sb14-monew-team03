@@ -46,6 +46,7 @@ public class UserController {
     @PatchMapping("/{userId}")
     public UserDto updateNickname(
             @PathVariable UUID userId, @Valid @RequestBody UserUpdateRequest request) {
-        return null;
+        UserResult result = userUseCase.updateNickname(userId, request.nickname());
+        return UserDto.from(result);
     }
 }
