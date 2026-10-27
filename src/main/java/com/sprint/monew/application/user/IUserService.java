@@ -14,4 +14,6 @@ public interface IUserService {
     User login(String email, String password);
 
     User updateNickname(UUID userId, String nickname);
+
+    void softDeleteUser(UUID userId);
 }

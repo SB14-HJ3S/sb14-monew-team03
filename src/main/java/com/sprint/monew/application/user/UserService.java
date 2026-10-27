@@ -71,6 +71,9 @@ public class UserService implements IUserService {
         return user;
     }
 
+    @Override
+    public void softDeleteUser(UUID userId) {}
+
     private MonewException loginFailed() {
         return new MonewException(UserErrorType.USER_LOGIN_FAILED);
     }
