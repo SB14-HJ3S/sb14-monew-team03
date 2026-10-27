@@ -215,6 +215,7 @@ jobs:
         env:
           EXEC_FILE: ${{ steps.claude-review.outputs.execution_file }}
           STARTED_AT: ${{ steps.started.outputs.at }}
+          HEADER: ${{ steps.meta.outputs.header }}
         with:
           script: |
             const fs = require('fs');
@@ -231,6 +232,17 @@ jobs:
               reviews.some((c) => new Date(c.created_at) >= started) ||
               inline.some((c) => isBot(c) && new Date(c.created_at) >= started);
             if (postedNow) {
+              const header = process.env.HEADER;
+              const fresh = reviews.filter((c) => new Date(c.created_at) >= started).pop();
+              if (header && fresh) {
+                const lines = fresh.body.split('\n');
+                const at = lines.findIndex((l) => l.startsWith('> ') && /번째 리뷰/.test(l));
+                if (at >= 0 && lines[at] !== header) {
+                  core.info(`리뷰 머리줄을 바로잡았어요: ${lines[at]} → ${header}`);
+                  lines[at] = header;
+                  await github.rest.issues.updateComment({ ...context.repo, comment_id: fresh.id, body: lines.join('\n') });
+                }
+              }
               core.info('이번 실행에서 리뷰 댓글을 남겼어요');
               return;
             }
