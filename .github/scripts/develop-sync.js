@@ -339,13 +339,13 @@ async function syncCheck({ github, context, core }) {
   core.setOutput('ref', pr.head.ref);
 }
 
-async function syncMerge({ github, context, getOctokit }) {
+async function syncMerge({ github, context }) {
   const repo = context.repo;
   const number = context.payload.issue.number;
   const ref = process.env.HEAD_REF;
   const issue = issueOf(ref);
   const title = `merge : develop 최신 내용 반영${issue ? ` [#${issue}]` : ''}`;
-  const bot = getOctokit(process.env.BOT_TOKEN);
+  const bot = new github.constructor({ auth: process.env.BOT_TOKEN });
 
   let res;
   try {
