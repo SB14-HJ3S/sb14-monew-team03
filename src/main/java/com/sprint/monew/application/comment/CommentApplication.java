@@ -37,7 +37,12 @@ public class CommentApplication implements CommentUseCase {
         Comment comment = commentService.saveComment(Comment.create(user, article, content));
 
         // 방금 만든 댓글이라 아직 아무도 좋아요를 누르지 않았다
-        return CommentResult.of(comment, false);
+        // +1 쿼리 뒤에는 댓글 정보를 못 읽을 수 있어서 결과를 먼저 만든다
+        CommentResult result = CommentResult.of(comment, false);
+
+        articleService.increaseCommentCount(articleId);
+
+        return result;
     }
 
     @Override
