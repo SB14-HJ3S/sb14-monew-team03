@@ -3,10 +3,8 @@ package com.sprint.monew.application.article;
 import com.sprint.monew.application.article.provided.ArticleUseCase;
 import com.sprint.monew.application.article.provided.dto.ArticleQuery;
 import com.sprint.monew.application.article.provided.dto.ArticleResult;
-import com.sprint.monew.application.article.provided.dto.CollectedArticle;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.article.entity.ArticleViewStatus;
-import com.sprint.monew.domain.interest.entity.Interest;
 import com.sprint.monew.global.annotation.ApplicationService;
 import com.sprint.monew.global.context.RequestIdContext;
 import com.sprint.monew.global.pagination.PageResult;
@@ -16,7 +14,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.transaction.annotation.Transactional;
 
 @ApplicationService
 @RequiredArgsConstructor
@@ -24,7 +21,6 @@ public class ArticleApplication implements ArticleUseCase {
 
     private final IArticleService articleService;
     private final IArticleViewStatusService articleViewStatusService;
-    private final IArticleInterestService articleInterestService;
 
     @Override
     public PageResult<ArticleResult> findArticlePage(ArticleQuery query) {
@@ -84,16 +80,5 @@ public class ArticleApplication implements ArticleUseCase {
     @Override
     public ArticleViewStatus register(UUID articleId, UUID requestId) {
         return null;
-    }
-
-    @Override
-    @Transactional
-    public void saveAndLink(CollectedArticle collectedArticle, Interest interest) {
-        articleService
-                .saveCollectedArticle(collectedArticle)
-                .ifPresent(
-                        article ->
-                                articleInterestService.getOrCreateArticleInterest(
-                                        article, interest));
     }
 }

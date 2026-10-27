@@ -2,10 +2,8 @@ package com.sprint.monew.application.article.provided;
 
 import com.sprint.monew.application.article.provided.dto.ArticleQuery;
 import com.sprint.monew.application.article.provided.dto.ArticleResult;
-import com.sprint.monew.application.article.provided.dto.CollectedArticle;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.article.entity.ArticleViewStatus;
-import com.sprint.monew.domain.interest.entity.Interest;
 import com.sprint.monew.global.pagination.PageResult;
 import com.sprint.monew.global.type.ArticleSourceType;
 import jakarta.validation.Valid;
@@ -28,6 +26,4 @@ public interface ArticleUseCase {
     List<Article> restoreArticles(LocalDateTime from, LocalDateTime to);
 
     ArticleViewStatus register(UUID articleId, UUID requestId);
-
-    void saveAndLink(CollectedArticle collectedArticle, Interest interest);
 }
