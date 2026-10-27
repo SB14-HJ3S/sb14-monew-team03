@@ -43,6 +43,7 @@ public class NotificationApplication implements NotificationUseCase {
     }
 
     @Override
+    @Transactional
     public void markAsRead(UUID notificationId) {
         UUID userId = RequestIdContext.get();
         notificationService.markAsRead(userId, notificationId);
