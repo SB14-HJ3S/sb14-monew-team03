@@ -8,9 +8,9 @@ import java.util.UUID;
 public interface NotificationUseCase {
     PageResult<NotificationResult> findByQuery(NotificationQuery query);
 
-    void markAllAsRead(UUID requestId);
+    void markAllAsRead();
 
-    void markAsRead(UUID notificationId, UUID requestId);
+    void markAsRead(UUID notificationId);
 
     void createArticleNotifications(UUID interestId, String interestName, int articleCount);
 

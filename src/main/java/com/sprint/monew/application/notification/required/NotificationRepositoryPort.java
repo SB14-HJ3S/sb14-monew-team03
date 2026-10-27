@@ -2,6 +2,7 @@ package com.sprint.monew.application.notification.required;
 
 import com.sprint.monew.application.notification.provided.dto.NotificationQuery;
 import com.sprint.monew.domain.notification.entity.Notification;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -21,4 +22,6 @@ public interface NotificationRepositoryPort {
     List<Notification> findByQuery(UUID userId, NotificationQuery query);
 
     long countByQuery(UUID userId, NotificationQuery query);
+
+    int markAllAsRead(UUID userId, LocalDateTime readAt);
 }

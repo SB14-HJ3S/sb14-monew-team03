@@ -3,6 +3,7 @@ package com.sprint.monew.adapter.out.notification;
 import com.sprint.monew.application.notification.provided.dto.NotificationQuery;
 import com.sprint.monew.application.notification.required.NotificationRepositoryPort;
 import com.sprint.monew.domain.notification.entity.Notification;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -48,5 +49,10 @@ public class NotificationRepositoryAdapter implements NotificationRepositoryPort
     @Override
     public long countByQuery(UUID userId, NotificationQuery query) {
         return jpaRepository.countByQuery(userId, query);
+    }
+
+    @Override
+    public int markAllAsRead(UUID userId, LocalDateTime readAt) {
+        return jpaRepository.markAllAsRead(userId, readAt);
     }
 }

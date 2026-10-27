@@ -4,9 +4,13 @@ import com.sprint.monew.application.notification.provided.dto.NotificationQuery;
 import com.sprint.monew.application.notification.required.NotificationRepositoryPort;
 import com.sprint.monew.domain.notification.entity.Notification;
 import com.sprint.monew.domain.user.entity.User;
+import com.sprint.monew.global.exception.MonewException;
+import com.sprint.monew.global.exception.errortype.NotificationErrorType;
 import com.sprint.monew.global.pagination.PageResult;
 import com.sprint.monew.global.type.ResourceType;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -52,5 +56,26 @@ public class NotificationServiceImpl implements NotificationService {
 
         return PageResult.of(
                 fetched, total, query, n -> n.getId().toString(), Notification::getCreatedAt);
+    }
+
+    @Override
+    public int markAllAsRead(UUID userId) {
+        return notificationRepository.markAllAsRead(userId, LocalDateTime.now());
+    }
+
+    @Override
+    public void markAsRead(UUID userId, UUID notificationId) {
+        Notification notification =
+                notificationRepository
+                        .findById(notificationId)
+                        // 남의 알림도 존재 여부를 노출하지 않도록 없는 것과 같이 처리한다
+                        .filter(n -> n.getUser().getId().equals(userId))
+                        .orElseThrow(
+                                () ->
+                                        new MonewException(
+                                                NotificationErrorType.NOTIFICATION_NOT_FOUND,
+                                                Map.of("notificationId", notificationId)));
+
+        notification.markAsRead(LocalDateTime.now());
     }
 }
