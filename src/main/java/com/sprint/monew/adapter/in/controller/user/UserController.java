@@ -46,7 +46,9 @@ public class UserController {
     @PatchMapping("/{userId}")
     public UserDto updateNickname(
             @PathVariable UUID userId, @Valid @RequestBody UserUpdateRequest request) {
+        log.info("닉네임 수정 요청: userId={}", userId);
         UserResult result = userUseCase.updateNickname(userId, request.nickname());
+        log.info("닉네임 수정 완료: userId={}", userId);
         return UserDto.from(result);
     }
 }
