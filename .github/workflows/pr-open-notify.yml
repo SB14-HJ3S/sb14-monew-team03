@@ -5,7 +5,8 @@ on:
     types: [opened, ready_for_review]
     branches: [dev, develop, main]
 
-permissions: {}
+permissions:
+  pull-requests: read
 
 jobs:
   notify:
@@ -17,11 +18,21 @@ jobs:
           DISCORD_WEBHOOK_URL_PR_OPENED: ${{ secrets.DISCORD_WEBHOOK_URL_PR_OPENED }}
           DISCORD_WEBHOOK_URL_ALL: ${{ secrets.DISCORD_WEBHOOK_URL_ALL }}
           PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
           PR_URL: ${{ github.event.pull_request.html_url }}
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
           BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
           HEAD_BRANCH: ${{ github.event.pull_request.head.ref }}
         run: |
+          for i in $(seq 1 12); do
+            LATEST=$(gh api "repos/$REPO/pulls/$PR_NUMBER" --jq .title 2>/dev/null || true)
+            if [[ -n "$LATEST" ]]; then PR_TITLE="$LATEST"; fi
+            if grep -Eq '^\S+ \[(Feat|Fix|Refactor|Docs|Chore|Test|Batch|Deploy)\] ' <<< "$PR_TITLE"; then break; fi
+            sleep 5
+          done
+
           PAYLOAD=$(jq -n \
             --arg title "📌 ${PR_TITLE}" \
             --arg url "$PR_URL" \
