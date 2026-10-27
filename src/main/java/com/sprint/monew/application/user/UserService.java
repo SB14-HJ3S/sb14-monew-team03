@@ -72,7 +72,18 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public void softDeleteUser(UUID userId) {}
+    @Transactional
+    public void softDeleteUser(UUID userId) {
+        User user =
+                repository
+                        .findUser(userId)
+                        .orElseThrow(
+                                () ->
+                                        new MonewException(
+                                                UserErrorType.USER_NOT_FOUND,
+                                                Map.of("userId", userId)));
+        user.softDelete();
+    }
 
     private MonewException loginFailed() {
         return new MonewException(UserErrorType.USER_LOGIN_FAILED);
