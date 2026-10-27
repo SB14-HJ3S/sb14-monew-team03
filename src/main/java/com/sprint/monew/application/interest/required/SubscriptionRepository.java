@@ -20,4 +20,6 @@ public interface SubscriptionRepository {
     void delete(Subscription deleting);
 
     List<UUID> findInterestIdsByUserId(UUID userId);
+
+    boolean existsByUserIdAndInterestId(UUID userId, UUID interestId);
 }

@@ -34,7 +34,16 @@ public class SubscriptionService implements ISubscriptionService {
 
     @Override
     public Subscription create(Subscription creating) {
+        validateNotExistsByUserAndInterest(creating.getUserId(), creating.getInterestId());
         return repository.save(creating);
+    }
+
+    private void validateNotExistsByUserAndInterest(UUID userId, UUID interestId) {
+        if (repository.existsByUserIdAndInterestId(userId, interestId)) {
+            throw new MonewException(
+                    SubscriptionErrorType.SUBSCRIPTION_ALREADY_EXISTS,
+                    Map.of("userId", userId, "interestId", interestId));
+        }
     }
 
     @Override

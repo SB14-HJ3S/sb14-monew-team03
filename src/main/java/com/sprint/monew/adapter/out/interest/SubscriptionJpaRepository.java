@@ -53,4 +53,12 @@ public interface SubscriptionJpaRepository extends JpaRepository<Subscription, U
             from Subscription s
             where s.user.id = :userId""")
     List<UUID> findInterestByUserId(UUID userId);
+
+    @Query(
+            """
+            select case when count(s) > 0 then true else false end
+            from Subscription s
+            where s.user.id = :userId
+            and s.interest.id = :interestId""")
+    boolean existsByUserIdAndInterestId(UUID userId, UUID interestId);
 }

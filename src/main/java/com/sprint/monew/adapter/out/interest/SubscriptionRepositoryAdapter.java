@@ -48,4 +48,9 @@ public class SubscriptionRepositoryAdapter implements SubscriptionRepository {
     public List<UUID> findInterestIdsByUserId(UUID userId) {
         return repository.findInterestByUserId(userId);
     }
+
+    @Override
+    public boolean existsByUserIdAndInterestId(UUID userId, UUID interestId) {
+        return repository.existsByUserIdAndInterestId(userId, interestId);
+    }
 }

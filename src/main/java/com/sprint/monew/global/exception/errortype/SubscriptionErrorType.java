@@ -13,7 +13,7 @@ import org.springframework.http.HttpStatus;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public enum SubscriptionErrorType implements ErrorType {
     SUBSCRIPTION_NOT_FOUND(HttpStatus.NOT_FOUND, Level.INFO, "구독 정보를 찾을 수 없습니다"),
-    ;
+    SUBSCRIPTION_ALREADY_EXISTS(HttpStatus.CONFLICT, Level.INFO, "구독 정보가 이미 존재합니다.");
 
     private final HttpStatus status;
     private final Level level;
