@@ -37,4 +37,7 @@ public class ArticleService implements IArticleService {
                 query.orderBy(),
                 query.limit());
     }
+
+    @Override
+    public void increaseCommentCount(UUID articleId) {}
 }

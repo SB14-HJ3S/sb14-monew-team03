@@ -10,4 +10,6 @@ public interface IArticleService {
     Article findById(UUID articleId);
 
     PageResult<Article> findPageByQuery(ArticleQuery query);
+
+    void increaseCommentCount(UUID articleId);
 }
