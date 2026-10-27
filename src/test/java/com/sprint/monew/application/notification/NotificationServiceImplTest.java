@@ -130,7 +130,8 @@ class NotificationServiceImplTest {
         assertThat(result)
                 .extracting(Notification::getCreatedAt)
                 .containsExactly(T, T, T.minusSeconds(60));
-        assertThat(result.get(0).getId()).isGreaterThan(result.get(1).getId());
+        assertThat(result.get(0).getId().toString())
+                .isGreaterThan(result.get(1).getId().toString());
     }
 
     @Test
