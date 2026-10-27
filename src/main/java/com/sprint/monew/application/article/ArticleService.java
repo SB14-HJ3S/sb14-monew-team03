@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -36,5 +37,11 @@ public class ArticleService implements IArticleService {
                 repository.countByQuery(query),
                 query.orderBy(),
                 query.limit());
+    }
+
+    @Override
+    @Transactional
+    public void increaseCommentCount(UUID articleId) {
+        repository.increaseCommentCount(articleId);
     }
 }

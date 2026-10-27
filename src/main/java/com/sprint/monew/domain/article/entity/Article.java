@@ -65,14 +65,4 @@ public class Article extends BaseSoftDeletableEntity {
             String summary) {
         return new Article(source, sourceUrl, title, publishedAt, summary);
     }
-
-    public void increaseCommentCount() {
-        this.commentCount++;
-    }
-
-    public void decreaseCommentCount() {
-        if (this.commentCount > 0) {
-            this.commentCount--;
-        }
-    }
 }

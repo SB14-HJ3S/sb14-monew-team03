@@ -1,7 +1,5 @@
 # MoNew 백엔드 프로젝트
 
-> ⚠️ **임시본입니다.** 팀 컨벤션은 팀 미팅에서 확정된 내용("확정된 것")을 반영했고, 패키지 구조(헥사고날 아키텍처)가 확정되면 최종본으로 보완할 예정입니다.
-
 이 파일은 Claude Code가 이 레포에서 코드 리뷰·작업을 할 때 참고하는 가이드입니다.
 전체 기능/API 명세/ERD 등 상세 요구사항은 코드잇이 제공한 노션 안내 문서(미션 안내 페이지)와 Swagger를 참고한다.
 
@@ -15,7 +13,7 @@
 
 - 난이도: 중급 (스프린트 백엔드 트랙 팀 프로젝트)
 - 프론트엔드: `src/main/resources/static/`은 코드잇이 준 프론트 빌드 결과물이라 리뷰하지 않는다
-- 패키지: 공통 코드는 `global/`, 도메인 코드는 `domain/{도메인}` (헥사고날 아키텍처로 구성 예정)
+- 패키지: 헥사고날 아키텍처, 계층 우선 (아래 "패키지 구조" 참고)
 
 ## 기술 스택
 
@@ -34,12 +32,31 @@
 - `RequestId`·`RequestIdContext`·`RequestIdInterceptor` 이름은 유지한다 (사용자 ID라는 건 변수 이름 `requestUserId`로 구분). 이름을 바꾸라고 제안하지 않는다
 - `get()` 뒤에 `null` 확인을 넣으라고 제안하지 않는다 (`/api/**`의 `@RequestId` 메서드는 인터셉터가 헤더를 먼저 검사해서 항상 값이 있음). 대신 `@RequestId` 누락을 지적한다
 
+## 패키지 구조
+
+```
+adapter/in                     컨트롤러, 요청·응답 DTO
+adapter/out                    저장소 어댑터(JpaRepository·QueryDSL), 이벤트 발행 어댑터 등
+application/{도메인}/provided    UseCase 인터페이스, Query·Result DTO
+application/{도메인}/required    저장소·이벤트 발행 포트
+application/{도메인}             Application(UseCase 구현, 흐름 조립), 도메인 서비스
+domain/{도메인}                  엔티티, enum
+global/                        여러 도메인이 같이 쓰는 것
+```
+
+- UseCase는 도메인별 인터페이스 하나다. Query/Command로 나누라고 제안하지 않는다
+- 저장소는 `required` 포트 + `adapter/out` 어댑터(`JpaRepository`를 감쌈)다. 어댑터에 `@Transactional`을 붙이라고 제안하지 않는다
+- 응답 변환: Application(`@Transactional` 안)에서 엔티티 → `XxxResult`(`application/{도메인}/provided/dto`), 컨트롤러에서 `XxxResult` → Swagger 응답 DTO(`XxxDto`)
+- 도메인 서비스·저장소 포트의 이름 방식(I 접두사, Impl, Port 접미사)은 팀에서 정하지 않았다. 도메인마다 달라도 지적하지 않는다
+
 ## 팀 컨벤션
 
 **확정된 것:**
 - 네이밍: 변수·함수 `camelCase`, 클래스 `PascalCase`, 패키지 소문자, 테이블 `snake_case`·소문자·복수형, 컬럼 `snake_case`
 - Lombok: `@Getter` 필수, `@Setter` 금지
-- 객체 생성: 정적 팩토리 메서드, 이름은 `create`
+- 객체 생성: 정적 팩토리 메서드. 엔티티 생성은 `create`, DTO 변환은 값 여러 개를 받으면 `of`, 객체 하나를 바꾸면 `from`
+- 파라미터 순서: 대상 ID 먼저, 요청자 ID는 뒤
+- 시간 타입: 커서·시간 값은 `Instant`
 - 로그: 로거(`log.info` 등) 사용
 - MapStruct: 사용 안 함 (Entity ↔ DTO 변환은 직접 작성)
 - TDD: Red-Green-Refactor 단계별 커밋 (`test(red)` → `feat(green)`/`fix(green)` → `refactor(blue)`)
@@ -112,6 +129,9 @@
 - 논리 삭제 대상(사용자·뉴스기사·댓글)을 조회할 때 `deleted_at IS NULL` 조건이 빠지지 않았는지 본다
 - 저장·수정·삭제하는 서비스 메서드에는 `@Transactional`이 있어야 한다
 - 커서 페이지네이션은 `limit + 1`개를 조회해서 다음 페이지 여부(`hasNext`)를 판단한다
+- 알림은 `resource_type`(enum) + `resource_id`로 관리한다. 댓글·관심사와 FK·연결 테이블로 이으라고 제안하지 않는다
+- 조회 기록(`ArticleViewStatus`, RDBMS)과 활동 내역(MongoDB)에 같은 정보가 있는 것은 의도된 구조다 (조회 수는 1인 1회 정합성 때문에 RDBMS, 행위 로그는 MongoDB)
+- 기사는 수집 시점의 키워드로만 관심사와 매칭한다. 키워드를 수정·삭제해도 이미 수집한 기사는 바꾸지 않고, 관심사를 삭제해도 기사는 남긴다
 - Swagger의 길이 제약이 DTO 검증(`@Size` 등)과 엔티티 컬럼 길이에 맞는지 본다
 
 ### 우리 저장소에서만 깨지는 지점
