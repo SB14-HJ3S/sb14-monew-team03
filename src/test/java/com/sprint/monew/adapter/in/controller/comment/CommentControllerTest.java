@@ -12,11 +12,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sprint.monew.adapter.in.controller.comment.dto.request.CommentRegisterRequest;
 import com.sprint.monew.adapter.in.controller.comment.dto.request.CommentUpdateRequest;
 import com.sprint.monew.application.comment.provided.CommentUseCase;
 import com.sprint.monew.application.comment.provided.dto.CommentLikeResult;
 import com.sprint.monew.application.comment.provided.dto.CommentResult;
 import com.sprint.monew.global.exception.MonewException;
+import com.sprint.monew.global.exception.errortype.ArticleErrorType;
 import com.sprint.monew.global.exception.errortype.CommentErrorType;
 import java.time.Instant;
 import java.util.UUID;
@@ -49,6 +51,100 @@ class CommentControllerTest {
                 .header(USER_ID_HEADER, requestUserId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(new CommentUpdateRequest(content)));
+    }
+
+    private MockHttpServletRequestBuilder registerRequest(
+            UUID articleId, UUID userId, String content) throws Exception {
+        return post("/api/comments")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                        objectMapper.writeValueAsString(
+                                new CommentRegisterRequest(articleId, userId, content)));
+    }
+
+    @Nested
+    @DisplayName("POST /api/comments 댓글 등록")
+    class Register {
+
+        private final UUID articleId = UUID.randomUUID();
+
+        @Test
+        @DisplayName("요청 헤더 없이 본문의 userId로 등록하면 201과 등록된 댓글(CommentDto)을 응답한다")
+        void success() throws Exception {
+            CommentResult result =
+                    new CommentResult(
+                            commentId,
+                            articleId,
+                            requestUserId,
+                            "작성자",
+                            "첫 댓글",
+                            0L,
+                            false,
+                            Instant.parse("2026-10-26T00:00:00Z"));
+            given(commentUseCase.register(requestUserId, articleId, "첫 댓글")).willReturn(result);
+
+            mockMvc.perform(registerRequest(articleId, requestUserId, "첫 댓글"))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.id").value(commentId.toString()))
+                    .andExpect(jsonPath("$.articleId").value(articleId.toString()))
+                    .andExpect(jsonPath("$.userId").value(requestUserId.toString()))
+                    .andExpect(jsonPath("$.userNickname").value("작성자"))
+                    .andExpect(jsonPath("$.content").value("첫 댓글"))
+                    .andExpect(jsonPath("$.likeCount").value(0))
+                    .andExpect(jsonPath("$.likedByMe").value(false))
+                    .andExpect(jsonPath("$.createdAt").value("2026-10-26T00:00:00Z"));
+        }
+
+        @Test
+        @DisplayName("content가 비어 있으면 400과 details.content를 응답하고 유스케이스를 부르지 않는다")
+        void blankContent() throws Exception {
+            mockMvc.perform(registerRequest(articleId, requestUserId, ""))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
+                    .andExpect(jsonPath("$.details.content").exists());
+            verifyNoInteractions(commentUseCase);
+        }
+
+        @Test
+        @DisplayName("content가 501자면 400과 details.content를 응답하고 유스케이스를 부르지 않는다")
+        void tooLongContent() throws Exception {
+            mockMvc.perform(registerRequest(articleId, requestUserId, "가".repeat(501)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
+                    .andExpect(jsonPath("$.details.content").exists());
+            verifyNoInteractions(commentUseCase);
+        }
+
+        @Test
+        @DisplayName("articleId가 없으면 400과 details.articleId를 응답하고 유스케이스를 부르지 않는다")
+        void missingArticleId() throws Exception {
+            mockMvc.perform(registerRequest(null, requestUserId, "첫 댓글"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
+                    .andExpect(jsonPath("$.details.articleId").exists());
+            verifyNoInteractions(commentUseCase);
+        }
+
+        @Test
+        @DisplayName("userId가 없으면 400과 details.userId를 응답하고 유스케이스를 부르지 않는다")
+        void missingUserId() throws Exception {
+            mockMvc.perform(registerRequest(articleId, null, "첫 댓글"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
+                    .andExpect(jsonPath("$.details.userId").exists());
+            verifyNoInteractions(commentUseCase);
+        }
+
+        @Test
+        @DisplayName("없거나 삭제된 기사면 404와 ARTICLE_NOT_FOUND를 응답한다")
+        void articleNotFound() throws Exception {
+            given(commentUseCase.register(any(), any(), any()))
+                    .willThrow(new MonewException(ArticleErrorType.ARTICLE_NOT_FOUND));
+
+            mockMvc.perform(registerRequest(articleId, requestUserId, "첫 댓글"))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.code").value("ARTICLE_NOT_FOUND"));
+        }
     }
 
     @Nested
