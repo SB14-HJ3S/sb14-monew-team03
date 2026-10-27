@@ -3,10 +3,12 @@ package com.sprint.monew.application.article;
 import com.sprint.monew.application.article.provided.dto.ArticleQuery;
 import com.sprint.monew.application.article.provided.dto.CollectedArticle;
 import com.sprint.monew.application.article.required.ArticleRepositoryPort;
+import com.sprint.monew.application.article.required.NaverNewsPort;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.ArticleErrorType;
 import com.sprint.monew.global.pagination.PageResult;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Service;
 public class ArticleService implements IArticleService {
 
     private final ArticleRepositoryPort repository;
+    private final NaverNewsPort naverNewsPort;
 
     @Override
     public Article findById(UUID articleId) {
@@ -38,6 +41,11 @@ public class ArticleService implements IArticleService {
                 repository.countByQuery(query),
                 query.orderBy(),
                 query.limit());
+    }
+
+    @Override
+    public List<CollectedArticle> searchNaverArticles(String keyword) {
+        return naverNewsPort.search(keyword);
     }
 
     @Override
