@@ -14,4 +14,8 @@ public interface NotificationService {
     void createCommentLikeNotification(User commentUser, UUID commentId, String likedByNickname);
 
     PageResult<Notification> findUnread(UUID userId, NotificationQuery query);
+
+    int markAllAsRead(UUID userId);
+
+    void markAsRead(UUID userId, UUID notificationId);
 }

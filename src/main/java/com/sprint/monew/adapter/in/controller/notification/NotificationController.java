@@ -8,10 +8,13 @@ import com.sprint.monew.global.annotation.RestWebAdapter;
 import com.sprint.monew.global.pagination.PageResult;
 import jakarta.validation.constraints.Min;
 import java.time.Instant;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
@@ -35,5 +38,19 @@ public class NotificationController {
         NotificationQuery query = NotificationQuery.of(cursor, after, limit);
 
         return notificationUseCase.findByQuery(query).map(NotificationDto::from);
+    }
+
+    @RequestId
+    @ResponseStatus(HttpStatus.OK)
+    @PatchMapping("/{notificationId}")
+    public void confirmNotification(@PathVariable("notificationId") UUID notificationId) {
+        notificationUseCase.markAsRead(notificationId);
+    }
+
+    @RequestId
+    @ResponseStatus(HttpStatus.OK)
+    @PatchMapping
+    public void confirmAllNotifications() {
+        notificationUseCase.markAllAsRead();
     }
 }

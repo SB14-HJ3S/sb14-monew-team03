@@ -3,6 +3,8 @@ name: CodeRabbit Limit Cleanup
 on:
   issue_comment:
     types: [created, edited]
+  pull_request_target:
+    types: [closed]
 
 permissions:
   issues: write
@@ -11,18 +13,44 @@ permissions:
 jobs:
   cleanup:
     if: >-
+      github.event_name == 'issue_comment' &&
       github.event.issue.pull_request &&
       github.event.comment.user.login == 'coderabbitai[bot]' &&
-      (contains(github.event.comment.body, 'Review limit reached') ||
-       contains(github.event.comment.body, 'Review rate limited') ||
-       contains(github.event.comment.body, 'Rate limit exceeded')) &&
-      !contains(github.event.comment.body, 'walkthrough_start')
+      ((github.event.issue.state == 'closed' &&
+        (contains(github.event.comment.body, 'walkthrough_start') ||
+         contains(github.event.comment.body, 'Review limit reached') ||
+         contains(github.event.comment.body, 'Review rate limited') ||
+         contains(github.event.comment.body, 'Rate limit exceeded') ||
+         contains(github.event.comment.body, 'Trigger review') ||
+         contains(github.event.comment.body, 'Currently processing new changes') ||
+         contains(github.event.comment.body, 'Draft PR not reviewed'))) ||
+       ((contains(github.event.comment.body, 'Review limit reached') ||
+         contains(github.event.comment.body, 'Review rate limited') ||
+         contains(github.event.comment.body, 'Rate limit exceeded')) &&
+        !contains(github.event.comment.body, 'walkthrough_start')))
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: 한도 초과 댓글 지우기
+      - name: CodeRabbit 안내 댓글 지우기
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           COMMENT_ID: ${{ github.event.comment.id }}
         run: gh api -X DELETE "repos/$REPO/issues/comments/$COMMENT_ID"
+
+  closed-summary:
+    if: github.event_name == 'pull_request_target'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: 닫힌 PR의 CodeRabbit 안내 댓글 지우기
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          gh api --paginate "repos/$REPO/issues/$NUMBER/comments" \
+            --jq '.[] | select(.user.login == "coderabbitai[bot]" and (.body | test("walkthrough_start|Review limit reached|Review rate limited|Rate limit exceeded|Trigger review|Currently processing new changes|Draft PR not reviewed"))) | .id' |
+            while read -r id; do
+              gh api -X DELETE "repos/$REPO/issues/comments/$id"
+            done

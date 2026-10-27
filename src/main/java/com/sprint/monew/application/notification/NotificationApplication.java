@@ -33,18 +33,28 @@ public class NotificationApplication implements NotificationUseCase {
     }
 
     @Override
-    public void markAllAsRead(UUID requestId) {}
+    @Transactional
+    public void markAllAsRead() {
+        UUID userId = RequestIdContext.get();
+        userService.getActiveUser(userId);
+
+        int updated = notificationService.markAllAsRead(userId);
+        log.info("알림 전체 확인: userId={}, 확인된 알림 수={}", userId, updated);
+    }
 
     @Override
-    public void markAsRead(UUID notificationId, UUID requestId) {}
+    @Transactional
+    public void markAsRead(UUID notificationId) {
+        UUID userId = RequestIdContext.get();
+        userService.getActiveUser(userId);
+        notificationService.markAsRead(userId, notificationId);
+    }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void createArticleNotifications(UUID interestId, String interestName, int articleCount) {
-        List<User> subscribers =
-                subscriptionService.findSubscriberIds(interestId).stream()
-                        .map(userService::getActiveUser)
-                        .toList();
+        List<UUID> subscriberIds = subscriptionService.findSubscriberIds(interestId);
+        List<User> subscribers = userService.getActiveUsers(subscriberIds);
 
         notificationService.createArticleNotifications(
                 subscribers, interestId, interestName, articleCount);

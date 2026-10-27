@@ -2,6 +2,7 @@ package com.sprint.monew.adapter.in.controller.user;
 
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -9,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.monew.adapter.in.controller.user.dto.request.UserLoginRequest;
 import com.sprint.monew.adapter.in.controller.user.dto.request.UserRegisterRequest;
+import com.sprint.monew.adapter.in.controller.user.dto.request.UserUpdateRequest;
 import com.sprint.monew.application.user.provided.UserUseCase;
 import com.sprint.monew.application.user.provided.dto.UserResult;
 import com.sprint.monew.global.exception.MonewException;
@@ -159,5 +161,52 @@ class UserControllerTest {
         mockMvc.perform(loginRequest("login@monew.com", "wrong1!"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("USER_LOGIN_FAILED"));
+    }
+
+    private MockHttpServletRequestBuilder updateNicknameRequest(String nickname) throws Exception {
+        return patch("/api/users/{userId}", userId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new UserUpdateRequest(nickname)));
+    }
+
+    @Test
+    @DisplayName("닉네임 수정에 성공하면 200과 바뀐 사용자 정보를 응답한다")
+    void givenValidNickname_whenUpdateNickname_thenOk() throws Exception {
+        given(userUseCase.updateNickname(userId, "새닉네임"))
+                .willReturn(userResult("me@monew.com", "새닉네임"));
+
+        mockMvc.perform(updateNicknameRequest("새닉네임"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(userId.toString()))
+                .andExpect(jsonPath("$.nickname").value("새닉네임"));
+    }
+
+    @Test
+    @DisplayName("닉네임이 21자면 400과 details.nickname을 응답하고 유스케이스를 부르지 않는다")
+    void givenTooLongNickname_whenUpdateNickname_thenBadRequest() throws Exception {
+        mockMvc.perform(updateNicknameRequest("가".repeat(21)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.nickname").exists());
+        verifyNoInteractions(userUseCase);
+    }
+
+    @Test
+    @DisplayName("닉네임이 공백뿐이면 400과 details.nickname을 응답하고 유스케이스를 부르지 않는다")
+    void givenBlankNickname_whenUpdateNickname_thenBadRequest() throws Exception {
+        mockMvc.perform(updateNicknameRequest("   "))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.nickname").exists());
+        verifyNoInteractions(userUseCase);
+    }
+
+    @Test
+    @DisplayName("없거나 탈퇴한 사용자면 404와 USER_NOT_FOUND를 응답한다")
+    void givenNoActiveUser_whenUpdateNickname_thenNotFound() throws Exception {
+        given(userUseCase.updateNickname(userId, "새닉네임"))
+                .willThrow(new MonewException(UserErrorType.USER_NOT_FOUND));
+
+        mockMvc.perform(updateNicknameRequest("새닉네임"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("USER_NOT_FOUND"));
     }
 }

@@ -13,6 +13,8 @@ public interface IUserService {
 
     User login(String email, String password);
 
+    User updateNickname(UUID userId, String nickname);
+
     default User getDeactivatedUser(UUID userId) {
         throw new UnsupportedOperationException();
     }
