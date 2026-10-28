@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -71,6 +72,12 @@ public class ArticleService implements IArticleService {
                         collectedArticle.summary());
 
         return Optional.of(repository.save(article));
+    }
+
+    @Override
+    @Transactional
+    public void increaseCommentCount(UUID articleId) {
+        repository.increaseCommentCount(articleId);
     }
 
     private String getCursorValue(Article article, ArticleQuery.SortOrder sortField) {

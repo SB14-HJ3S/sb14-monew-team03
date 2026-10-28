@@ -5,7 +5,8 @@ on:
     types: [ review_requested ]
     branches: [ dev, develop, main ]
 
-permissions: { }
+permissions:
+  pull-requests: read
 
 jobs:
   notify:
@@ -24,6 +25,9 @@ jobs:
           REVIEWER: ${{ github.event.requested_reviewer.login }}
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
           PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
           PR_URL: ${{ github.event.pull_request.html_url }}
         run: |
           set -euo pipefail
@@ -56,6 +60,13 @@ jobs:
             echo "::error::DM 채널 생성에 실패했습니다. (리뷰어: $REVIEWER)"
             exit 1
           fi
+
+          for i in $(seq 1 12); do
+            LATEST=$(gh api "repos/$REPO/pulls/$PR_NUMBER" --jq .title 2>/dev/null || true)
+            if [[ -n "$LATEST" ]]; then PR_TITLE="$LATEST"; fi
+            if grep -Eq '^\S+ \[(Feat|Fix|Refactor|Docs|Chore|Test|Batch|Deploy)\] ' <<< "$PR_TITLE"; then break; fi
+            sleep 5
+          done
 
           jq -n \
             --arg author "$PR_AUTHOR" \

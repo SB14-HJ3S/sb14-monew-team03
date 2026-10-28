@@ -40,6 +40,8 @@ const TEXT = {
   ].filter((line, i) => line !== '' || i === 2 || i === 4).join('\n'),
   notAllowed: (user) => `@${user} 체크박스는 저장소 쓰기 권한이 있는 팀원만 쓸 수 있어요`,
   forkOrClosed: '열린 PR이 아니거나 다른 저장소에서 온 PR이라 체크박스로 반영할 수 없어요',
+  syncDenied: '봇 권한 문제(403)로 반영하지 못했어요. 로컬에서 `git fetch origin develop` → `git merge origin/develop` 후 push해 주세요',
+  syncFailed: (status, message) => `반영하지 못했어요. 그사이 브랜치에 새 커밋이 올라왔을 수 있어요. 체크박스를 다시 눌러 주세요\n\`\`\`\n${status || ''} ${String(message || '').trim().slice(0, 500)}\n\`\`\``,
 };
 
 function fileList(files, max = 5) {
@@ -337,35 +339,30 @@ async function syncCheck({ github, context, core }) {
   core.setOutput('ref', pr.head.ref);
 }
 
-async function syncMerge({ github, context, exec }) {
+async function syncMerge({ github, context }) {
   const repo = context.repo;
   const number = context.payload.issue.number;
   const ref = process.env.HEAD_REF;
   const issue = issueOf(ref);
   const title = `merge : develop 최신 내용 반영${issue ? ` [#${issue}]` : ''}`;
+  const bot = new github.constructor({ auth: process.env.BOT_TOKEN });
 
-  await git(exec, ['config', 'user.name', PUSH_BOT_NAME]);
-  await git(exec, ['config', 'user.email', PUSH_BOT_EMAIL]);
-  await git(exec, ['fetch', '-q', 'origin', '+refs/heads/develop:refs/remotes/origin/develop']);
+  let res;
+  try {
+    res = await bot.rest.repos.merge({ ...repo, base: ref, head: 'develop', commit_message: title });
+  } catch (e) {
+    if (e.status === 409) {
+      await upsert(github, repo, number, TEXT.conflict([], ref));
+      await setLabel(github, repo, number, 'conflict');
+      return;
+    }
+    await upsert(github, repo, number, e.status === 403 ? TEXT.syncDenied : TEXT.syncFailed(e.status, e.message));
+    return;
+  }
 
-  const merge = await git(exec, ['merge', '--no-ff', '-m', title, 'origin/develop']);
-  if (merge.exitCode === 0 && /Already up to date/i.test(merge.stdout)) {
+  if (res.status === 204) {
     await upsert(github, repo, number, TEXT.latest);
     await setLabel(github, repo, number, 'none');
-    return;
-  }
-  if (merge.exitCode !== 0) {
-    const { stdout } = await git(exec, ['diff', '--name-only', '--diff-filter=U']);
-    await git(exec, ['merge', '--abort']);
-    const files = stdout.split('\n').map((s) => s.trim()).filter(Boolean);
-    await upsert(github, repo, number, TEXT.conflict(files, ref));
-    await setLabel(github, repo, number, 'conflict');
-    return;
-  }
-
-  const push = await git(exec, ['push', 'origin', `HEAD:refs/heads/${ref}`]);
-  if (push.exitCode !== 0) {
-    await upsert(github, repo, number, `반영하지 못했어요. 그사이 브랜치에 새 커밋이 올라왔을 수 있어요. 체크박스를 다시 눌러 주세요\n\`\`\`\n${push.stderr.trim().slice(0, 500)}\n\`\`\``);
     return;
   }
   await upsert(github, repo, number, TEXT.merged);

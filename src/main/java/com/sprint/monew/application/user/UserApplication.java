@@ -29,4 +29,10 @@ public class UserApplication implements UserUseCase {
         User user = userService.login(email, password);
         return UserResult.from(user);
     }
+
+    @Override
+    public UserResult updateNickname(UUID userId, String nickname) {
+        User user = userService.updateNickname(userId, nickname);
+        return UserResult.from(user);
+    }
 }

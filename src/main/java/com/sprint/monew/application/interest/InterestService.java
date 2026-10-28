@@ -18,4 +18,10 @@ public interface InterestService {
     Interest getById(UUID interestId);
 
     void delete(Interest deleting);
+
+    Interest increaseSubscriberCount(UUID interestId);
+
+    void decreaseSubscriberCount(UUID interestId);
+
+    void decreaseSubscriberCount(List<UUID> interestIds);
 }

@@ -1,6 +1,7 @@
 package com.sprint.monew.application.interest;
 
 import com.sprint.monew.application.interest.provided.dto.InterestQuery;
+import com.sprint.monew.application.interest.required.DuplicateInterestNameException;
 import com.sprint.monew.application.interest.required.InterestRepository;
 import com.sprint.monew.domain.interest.entity.Interest;
 import com.sprint.monew.global.exception.MonewException;
@@ -24,9 +25,14 @@ public class InterestServiceImpl implements InterestService {
     @Override
     public Interest create(String name, List<String> keywords) {
         // name이 80% 이상 유사한 이름의 관심사가 있다면 등록할 수 없습니다.
-        validateSimilarNameDoesNotExist(name);
-        Interest interest = Interest.create(name, keywords);
-        return repository.save(interest);
+        try {
+            validateSimilarNameDoesNotExist(name);
+            Interest interest = Interest.create(name, keywords);
+            return repository.save(interest);
+        } catch (DuplicateInterestNameException e) {
+            throw new MonewException(
+                    InterestErrorType.SIMILAR_NAME_CONFLICT, Map.of("name", name), e);
+        }
     }
 
     private void validateSimilarNameDoesNotExist(String name) {
@@ -91,5 +97,41 @@ public class InterestServiceImpl implements InterestService {
     @Override
     public void delete(Interest deleting) {
         repository.delete(deleting);
+    }
+
+    @Override
+    public Interest increaseSubscriberCount(UUID interestId) {
+        repository.increaseSubscriberCount(interestId);
+        return getById(interestId);
+    }
+
+    @Override
+    public void decreaseSubscriberCount(UUID interestId) {
+        validateAlreadyExistsById(interestId);
+        repository.decreaseSubscriberCount(interestId);
+    }
+
+    @Override
+    public void decreaseSubscriberCount(List<UUID> interestIds) {
+        validateExistsByIds(interestIds);
+        repository.decreaseSubscriberCountIn(interestIds);
+    }
+
+    private boolean existsById(UUID interestId) {
+        return repository.existsById(interestId);
+    }
+
+    private void validateAlreadyExistsById(UUID interestId) {
+        if (!existsById(interestId)) {
+            throw new MonewException(
+                    InterestErrorType.INTEREST_NOT_FOUND, Map.of("id", interestId));
+        }
+    }
+
+    private void validateExistsByIds(List<UUID> interestId) {
+        if (repository.countByIdIn(interestId) != interestId.size()) {
+            throw new MonewException(
+                    InterestErrorType.INTEREST_NOT_FOUND, Map.of("id", interestId));
+        }
     }
 }

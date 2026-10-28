@@ -8,7 +8,7 @@ import com.sprint.monew.global.pagination.PageResult;
 import java.util.UUID;
 
 public interface CommentUseCase {
-    Comment register(UUID userId, UUID articleId, String content);
+    CommentResult register(UUID userId, UUID articleId, String content);
 
     PageResult<Comment> findByQuery(CommentQuery query);
 

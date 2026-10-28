@@ -6,7 +6,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
+import com.sprint.monew.application.user.event.UserNicknameUpdatedEvent;
 import com.sprint.monew.application.user.event.UserRegisteredEvent;
 import com.sprint.monew.application.user.required.UserEventPublisherPort;
 import com.sprint.monew.application.user.required.UserRepositoryPort;
@@ -108,7 +110,7 @@ class UserServiceTest {
                 .extracting("errorType")
                 .isEqualTo(UserErrorType.USER_EMAIL_DUPLICATED);
         verify(repository, never()).save(any());
-        verify(userEventPublisher, never()).publish(any());
+        verifyNoInteractions(userEventPublisher);
     }
 
     @Test
@@ -169,5 +171,41 @@ class UserServiceTest {
                 .isInstanceOf(MonewException.class)
                 .extracting("errorType")
                 .isEqualTo(UserErrorType.USER_LOGIN_FAILED);
+    }
+
+    @Test
+    @DisplayName("닉네임을 바꾸면 닉네임이 바뀐다")
+    void givenActiveUser_whenUpdateNickname_thenChanged() {
+        UUID userId = UUID.randomUUID();
+        User user = User.create("me@monew.com", "옛닉네임", "암호화된비밀번호");
+        given(repository.findUser(userId)).willReturn(Optional.of(user));
+
+        User result = userService.updateNickname(userId, "새닉네임");
+
+        assertThat(result.getNickname()).isEqualTo("새닉네임");
+    }
+
+    @Test
+    @DisplayName("없거나 탈퇴한 사용자면 닉네임 수정 때 USER_NOT_FOUND 예외가 난다")
+    void givenNoActiveUser_whenUpdateNickname_thenThrowUserNotFound() {
+        UUID userId = UUID.randomUUID();
+        given(repository.findUser(userId)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userService.updateNickname(userId, "새닉네임"))
+                .isInstanceOf(MonewException.class)
+                .extracting("errorType")
+                .isEqualTo(UserErrorType.USER_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("닉네임을 바꾸면 바뀐 닉네임으로 닉네임 수정 이벤트를 보낸다")
+    void givenActiveUser_whenUpdateNickname_thenPublishNicknameUpdatedEvent() {
+        UUID userId = UUID.randomUUID();
+        User user = User.create("me@monew.com", "옛닉네임", "암호화된비밀번호");
+        given(repository.findUser(userId)).willReturn(Optional.of(user));
+
+        userService.updateNickname(userId, "새닉네임");
+
+        verify(userEventPublisher).publish(new UserNicknameUpdatedEvent(userId, "새닉네임"));
     }
 }

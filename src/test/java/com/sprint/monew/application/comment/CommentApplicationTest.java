@@ -10,12 +10,13 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
+import com.sprint.monew.application.article.IArticleService;
 import com.sprint.monew.application.comment.provided.dto.CommentLikeResult;
 import com.sprint.monew.application.comment.provided.dto.CommentResult;
 import com.sprint.monew.application.comment.required.CommentEventPublisherPort;
 import com.sprint.monew.application.comment.required.CommentLikeRepositoryPort;
 import com.sprint.monew.application.comment.required.CommentRepositoryPort;
-import com.sprint.monew.application.user.provided.UserUseCase;
+import com.sprint.monew.application.user.IUserService;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.comment.entity.Comment;
 import com.sprint.monew.domain.comment.entity.CommentLike;
@@ -23,6 +24,7 @@ import com.sprint.monew.domain.comment.event.CommentLikedEvent;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.context.RequestIdContext;
 import com.sprint.monew.global.exception.MonewException;
+import com.sprint.monew.global.exception.errortype.ArticleErrorType;
 import com.sprint.monew.global.exception.errortype.CommentErrorType;
 import com.sprint.monew.global.exception.errortype.UserErrorType;
 import java.time.Instant;
@@ -34,8 +36,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -45,14 +47,26 @@ class CommentApplicationTest {
 
     @Mock private CommentRepositoryPort commentRepository;
     @Mock private CommentLikeRepositoryPort commentLikeRepository;
-    @Mock private UserUseCase userUseCase;
+    @Mock private IUserService userService;
+    @Mock private IArticleService articleService;
     @Mock private CommentEventPublisherPort commentEventPublisher;
-    @InjectMocks private CommentApplication commentApplication;
+    private CommentApplication commentApplication;
 
     private final UUID commentId = UUID.randomUUID();
     private final UUID authorId = UUID.randomUUID();
     private final UUID articleId = UUID.randomUUID();
     private final Instant createdAt = Instant.parse("2026-10-21T00:00:00Z");
+
+    // CommentService는 진짜로 쓰고 DB 포트만 가짜로 둔다 — 조립(Application)과 댓글 DB 처리(Service)를 함께 검증한다
+    @BeforeEach
+    void setUp() {
+        commentApplication =
+                new CommentApplication(
+                        new CommentService(commentRepository, commentLikeRepository),
+                        userService,
+                        articleService,
+                        commentEventPublisher);
+    }
 
     // 단위 테스트에선 인터셉터가 안 돌아서 요청자 ID를 직접 넣는다 — 다른 테스트에 남지 않게 지운다
     @AfterEach
@@ -247,7 +261,7 @@ class CommentApplicationTest {
             Comment likedComment = savedComment(author, article);
             ReflectionTestUtils.setField(likedComment, "likeCount", 1L);
             User liker = liker();
-            given(userUseCase.getActiveUser(requestUserId)).willReturn(liker);
+            given(userService.getActiveUser(requestUserId)).willReturn(liker);
             given(commentRepository.findById(commentId))
                     .willReturn(Optional.of(comment), Optional.of(likedComment));
             given(commentLikeRepository.existsByCommentIdAndUserId(commentId, requestUserId))
@@ -282,7 +296,10 @@ class CommentApplicationTest {
         @DisplayName("이미 좋아요한 댓글이면 COMMENT_LIKE_DUPLICATED 예외가 나고 저장·알림이 없다")
         void duplicated() {
             Comment comment = savedComment(mock(User.class), mock(Article.class));
-            given(userUseCase.getActiveUser(requestUserId)).willReturn(mock(User.class));
+            // 중복 확인을 서비스가 사용자 객체의 id로 하므로 id를 채운다
+            User liker = mock(User.class);
+            given(liker.getId()).willReturn(requestUserId);
+            given(userService.getActiveUser(requestUserId)).willReturn(liker);
             given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
             given(commentLikeRepository.existsByCommentIdAndUserId(commentId, requestUserId))
                     .willReturn(true);
@@ -299,7 +316,7 @@ class CommentApplicationTest {
         @Test
         @DisplayName("없거나 탈퇴한 사용자면 USER_NOT_FOUND 예외가 나고 댓글·좋아요를 건드리지 않는다")
         void notExistUser() {
-            given(userUseCase.getActiveUser(requestUserId))
+            given(userService.getActiveUser(requestUserId))
                     .willThrow(new MonewException(UserErrorType.USER_NOT_FOUND));
 
             assertThatThrownBy(() -> commentApplication.like(commentId))
@@ -333,6 +350,87 @@ class CommentApplicationTest {
                     .extracting("errorType")
                     .isEqualTo(CommentErrorType.COMMENT_NOT_FOUND);
             verifyNoInteractions(commentLikeRepository, commentEventPublisher);
+        }
+    }
+
+    @Nested
+    @DisplayName("댓글 등록")
+    class Register {
+
+        @Test
+        @DisplayName("기사에 댓글을 등록하면 저장되고, 작성자 닉네임과 좋아요 0·내 좋아요 아님이 담긴 결과를 돌려준다")
+        void success() {
+            User author = author();
+            given(author.getNickname()).willReturn("작성자");
+            Article article = mock(Article.class);
+            given(article.getId()).willReturn(articleId);
+            given(userService.getActiveUser(authorId)).willReturn(author);
+            given(articleService.findById(articleId)).willReturn(article);
+            // 저장하면 DB가 id·생성일을 채워 주는 것처럼 직접 넣는다
+            given(commentRepository.save(any(Comment.class)))
+                    .willAnswer(
+                            invocation -> {
+                                Comment saved = invocation.getArgument(0);
+                                ReflectionTestUtils.setField(saved, "id", commentId);
+                                ReflectionTestUtils.setField(saved, "createdAt", createdAt);
+                                return saved;
+                            });
+
+            CommentResult result = commentApplication.register(authorId, articleId, "첫 댓글");
+
+            ArgumentCaptor<Comment> saved = ArgumentCaptor.forClass(Comment.class);
+            verify(commentRepository).save(saved.capture());
+            assertThat(saved.getValue().getUser()).isSameAs(author);
+            assertThat(saved.getValue().getArticle()).isSameAs(article);
+            assertThat(result)
+                    .isEqualTo(
+                            new CommentResult(
+                                    commentId, articleId, authorId, "작성자", "첫 댓글", 0L, false,
+                                    createdAt));
+        }
+
+        @Test
+        @DisplayName("댓글을 등록하면 기사의 댓글 수를 1 늘린다")
+        void increaseArticleCommentCount() {
+            User author = author();
+            Article article = mock(Article.class);
+            given(article.getId()).willReturn(articleId);
+            given(userService.getActiveUser(authorId)).willReturn(author);
+            given(articleService.findById(articleId)).willReturn(article);
+            given(commentRepository.save(any(Comment.class)))
+                    .willAnswer(invocation -> invocation.getArgument(0));
+
+            commentApplication.register(authorId, articleId, "첫 댓글");
+
+            verify(articleService).increaseCommentCount(articleId);
+        }
+
+        @Test
+        @DisplayName("없거나 탈퇴한 사용자면 USER_NOT_FOUND 예외가 나고 기사 조회·저장을 하지 않는다")
+        void notExistUser() {
+            given(userService.getActiveUser(authorId))
+                    .willThrow(new MonewException(UserErrorType.USER_NOT_FOUND));
+
+            assertThatThrownBy(() -> commentApplication.register(authorId, articleId, "첫 댓글"))
+                    .isInstanceOf(MonewException.class)
+                    .extracting("errorType")
+                    .isEqualTo(UserErrorType.USER_NOT_FOUND);
+            verifyNoInteractions(articleService, commentRepository);
+        }
+
+        @Test
+        @DisplayName("없거나 삭제된 기사면 ARTICLE_NOT_FOUND 예외가 나고 저장·댓글 수 증가를 하지 않는다")
+        void notExistArticle() {
+            given(userService.getActiveUser(authorId)).willReturn(mock(User.class));
+            given(articleService.findById(articleId))
+                    .willThrow(new MonewException(ArticleErrorType.ARTICLE_NOT_FOUND));
+
+            assertThatThrownBy(() -> commentApplication.register(authorId, articleId, "첫 댓글"))
+                    .isInstanceOf(MonewException.class)
+                    .extracting("errorType")
+                    .isEqualTo(ArticleErrorType.ARTICLE_NOT_FOUND);
+            verifyNoInteractions(commentRepository);
+            verify(articleService, never()).increaseCommentCount(any());
         }
     }
 }

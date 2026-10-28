@@ -1,5 +1,6 @@
 package com.sprint.monew.adapter.in.controller.comment;
 
+import com.sprint.monew.adapter.in.controller.comment.dto.request.CommentRegisterRequest;
 import com.sprint.monew.adapter.in.controller.comment.dto.request.CommentUpdateRequest;
 import com.sprint.monew.adapter.in.controller.comment.dto.response.CommentDto;
 import com.sprint.monew.adapter.in.controller.comment.dto.response.CommentLikeDto;
@@ -11,6 +12,7 @@ import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -27,6 +29,17 @@ import org.springframework.web.bind.annotation.RestController;
 public class CommentController {
 
     private final CommentUseCase commentUseCase;
+
+    // 댓글 등록만 요청자 ID를 헤더가 아니라 본문(userId)으로 받아서 @RequestId를 붙이지 않는다
+    @PostMapping
+    public ResponseEntity<CommentDto> register(@Valid @RequestBody CommentRegisterRequest request) {
+        // 댓글 내용은 개인 정보가 섞일 수 있어 로그에 남기지 않는다
+        log.info("댓글 등록 요청: articleId={}, userId={}", request.articleId(), request.userId());
+        CommentResult result =
+                commentUseCase.register(request.userId(), request.articleId(), request.content());
+        log.info("댓글 등록 완료: commentId={}, articleId={}", result.id(), result.articleId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(CommentDto.from(result));
+    }
 
     @RequestId
     @PatchMapping("/{commentId}")

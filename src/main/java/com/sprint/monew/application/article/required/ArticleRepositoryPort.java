@@ -22,4 +22,7 @@ public interface ArticleRepositoryPort {
     long countByQuery(ArticleQuery query);
 
     Optional<Article> findBySourceUrl(String sourceUrl);
+
+    // 동시에 댓글이 달려도 숫자가 사라지지 않게 DB에서 +1
+    int increaseCommentCount(UUID articleId);
 }

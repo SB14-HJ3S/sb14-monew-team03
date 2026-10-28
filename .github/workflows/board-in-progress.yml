@@ -50,6 +50,55 @@ jobs:
           echo "issue=$ISSUE" >> "$GITHUB_OUTPUT"
           echo "node=$NODE" >> "$GITHUB_OUTPUT"
 
+      - name: 시작일이 비어 있으면 첫 커밋 날짜로 채우기
+        if: steps.check.outputs.node != ''
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.PROJECTS_PAT }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+          ISSUE: ${{ steps.check.outputs.issue }}
+          CONTENT_ID: ${{ steps.check.outputs.node }}
+        run: |
+          set -e
+          START_FIELD_ID="IFD_kgDOAtANOg"
+
+          CURRENT=$(gh api graphql -f query='
+            query($issue: ID!) {
+              node(id: $issue) {
+                ... on Issue {
+                  issueFieldValues(first: 20) {
+                    nodes {
+                      ... on IssueFieldDateValue {
+                        value
+                        field { ... on IssueFieldDate { id } }
+                      }
+                    }
+                  }
+                }
+              }
+            }' -f issue="$CONTENT_ID" --jq '.data.node.issueFieldValues.nodes[] | select(.field.id == "IFD_kgDOAtANOg") | .value')
+          if [ -n "$CURRENT" ]; then
+            echo "#$ISSUE 시작일이 이미 있어($CURRENT) 그대로 둡니다."
+            exit 0
+          fi
+
+          FIRST=$(gh api "repos/$REPO/compare/develop...$BRANCH" --jq '[.commits[].commit.author.date] | min // empty')
+          if [ -z "$FIRST" ]; then
+            echo "$BRANCH: 첫 커밋 날짜를 찾지 못해 건너뜁니다."
+            exit 0
+          fi
+          START_DATE=$(TZ=Asia/Seoul date -d "$FIRST" +%F)
+
+          gh api graphql -f query='
+            mutation($issue: ID!, $field: ID!, $date: String!) {
+              updateIssueFieldValue(input: {
+                issueId: $issue
+                issueField: { fieldId: $field, dateValue: $date }
+              }) { clientMutationId }
+            }' -f issue="$CONTENT_ID" -f field="$START_FIELD_ID" -f date="$START_DATE" > /dev/null
+          echo "#$ISSUE 시작일을 $START_DATE로 채웠습니다."
+
       - name: 보드 상태가 Todo면 In progress로 변경
         if: steps.check.outputs.node != ''
         env:

@@ -17,4 +17,6 @@ public interface IArticleService {
     List<CollectedArticle> collectNaverArticles(String keyword);
 
     Optional<Article> saveCollectedArticle(CollectedArticle collectedArticle);
+
+    void increaseCommentCount(UUID articleId);
 }
