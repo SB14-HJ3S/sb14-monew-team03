@@ -44,7 +44,7 @@ public class ArticleService implements IArticleService {
     }
 
     @Override
-    public List<CollectedArticle> searchNaverArticles(String keyword) {
+    public List<CollectedArticle> collectNaverArticles(String keyword) {
         return naverNewsPort.search(keyword);
     }
 

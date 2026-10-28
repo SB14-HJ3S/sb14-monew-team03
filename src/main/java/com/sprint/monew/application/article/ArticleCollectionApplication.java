@@ -45,7 +45,7 @@ public class ArticleCollectionApplication implements ArticleCollectionUseCase {
 
         for (InterestKeyword keyword : interest.getKeywords()) {
             List<CollectedArticle> searched =
-                    articleService.searchNaverArticles(keyword.getKeyword().trim());
+                    articleService.collectNaverArticles(keyword.getKeyword().trim());
 
             for (CollectedArticle article : searched) {
                 if (!collectedUrls.contains(article.sourceUrl())) {

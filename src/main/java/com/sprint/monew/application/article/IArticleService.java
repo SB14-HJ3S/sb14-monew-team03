@@ -14,7 +14,7 @@ public interface IArticleService {
 
     PageResult<Article> findPageByQuery(ArticleQuery query);
 
-    List<CollectedArticle> searchNaverArticles(String keyword);
+    List<CollectedArticle> collectNaverArticles(String keyword);
 
     Optional<Article> saveCollectedArticle(CollectedArticle collectedArticle);
 }
