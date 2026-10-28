@@ -12,6 +12,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -51,4 +52,7 @@ public class UserController {
         log.info("닉네임 수정 완료: userId={}", userId);
         return UserDto.from(result);
     }
+
+    @DeleteMapping("/{userId}")
+    public void softDeleteUser(@PathVariable UUID userId) {}
 }
