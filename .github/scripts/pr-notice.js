@@ -74,15 +74,83 @@ function archViolations(dir) {
       if (!failure) continue;
       const message = unescapeXml(failure[1]);
       const because = (message.match(/because (.*?)' was violated/) || [])[1] || '';
-      const details = message
+      const lines = message
         .split('\n')
         .slice(1)
         .map((l) => l.trim())
         .filter(Boolean);
-      rules.push({ name: m[1], because, details });
+      rules.push({ name: m[1], because, details: groupViolations(lines) });
     }
   }
   return rules;
+}
+
+function shortName(qualified) {
+  const parts = qualified.replace(/\(.*\)$/, '').split('.');
+  const classAt = parts.map((p, i) => (/^[A-Z]/.test(p) ? i : -1)).filter((i) => i >= 0).pop();
+  if (classAt === undefined) return qualified;
+  const member = parts.slice(classAt + 1).join('.');
+  return member && member !== '<init>' ? `${parts[classAt]}.${member}()` : parts[classAt];
+}
+
+function cycleDependency(line) {
+  const types = [...line.matchAll(/<([^<>]*(?:<init>[^<>]*)?)>/g)].map((x) => x[1]);
+  const where = (line.match(/in \(([^)]*)\)/) || [])[1] || '';
+  const from = where.replace(/\.java:\d+$/, '');
+  const target = types.length > 1 ? shortName(types[types.length - 1]) : '';
+  if (!from || !target) return null;
+  const lineNo = (where.match(/:(\d+)$/) || [])[1];
+  return { from, target, at: lineNo && lineNo !== '0' ? where : '' };
+}
+
+function summarizeCycle(slices, deps) {
+  const pairs = new Map();
+  for (const d of deps.map(cycleDependency).filter(Boolean)) {
+    const targetClass = d.target.split('.')[0];
+    const key = `${d.from}→${targetClass}`;
+    const p = pairs.get(key) || { from: d.from, targetClass, calls: [], at: '' };
+    if (d.target.includes('.') && !p.calls.includes(d.target)) p.calls.push(d.target);
+    if (!p.at && d.at) p.at = d.at;
+    pairs.set(key, p);
+  }
+  const sub = [...pairs.values()].map((p) => {
+    const what = p.calls.length > 0 ? p.calls.map((c) => `\`${c}\``).join(', ') : `\`${p.targetClass}\``;
+    return `\`${p.from}\` → ${what}${p.at ? ` (${p.at})` : ''}`;
+  });
+  return { summary: `${slices.join(' → ')} 순환`, sub, raw: [] };
+}
+
+function groupViolations(lines) {
+  const items = [];
+  let i = 0;
+  while (i < lines.length) {
+    const start = lines[i].match(/^Cycle detected:\s*(.*)$/);
+    if (!start) {
+      items.push({ summary: lines[i], sub: [], raw: [lines[i]] });
+      i += 1;
+      continue;
+    }
+    const raw = [lines[i]];
+    let path = start[1];
+    i += 1;
+    while (i < lines.length && /^Slice /.test(lines[i])) {
+      path += ` ${lines[i]}`;
+      raw.push(lines[i]);
+      i += 1;
+    }
+    const deps = [];
+    while (i < lines.length && !/^Cycle detected:/.test(lines[i])) {
+      if (/^- /.test(lines[i])) deps.push(lines[i].slice(2));
+      raw.push(lines[i]);
+      i += 1;
+    }
+    const slices = path
+      .split('->')
+      .map((s) => s.replace(/^\s*Slice\s+/, '').trim())
+      .filter(Boolean);
+    items.push({ ...summarizeCycle(slices, deps), raw, isCycle: true });
+  }
+  return items;
 }
 
 async function archNotice({ github, context, core }) {
@@ -93,7 +161,7 @@ async function archNotice({ github, context, core }) {
   }
   for (const r of rules) {
     for (const d of r.details.slice(0, 20)) {
-      core.warning(d, { title: `패키지 규칙 위반: ${r.because || r.name}` });
+      core.warning(d.raw.join('\n'), { title: `패키지 규칙 위반: ${d.isCycle ? d.summary : r.because || r.name}` });
     }
   }
   const total = rules.reduce((n, r) => n + r.details.length, 0);
@@ -104,7 +172,7 @@ async function archNotice({ github, context, core }) {
     '',
     ...rules.flatMap((r) => [
       `**${r.because || r.name}**`,
-      ...r.details.slice(0, 10).map((d) => `- ${d}`),
+      ...r.details.slice(0, 10).flatMap((d) => [`- ${d.summary}`, ...d.sub.map((s) => `  - ${s}`)]),
       ...(r.details.length > 10 ? [`- 외 ${r.details.length - 10}건 (Checks 탭 경고에서 전부 볼 수 있어요)`] : []),
       '',
     ]),
@@ -245,5 +313,5 @@ module.exports = {
   upsertNotice,
   archNotice,
   coverageNotice,
-  _test: { archViolations, unescapeXml, changedLines, coverageReport, ranges },
+  _test: { archViolations, groupViolations, unescapeXml, changedLines, coverageReport, ranges },
 };
