@@ -34,9 +34,10 @@ public interface InterestJpaRepository
 
     @Query(
             """
-        select distinct i
-        from Interest i
-        join fetch i.keywords
-        """)
+            select distinct i
+            from Interest i
+            join fetch i.keywords
+            where i.subscriberCount > 0
+            """)
     List<Interest> findSubscribedWithKeywords();
 }
