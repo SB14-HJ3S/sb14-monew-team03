@@ -1,7 +1,10 @@
 package com.sprint.monew.adapter.in.controller.user;
 
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -206,6 +209,25 @@ class UserControllerTest {
                 .willThrow(new MonewException(UserErrorType.USER_NOT_FOUND));
 
         mockMvc.perform(updateNicknameRequest("새닉네임"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("USER_NOT_FOUND"));
+    }
+
+    @Test
+    @DisplayName("논리 삭제에 성공하면 204를 응답한다")
+    void givenActiveUser_whenSoftDelete_thenNoContent() throws Exception {
+        mockMvc.perform(delete("/api/users/{userId}", userId)).andExpect(status().isNoContent());
+        verify(userUseCase).softDeleteUser(userId);
+    }
+
+    @Test
+    @DisplayName("없거나 이미 탈퇴한 사용자를 논리 삭제하면 404와 USER_NOT_FOUND를 응답한다")
+    void givenNoActiveUser_whenSoftDelete_thenNotFound() throws Exception {
+        willThrow(new MonewException(UserErrorType.USER_NOT_FOUND))
+                .given(userUseCase)
+                .softDeleteUser(userId);
+
+        mockMvc.perform(delete("/api/users/{userId}", userId))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("USER_NOT_FOUND"));
     }
