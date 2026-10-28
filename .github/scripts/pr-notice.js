@@ -148,7 +148,7 @@ function groupViolations(lines) {
       .split('->')
       .map((s) => s.replace(/^\s*Slice\s+/, '').trim())
       .filter(Boolean);
-    items.push({ ...summarizeCycle(slices, deps), raw });
+    items.push({ ...summarizeCycle(slices, deps), raw, isCycle: true });
   }
   return items;
 }
@@ -161,7 +161,7 @@ async function archNotice({ github, context, core }) {
   }
   for (const r of rules) {
     for (const d of r.details.slice(0, 20)) {
-      core.warning(d.raw.join('\n'), { title: `패키지 규칙 위반: ${d.sub.length > 0 ? d.summary : r.because || r.name}` });
+      core.warning(d.raw.join('\n'), { title: `패키지 규칙 위반: ${d.isCycle ? d.summary : r.because || r.name}` });
     }
   }
   const total = rules.reduce((n, r) => n + r.details.length, 0);
