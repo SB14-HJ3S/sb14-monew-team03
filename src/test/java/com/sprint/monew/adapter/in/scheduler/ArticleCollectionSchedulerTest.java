@@ -1,14 +1,17 @@
 package com.sprint.monew.adapter.in.scheduler;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.sprint.monew.adapter.in.batch.ArticleCollectionRunner;
 import com.sprint.monew.global.config.SchedulingConfig;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.core.io.ClassPathResource;
@@ -17,9 +20,10 @@ import org.springframework.scheduling.annotation.ScheduledAnnotationBeanPostProc
 import org.springframework.scheduling.config.CronTask;
 import org.springframework.scheduling.support.CronExpression;
 
+@ExtendWith(MockitoExtension.class)
 class ArticleCollectionSchedulerTest {
 
-    private final ArticleCollectionRunner runner = mock(ArticleCollectionRunner.class);
+    @Mock private ArticleCollectionRunner runner;
 
     private ApplicationContextRunner contextRunner() {
         YamlPropertiesFactoryBean yaml = new YamlPropertiesFactoryBean();
@@ -32,43 +36,51 @@ class ArticleCollectionSchedulerTest {
     }
 
     @Test
-    void registersHourlyScheduleInSeoul() throws NoSuchMethodException {
+    @DisplayName("기본 설정으로 실행하면 서울 시간 기준 매시간 정각 스케줄을 등록한다.")
+    void givenDefaultSchedule_whenContextStarts_thenRegisterHourlySeoulSchedule()
+            throws NoSuchMethodException {
+        // given
+        ApplicationContextRunner application = contextRunner();
         String zone =
                 ArticleCollectionScheduler.class
                         .getMethod("collect")
                         .getAnnotation(Scheduled.class)
                         .zone();
-        assertThat(zone).isEqualTo("Asia/Seoul");
-
-        contextRunner()
-                .run(
-                        context -> {
-                            assertThat(context).hasNotFailed();
-                            var tasks =
-                                    context.getBean(ScheduledAnnotationBeanPostProcessor.class)
-                                            .getScheduledTasks();
-                            assertThat(tasks).hasSize(1);
-                            CronTask task = (CronTask) tasks.iterator().next().getTask();
-                            CronExpression cron = CronExpression.parse(task.getExpression());
-                            ZonedDateTime before =
-                                    ZonedDateTime.of(2026, 10, 27, 12, 37, 15, 0, ZoneId.of(zone));
-                            ZonedDateTime next = before.withHour(13).withMinute(0).withSecond(0);
-                            assertThat(cron.next(before)).isEqualTo(next);
-                            assertThat(cron.next(next)).isEqualTo(next.plusHours(1));
-                        });
+        // when
+        application.run(
+                context -> {
+                    // then
+                    assertThat(context).hasNotFailed();
+                    assertThat(zone).isEqualTo("Asia/Seoul");
+                    var tasks =
+                            context.getBean(ScheduledAnnotationBeanPostProcessor.class)
+                                    .getScheduledTasks();
+                    assertThat(tasks).hasSize(1);
+                    CronTask task = (CronTask) tasks.iterator().next().getTask();
+                    CronExpression cron = CronExpression.parse(task.getExpression());
+                    ZonedDateTime before =
+                            ZonedDateTime.of(2026, 10, 27, 12, 37, 15, 0, ZoneId.of(zone));
+                    ZonedDateTime next = before.withHour(13).withMinute(0).withSecond(0);
+                    assertThat(cron.next(before)).isEqualTo(next);
+                    assertThat(cron.next(next)).isEqualTo(next.plusHours(1));
+                });
     }
 
     @Test
-    void disabledSchedulingDoesNotRegisterCollector() {
-        contextRunner()
-                .withPropertyValues("monew.scheduling.enabled=false")
-                .run(
-                        context -> {
-                            assertThat(context).hasNotFailed();
-                            assertThat(context).doesNotHaveBean(ArticleCollectionScheduler.class);
-                            assertThat(context)
-                                    .doesNotHaveBean(ScheduledAnnotationBeanPostProcessor.class);
-                            verifyNoInteractions(runner);
-                        });
+    @DisplayName("스케줄링을 비활성화하면 수집 스케줄을 등록하지 않는다.")
+    void givenDisabledScheduling_whenContextStarts_thenDoNotRegisterCollector() {
+        // given
+        ApplicationContextRunner application =
+                contextRunner().withPropertyValues("monew.scheduling.enabled=false");
+
+        // when
+        application.run(
+                context -> {
+                    assertThat(context).hasNotFailed();
+                    // then
+                    assertThat(context).doesNotHaveBean(ArticleCollectionScheduler.class);
+                    assertThat(context).doesNotHaveBean(ScheduledAnnotationBeanPostProcessor.class);
+                    verifyNoInteractions(runner);
+                });
     }
 }
