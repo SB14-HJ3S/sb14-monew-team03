@@ -1,18 +1,12 @@
 package com.sprint.monew.application.article;
 
-import com.sprint.monew.application.article.required.ArticleInterestRepositoryPort;
+import com.sprint.monew.domain.article.entity.Article;
+import com.sprint.monew.domain.article.entity.ArticleInterest;
+import com.sprint.monew.domain.interest.entity.Interest;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
-@Service
-@RequiredArgsConstructor
-public class ArticleInterestService implements IArticleInterestService {
+public interface ArticleInterestService {
+    ArticleInterest getOrCreateArticleInterest(Article article, Interest interest);
 
-    private final ArticleInterestRepositoryPort repository;
-
-    @Override
-    public void deleteAllByInterestId(UUID interestId) {
-        repository.deleteAllByInterestId(interestId);
-    }
+    void deleteAllByInterestId(UUID interestId);
 }

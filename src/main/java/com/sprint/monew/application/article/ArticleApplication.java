@@ -19,8 +19,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ArticleApplication implements ArticleUseCase {
 
-    private final IArticleService articleService;
-    private final IArticleViewStatusService articleViewStatusService;
+    private final ArticleService articleService;
+    private final ArticleViewStatusService articleViewStatusService;
 
     @Override
     public PageResult<ArticleResult> findArticlePage(ArticleQuery query) {

@@ -54,6 +54,8 @@ management:
 # 뉴스기사 RSS 수집용 피드 URL
 monew:
   news:
+    collection:
+      cron: "0 0 * * * *" # 매시간 정각, Asia/Seoul
     rss:
       hankyung: https://www.hankyung.com/feed/all-news
       chosun: https://www.chosun.com/arc/outboundfeeds/rss/?outputType=xml
