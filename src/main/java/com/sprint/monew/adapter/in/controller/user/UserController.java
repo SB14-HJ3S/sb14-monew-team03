@@ -53,6 +53,9 @@ public class UserController {
         return UserDto.from(result);
     }
 
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{userId}")
-    public void softDeleteUser(@PathVariable UUID userId) {}
+    public void softDeleteUser(@PathVariable UUID userId) {
+        userUseCase.softDeleteUser(userId);
+    }
 }
