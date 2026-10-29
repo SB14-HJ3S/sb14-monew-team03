@@ -349,4 +349,55 @@ class CommentControllerTest {
                     .andExpect(jsonPath("$.code").value("COMMENT_LIKE_NOT_FOUND"));
         }
     }
+
+    @Nested
+    @DisplayName("DELETE /api/comments/{commentId} 댓글 논리 삭제")
+    class SoftDelete {
+
+        // Swagger에 요청자 헤더가 없는 API라 헤더 없이 보낸다
+        @Test
+        @DisplayName("정상 요청이면 204를 응답하고 논리 삭제를 부른다")
+        void success() throws Exception {
+            mockMvc.perform(delete("/api/comments/{commentId}", commentId))
+                    .andExpect(status().isNoContent());
+            verify(commentUseCase).softDeleteComment(commentId);
+        }
+
+        @Test
+        @DisplayName("없거나 이미 삭제된 댓글이면 404와 COMMENT_NOT_FOUND를 응답한다")
+        void notFound() throws Exception {
+            willThrow(new MonewException(CommentErrorType.COMMENT_NOT_FOUND))
+                    .given(commentUseCase)
+                    .softDeleteComment(any());
+
+            mockMvc.perform(delete("/api/comments/{commentId}", commentId))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.code").value("COMMENT_NOT_FOUND"));
+        }
+    }
+
+    @Nested
+    @DisplayName("DELETE /api/comments/{commentId}/hard 댓글 물리 삭제")
+    class HardDelete {
+
+        @Test
+        @DisplayName("정상 요청이면 204를 응답하고 물리 삭제를 부른다")
+        void success() throws Exception {
+            mockMvc.perform(delete("/api/comments/{commentId}/hard", commentId))
+                    .andExpect(status().isNoContent());
+            verify(commentUseCase).hardDeleteComment(commentId);
+        }
+
+        @Test
+        @DisplayName("없는 댓글이면 404와 COMMENT_NOT_FOUND를 응답한다")
+        void notFound() throws Exception {
+            willThrow(new MonewException(CommentErrorType.COMMENT_NOT_FOUND))
+                    .given(commentUseCase)
+                    .hardDeleteComment(any());
+
+            mockMvc.perform(delete("/api/comments/{commentId}/hard", commentId))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.code").value("COMMENT_NOT_FOUND"));
+        }
+    }
 }
