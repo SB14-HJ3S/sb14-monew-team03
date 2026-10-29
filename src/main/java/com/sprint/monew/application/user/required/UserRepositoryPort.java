@@ -23,4 +23,6 @@ public interface UserRepositoryPort {
     boolean existsByEmail(String email); // 회원가입 중복확인용 - 탈퇴 사용자의 이메일도 포함
 
     List<User> findUsers(List<UUID> ids);
+
+    Optional<User> findUserIncludingDeleted(UUID id);
 }

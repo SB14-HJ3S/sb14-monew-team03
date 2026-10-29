@@ -78,6 +78,12 @@ public class UserService implements IUserService {
         user.softDelete();
     }
 
+    @Override
+    public void validateDeactivatedUser(UUID userId) {}
+
+    @Override
+    public void hardDeleteUser(UUID userId) {}
+
     private MonewException loginFailed() {
         return new MonewException(UserErrorType.USER_LOGIN_FAILED);
     }

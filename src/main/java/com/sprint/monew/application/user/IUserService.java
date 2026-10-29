@@ -17,6 +17,8 @@ public interface IUserService {
 
     void softDeleteUser(UUID userId);
 
+    void hardDeleteUser(UUID userId);
+
     default void validateDeactivatedUser(UUID userId) {
         /*
         해당 User가 soft deleted 상태가 아니면 예외를 던진다.
