@@ -231,4 +231,14 @@ class UserControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("USER_NOT_FOUND"));
     }
+
+    @Test
+    @DisplayName("사용자 ID가 UUID 형식이 아니면 400을 응답하고 유스케이스를 부르지 않는다")
+    void givenInvalidUserId_whenSoftDelete_thenBadRequest() throws Exception {
+        mockMvc.perform(delete("/api/users/{userId}", "invalid-id"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
+                .andExpect(jsonPath("$.details.userId").exists());
+        verifyNoInteractions(userUseCase);
+    }
 }
