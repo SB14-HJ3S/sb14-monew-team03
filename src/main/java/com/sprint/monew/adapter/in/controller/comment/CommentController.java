@@ -69,4 +69,14 @@ public class CommentController {
         log.info("댓글 좋아요 취소 완료: commentId={}", commentId);
         return ResponseEntity.ok().build();
     }
+
+    @DeleteMapping("/{commentId}")
+    public ResponseEntity<Void> softDelete(@PathVariable UUID commentId) {
+        return null;
+    }
+
+    @DeleteMapping("/{commentId}/hard")
+    public ResponseEntity<Void> hardDelete(@PathVariable UUID commentId) {
+        return null;
+    }
 }
