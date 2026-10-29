@@ -433,4 +433,99 @@ class CommentApplicationTest {
             verify(articleService, never()).increaseCommentCount(any());
         }
     }
+
+    @Nested
+    @DisplayName("댓글 논리 삭제")
+    class SoftDelete {
+
+        @Test
+        @DisplayName("댓글을 논리 삭제하면 삭제 상태가 되고 기사의 댓글 수를 1 줄인다")
+        void success() {
+            Article article = mock(Article.class);
+            given(article.getId()).willReturn(articleId);
+            Comment comment = savedComment(mock(User.class), article);
+            given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
+
+            commentApplication.softDeleteComment(commentId);
+
+            assertThat(comment.isDeleted()).isTrue();
+            verify(articleService).decreaseCommentCount(articleId);
+        }
+
+        @Test
+        @DisplayName("이미 삭제된 댓글이면 COMMENT_NOT_FOUND 예외가 나고 기사의 댓글 수를 줄이지 않는다")
+        void deletedComment() {
+            Comment comment = savedComment(mock(User.class), mock(Article.class));
+            comment.softDelete();
+            given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
+
+            assertThatThrownBy(() -> commentApplication.softDeleteComment(commentId))
+                    .isInstanceOf(MonewException.class)
+                    .extracting("errorType")
+                    .isEqualTo(CommentErrorType.COMMENT_NOT_FOUND);
+            verify(articleService, never()).decreaseCommentCount(any());
+        }
+
+        @Test
+        @DisplayName("없는 댓글이면 COMMENT_NOT_FOUND 예외가 나고 기사의 댓글 수를 줄이지 않는다")
+        void notExistComment() {
+            given(commentRepository.findById(commentId)).willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> commentApplication.softDeleteComment(commentId))
+                    .isInstanceOf(MonewException.class)
+                    .extracting("errorType")
+                    .isEqualTo(CommentErrorType.COMMENT_NOT_FOUND);
+            verifyNoInteractions(articleService);
+        }
+    }
+
+    @Nested
+    @DisplayName("댓글 물리 삭제")
+    class HardDelete {
+
+        @Test
+        @DisplayName("살아 있는 댓글을 물리 삭제하면 좋아요를 먼저 지운 뒤 댓글을 지우고, 기사의 댓글 수를 1 줄인다")
+        void activeComment() {
+            Article article = mock(Article.class);
+            given(article.getId()).willReturn(articleId);
+            Comment comment = savedComment(mock(User.class), article);
+            given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
+
+            commentApplication.hardDeleteComment(commentId);
+
+            // 좋아요가 댓글을 가리키고 있어서 좋아요를 먼저 지워야 댓글을 지울 수 있다
+            InOrder inOrder = inOrder(commentLikeRepository, commentRepository);
+            inOrder.verify(commentLikeRepository).deleteAllByCommentId(commentId);
+            inOrder.verify(commentRepository).deleteById(commentId);
+            verify(articleService).decreaseCommentCount(articleId);
+        }
+
+        @Test
+        @DisplayName("이미 논리 삭제된 댓글이면 좋아요와 댓글은 지우지만, 기사의 댓글 수는 다시 줄이지 않는다")
+        void softDeletedComment() {
+            Comment comment = savedComment(mock(User.class), mock(Article.class));
+            comment.softDelete();
+            given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
+
+            commentApplication.hardDeleteComment(commentId);
+
+            // 논리 삭제할 때 이미 1 줄였으므로 또 줄이면 댓글 수가 실제보다 적어진다
+            verify(commentLikeRepository).deleteAllByCommentId(commentId);
+            verify(commentRepository).deleteById(commentId);
+            verify(articleService, never()).decreaseCommentCount(any());
+        }
+
+        @Test
+        @DisplayName("없는 댓글이면 COMMENT_NOT_FOUND 예외가 나고 아무것도 지우지 않는다")
+        void notExistComment() {
+            given(commentRepository.findById(commentId)).willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> commentApplication.hardDeleteComment(commentId))
+                    .isInstanceOf(MonewException.class)
+                    .extracting("errorType")
+                    .isEqualTo(CommentErrorType.COMMENT_NOT_FOUND);
+            verify(commentRepository, never()).deleteById(any());
+            verifyNoInteractions(commentLikeRepository, articleService);
+        }
+    }
 }
