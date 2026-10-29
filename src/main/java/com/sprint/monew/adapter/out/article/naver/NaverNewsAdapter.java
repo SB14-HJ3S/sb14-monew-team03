@@ -60,20 +60,27 @@ public class NaverNewsAdapter implements NaverNewsPort {
         for (int start = 1; start <= MAX_RESULTS; start += PAGE_SIZE) {
             NaverNewsResponse response = requestPage(keyword, start);
 
-            if (Objects.isNull(response)
-                    || Objects.isNull(response.items())
-                    || response.items().isEmpty()) {
+            // 응답/ 기사 목록 누락
+            if (Objects.isNull(response) || Objects.isNull(response.items())) {
+                throw new MonewException(ExternalErrorType.EXTERNAL_API_CALL_FAILED);
+            }
+
+            // 볼 기사 없음 - 이미 모든 기사 조회
+            if (response.items().isEmpty()) {
                 break;
             }
 
+            // NaverNewsResponse.ArticleItem -> CollectedArticle
             for (NaverNewsResponse.ArticleItem item : response.items()) {
                 articles.add(mapper.toCollectedArticle(item));
             }
 
+            // 마지막 페이지
             if (response.items().size() < PAGE_SIZE) {
                 break;
             }
 
+            // 전체 검색 결과 모두 조희
             if (start + response.items().size() > response.total()) {
                 break;
             }
