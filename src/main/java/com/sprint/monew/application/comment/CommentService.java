@@ -78,4 +78,10 @@ public class CommentService implements ICommentService {
     public void decreaseLikeCount(UUID commentId) {
         commentRepository.decreaseLikeCount(commentId);
     }
+
+    @Override
+    public void deleteAllLikes(UUID commentId) {}
+
+    @Override
+    public void deleteComment(UUID commentId) {}
 }

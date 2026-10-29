@@ -73,4 +73,9 @@ public class CommentLikeRepositoryAdapter implements CommentLikeRepositoryPort {
     public Optional<CommentLike> findByCommentIdAndUserId(UUID commentId, UUID userId) {
         return jpaRepository.findByCommentIdAndUserId(commentId, userId);
     }
+
+    @Override
+    public int deleteAllByCommentId(UUID commentId) {
+        return 0;
+    }
 }

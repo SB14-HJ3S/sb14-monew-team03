@@ -21,4 +21,8 @@ public interface ICommentService {
     void increaseLikeCount(UUID commentId);
 
     void decreaseLikeCount(UUID commentId);
+
+    void deleteAllLikes(UUID commentId);
+
+    void deleteComment(UUID commentId);
 }
