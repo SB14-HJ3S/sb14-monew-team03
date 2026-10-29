@@ -18,10 +18,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 public class NotificationApplicationUnitTest {
     @Mock private NotificationService notificationService;
-    // NotificationApplication 생성자에 필요한 다른 의존성도 @Mock으로 추가
-    // 예: @Mock private IUserService userService;
-    //     @Mock private ISubscriptionService subscriptionService;
-
     @InjectMocks private NotificationApplication notificationApplication;
 
     @Captor private ArgumentCaptor<LocalDateTime> thresholdCaptor;

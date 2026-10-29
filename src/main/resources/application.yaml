@@ -73,7 +73,7 @@ monew:
     cleanup:
       cron: "0 0 3 * * *" # 매일 새벽 3시, Asia/Seoul
 
-# 뉴스기사 백업/로그 적재용 S3 버킷. 버킷 이름 환경변수가 환경별로 달라서
+  # 뉴스기사 백업/로그 적재용 S3 버킷. 버킷 이름 환경변수가 환경별로 달라서
   # (로컬: AWS_S3_BUCKET, 배포 ECS 태스크 정의: BACKUP_BUCKET_NAME) 둘 다 받도록 중첩 기본값 사용
   aws:
     s3:
