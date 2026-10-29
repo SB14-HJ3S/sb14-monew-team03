@@ -76,6 +76,6 @@ public class CommentLikeRepositoryAdapter implements CommentLikeRepositoryPort {
 
     @Override
     public int deleteAllByCommentId(UUID commentId) {
-        return 0;
+        return jpaRepository.deleteAllByCommentId(commentId);
     }
 }

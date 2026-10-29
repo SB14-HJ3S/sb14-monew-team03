@@ -80,8 +80,14 @@ public class CommentService implements ICommentService {
     }
 
     @Override
-    public void deleteAllLikes(UUID commentId) {}
+    @Transactional
+    public void deleteAllLikes(UUID commentId) {
+        commentLikeRepository.deleteAllByCommentId(commentId);
+    }
 
     @Override
-    public void deleteComment(UUID commentId) {}
+    @Transactional
+    public void deleteComment(UUID commentId) {
+        commentRepository.deleteById(commentId);
+    }
 }

@@ -46,5 +46,8 @@ public class ArticleService implements IArticleService {
     }
 
     @Override
-    public void decreaseCommentCount(UUID articleId) {}
+    @Transactional
+    public void decreaseCommentCount(UUID articleId) {
+        repository.decreaseCommentCount(articleId);
+    }
 }

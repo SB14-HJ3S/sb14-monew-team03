@@ -102,8 +102,31 @@ public class CommentApplication implements CommentUseCase {
     }
 
     @Override
-    public void softDeleteComment(UUID commentId) {}
+    @Transactional
+    public void softDeleteComment(UUID commentId) {
+        Comment comment = commentService.getActiveComment(commentId);
+
+        comment.softDelete();
+
+        articleService.decreaseCommentCount(comment.getArticle().getId());
+    }
 
     @Override
-    public void hardDeleteComment(UUID commentId) {}
+    @Transactional
+    public void hardDeleteComment(UUID commentId) {
+        Comment comment = commentService.getComment(commentId);
+
+        // 삭제 쿼리 뒤에는 댓글 정보를 못 읽을 수 있어서 먼저 꺼내 둔다
+        boolean wasActive = !comment.isDeleted();
+        UUID articleId = comment.getArticle().getId();
+
+        // 좋아요가 댓글을 가리키고 있어서 좋아요부터 지운다
+        commentService.deleteAllLikes(commentId);
+        commentService.deleteComment(commentId);
+
+        // 이미 논리 삭제된 댓글은 그때 1 줄였으므로 다시 줄이지 않는다
+        if (wasActive) {
+            articleService.decreaseCommentCount(articleId);
+        }
+    }
 }
