@@ -3,10 +3,15 @@ package com.sprint.monew.adapter.in.batch;
 import com.sprint.monew.application.article.provided.ArticleCollectionUseCase;
 import com.sprint.monew.application.article.provided.dto.CollectedArticle;
 import com.sprint.monew.domain.interest.entity.Interest;
+import com.sprint.monew.global.exception.MonewException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.TransactionException;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class ArticleCollectionRunner {
@@ -16,8 +21,20 @@ public class ArticleCollectionRunner {
     public void runCollection() {
         List<Interest> interests = collectionUseCase.findCollectionInterests();
         for (Interest interest : interests) {
-            List<CollectedArticle> articles = collectionUseCase.collectNaverArticles(interest);
-            collectionUseCase.saveArticlesAndLink(articles, interest);
+            try {
+                List<CollectedArticle> articles = collectionUseCase.collectNaverArticles(interest);
+                collectionUseCase.saveArticlesAndLink(articles, interest);
+            } catch (MonewException e) {
+                log.error(
+                        "기사 수집 실패: interestId={}, errorType={}",
+                        interest.getId(),
+                        e.getErrorType(),
+                        e);
+            } catch (DataAccessException | TransactionException e) {
+                log.error("기사 저장 실패: interestId={}", interest.getId(), e);
+            } catch (RuntimeException e) {
+                log.error("기사 수집 중 예상하지 못한 오류: interestId={}", interest.getId(), e);
+            }
         }
     }
 }
