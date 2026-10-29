@@ -72,11 +72,13 @@ public class CommentController {
 
     @DeleteMapping("/{commentId}")
     public ResponseEntity<Void> softDelete(@PathVariable UUID commentId) {
-        return null;
+        commentUseCase.softDeleteComment(commentId);
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{commentId}/hard")
     public ResponseEntity<Void> hardDelete(@PathVariable UUID commentId) {
-        return null;
+        commentUseCase.hardDeleteComment(commentId);
+        return ResponseEntity.noContent().build();
     }
 }
