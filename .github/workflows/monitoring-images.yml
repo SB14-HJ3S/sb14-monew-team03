@@ -30,9 +30,11 @@ jobs:
         include:
           - name: prometheus
             repository: monew-prometheus
+            task-definition: monew-prometheus
             service: monew-prometheus-service
           - name: grafana
             repository: monew-grafana
+            task-definition: monew-grafana
             service: monew-grafana-service
     steps:
       - name: Checkout
@@ -49,25 +51,41 @@ jobs:
         uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2
 
       - name: Build and push image
+        id: build
         env:
           IMAGE: ${{ steps.login-ecr.outputs.registry }}/${{ matrix.repository }}
+          IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t "$IMAGE:${{ github.sha }}" -t "$IMAGE:latest" "monitoring/${{ matrix.name }}"
-          docker push "$IMAGE:${{ github.sha }}"
-          docker push "$IMAGE:latest"
+          # 같은 커밋을 다시 실행하면 이미 올린 이미지를 그대로 쓴다 (태그 불변이라 다시 push하면 실패)
+          if aws ecr describe-images --repository-name "${{ matrix.repository }}" \
+              --image-ids imageTag="$IMAGE_TAG" > /dev/null 2>&1; then
+            echo "이미지 $IMAGE_TAG 가 ECR에 이미 있어서 빌드·push를 건너뜁니다."
+          else
+            docker build -t "$IMAGE:$IMAGE_TAG" "monitoring/${{ matrix.name }}"
+            docker push "$IMAGE:$IMAGE_TAG"
+          fi
+          echo "image=$IMAGE:$IMAGE_TAG" >> "$GITHUB_OUTPUT"
 
-      - name: Redeploy service if running
+      - name: Download current task definition
         run: |
-          DESIRED=$(aws ecs describe-services --cluster "$ECS_CLUSTER" --services "${{ matrix.service }}" \
-            --query 'services[0].desiredCount' --output text)
-          if [ "$DESIRED" = "None" ]; then
-            echo "::error::${{ matrix.service }} 서비스를 찾을 수 없습니다."
-            exit 1
-          fi
-          if [ "$DESIRED" = "0" ]; then
-            echo "::notice::${{ matrix.service }}가 꺼져 있어 다시 띄우지 않습니다."
-            exit 0
-          fi
-          aws ecs update-service --cluster "$ECS_CLUSTER" --service "${{ matrix.service }}" \
-            --force-new-deployment > /dev/null
-          aws ecs wait services-stable --cluster "$ECS_CLUSTER" --services "${{ matrix.service }}"
+          aws ecs describe-task-definition \
+            --task-definition "${{ matrix.task-definition }}" \
+            --query taskDefinition \
+            > task-definition.json
+
+      - name: Fill in new image in task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@8d79160660ad39c402a16e5fc7cd2a32e8f7d6b7 # v1
+        with:
+          task-definition: task-definition.json
+          container-name: ${{ matrix.name }}
+          image: ${{ steps.build.outputs.image }}
+
+      # 서비스가 꺼져 있으면(실행 개수 0) 새 버전만 연결되고 태스크는 뜨지 않는다. 다음에 켤 때 이 이미지로 뜬다
+      - name: Deploy to ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@a00d4d57ac0de1a99b39fe469f3d898d38717c2b # v2
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ matrix.service }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
