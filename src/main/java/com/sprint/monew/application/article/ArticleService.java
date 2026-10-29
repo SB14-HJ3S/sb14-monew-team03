@@ -2,89 +2,27 @@ package com.sprint.monew.application.article;
 
 import com.sprint.monew.application.article.provided.dto.ArticleQuery;
 import com.sprint.monew.application.article.provided.dto.CollectedArticle;
-import com.sprint.monew.application.article.required.ArticleRepositoryPort;
-import com.sprint.monew.application.article.required.NaverNewsPort;
 import com.sprint.monew.domain.article.entity.Article;
-import com.sprint.monew.global.exception.MonewException;
-import com.sprint.monew.global.exception.errortype.ArticleErrorType;
 import com.sprint.monew.global.pagination.PageResult;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-@Service
-@RequiredArgsConstructor
-public class ArticleService implements IArticleService {
+public interface ArticleService {
 
-    private final ArticleRepositoryPort repository;
-    private final NaverNewsPort naverNewsPort;
+    Article findById(UUID articleId);
 
-    @Override
-    public Article findById(UUID articleId) {
-        return repository
-                .findById(articleId)
-                .filter(article -> !article.isDeleted())
-                .orElseThrow(
-                        () ->
-                                new MonewException(
-                                        ArticleErrorType.ARTICLE_NOT_FOUND,
-                                        Map.of("articleId", articleId)));
-    }
+    PageResult<Article> findPageByQuery(ArticleQuery query);
 
-    @Override
-    public PageResult<Article> findPageByQuery(ArticleQuery query) {
-        return PageResult.of(
-                repository.findByQuery(query),
-                repository.countByQuery(query),
-                query.orderBy(),
-                query.limit());
-    }
+    List<CollectedArticle> collectNaverArticles(String keyword);
 
-    @Override
-    public List<CollectedArticle> collectNaverArticles(String keyword) {
-        return naverNewsPort.search(keyword);
-    }
+    Optional<Article> saveCollectedArticle(CollectedArticle collectedArticle);
 
-    @Override
-    public Optional<Article> saveCollectedArticle(CollectedArticle collectedArticle) {
+    void increaseCommentCount(UUID articleId);
 
-        Optional<Article> existing = repository.findBySourceUrl(collectedArticle.sourceUrl());
-        if (existing.isPresent()) { // 이미 수집했던 기사
-            Article article = existing.get();
+    Optional<Article> findBySourceUrl(String sourceUrl);
 
-            if (article.isDeleted()) { // 논리 삭제 했었던 기사
-                return Optional.empty();
-            }
+    Article createCollectedArticle(CollectedArticle collectedArticle);
 
-            return Optional.of(article);
-        }
-
-        Article article =
-                Article.create(
-                        collectedArticle.source(),
-                        collectedArticle.sourceUrl(),
-                        collectedArticle.title(),
-                        collectedArticle.publishedAt(),
-                        collectedArticle.summary());
-
-        return Optional.of(repository.save(article));
-    }
-
-    @Override
-    @Transactional
-    public void increaseCommentCount(UUID articleId) {
-        repository.increaseCommentCount(articleId);
-    }
-
-    private String getCursorValue(Article article, ArticleQuery.SortOrder sortField) {
-        return switch (sortField) {
-            case PUBLISH_DATE -> article.getPublishedAt().toString();
-            case COMMENT_COUNT -> Integer.toString(article.getCommentCount());
-            case VIEW_COUNT -> Integer.toString(article.getViewCount());
-        };
-    }
+    void publishArticlesSaved(UUID interestId, String interestName, int articleCount);
 }

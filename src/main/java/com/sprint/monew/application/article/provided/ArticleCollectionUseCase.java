@@ -10,5 +10,5 @@ public interface ArticleCollectionUseCase {
 
     List<CollectedArticle> collectNaverArticles(Interest interest);
 
-    void saveAndLink(CollectedArticle article, Interest interest);
+    void saveArticlesAndLink(List<CollectedArticle> articles, Interest interest);
 }

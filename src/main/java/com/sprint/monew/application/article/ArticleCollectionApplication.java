@@ -22,16 +22,34 @@ import org.springframework.transaction.annotation.Transactional;
 public class ArticleCollectionApplication implements ArticleCollectionUseCase {
 
     private final InterestService interestService;
-    private final IArticleService articleService;
-    private final IArticleInterestService articleInterestService;
+    private final ArticleService articleService;
+    private final ArticleInterestService articleInterestService;
 
     @Override
     @Transactional
-    public void saveAndLink(CollectedArticle collectedArticle, Interest interest) {
-        // CollectedArticle과 Interest를 ArticleInterest로 저장
-        Optional<Article> saved = articleService.saveCollectedArticle(collectedArticle);
-        if (saved.isPresent()) {
-            articleInterestService.getOrCreateArticleInterest(saved.get(), interest);
+    public void saveArticlesAndLink(List<CollectedArticle> articles, Interest interest) {
+        int newArticleCount = 0;
+
+        for (CollectedArticle collectedArticle : articles) {
+            Optional<Article> existing =
+                    articleService.findBySourceUrl(collectedArticle.sourceUrl());
+            Article article;
+            if (existing.isPresent()) {
+                article = existing.get();
+                if (article.isDeleted()) {
+                    continue;
+                }
+            } else {
+                article = articleService.createCollectedArticle(collectedArticle);
+                newArticleCount++;
+            }
+            articleInterestService.getOrCreateArticleInterest(article, interest);
+        }
+
+        if (newArticleCount > 0) {
+            // 관심사 기사 추가 알림 이벤트 발행
+            articleService.publishArticlesSaved(
+                    interest.getId(), interest.getName(), newArticleCount);
         }
     }
 

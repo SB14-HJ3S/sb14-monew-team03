@@ -17,9 +17,7 @@ public class ArticleCollectionRunner {
         List<Interest> interests = collectionUseCase.findCollectionInterests();
         for (Interest interest : interests) {
             List<CollectedArticle> articles = collectionUseCase.collectNaverArticles(interest);
-            for (CollectedArticle article : articles) {
-                collectionUseCase.saveAndLink(article, interest);
-            }
+            collectionUseCase.saveArticlesAndLink(articles, interest);
         }
     }
 }
