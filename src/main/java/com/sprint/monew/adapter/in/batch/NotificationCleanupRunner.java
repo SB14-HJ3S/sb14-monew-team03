@@ -3,9 +3,9 @@ package com.sprint.monew.adapter.in.batch;
 import com.sprint.monew.application.notification.provided.NotificationUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.TransactionException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.TransactionException;
 
 @Slf4j
 @Component
