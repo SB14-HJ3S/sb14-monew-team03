@@ -56,6 +56,8 @@ public class UserController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{userId}")
     public void softDeleteUser(@PathVariable UUID userId) {
+        log.info("사용자 논리 삭제 요청: userId={}", userId);
         userUseCase.softDeleteUser(userId);
+        log.info("사용자 논리 삭제 완료: userId={}", userId);
     }
 }
