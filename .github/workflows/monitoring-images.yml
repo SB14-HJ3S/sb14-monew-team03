@@ -30,11 +30,9 @@ jobs:
         include:
           - name: prometheus
             repository: monew-prometheus
-            task-definition: monew-prometheus
             service: monew-prometheus-service
           - name: grafana
             repository: monew-grafana
-            task-definition: monew-grafana
             service: monew-grafana-service
     steps:
       - name: Checkout
@@ -66,10 +64,15 @@ jobs:
           fi
           echo "image=$IMAGE:$IMAGE_TAG" >> "$GITHUB_OUTPUT"
 
+      # 패밀리 최신 버전이 아니라 서비스가 지금 쓰는 버전을 기준으로 해서 이미지만 바뀌게 한다
       - name: Download current task definition
+        env:
+          ECS_SERVICE: ${{ matrix.service }}
         run: |
+          TASK_DEF_ARN=$(aws ecs describe-services --cluster "$ECS_CLUSTER" --services "$ECS_SERVICE" \
+            --query 'services[0].taskDefinition' --output text)
           aws ecs describe-task-definition \
-            --task-definition "${{ matrix.task-definition }}" \
+            --task-definition "$TASK_DEF_ARN" \
             --query taskDefinition \
             > task-definition.json
 
