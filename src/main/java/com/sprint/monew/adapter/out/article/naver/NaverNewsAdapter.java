@@ -86,7 +86,8 @@ public class NaverNewsAdapter implements NaverNewsPort {
                             "기사 변환 실패로 건너뜀: keyword={}, start={}, errorType={}",
                             keyword,
                             start,
-                            e.getErrorType(), // ARTICLE_SOURCE_URL_MISSING,
+                            e.getErrorType(),
+                            // ARTICLE_SOURCE_URL_MISSING,
                             // ARTICLE_TITLE_MISSING,
                             // ARTICLE_PUBLISHED_AT_INVALID 중 하나
                             e);
