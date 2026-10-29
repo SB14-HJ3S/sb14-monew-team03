@@ -23,6 +23,8 @@ public class NotificationEventListener {
         try {
             notification.createArticleNotifications(
                     event.interestId(), event.interestName(), event.articleCount());
+            log.info(
+                    "기사 알림 처리 완료: interestId={}, 기사={}건", event.interestId(), event.articleCount());
         } catch (Exception e) {
             log.error("기사 알림 생성 실패: {}", event, e);
         }

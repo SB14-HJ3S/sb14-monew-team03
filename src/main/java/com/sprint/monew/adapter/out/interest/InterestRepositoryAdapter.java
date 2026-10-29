@@ -15,6 +15,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 @RequiredArgsConstructor
 public class InterestRepositoryAdapter implements InterestRepository {
+
     private final InterestJpaRepository jpaRepository;
 
     @Override
@@ -82,5 +83,10 @@ public class InterestRepositoryAdapter implements InterestRepository {
     @Override
     public void decreaseSubscriberCountIn(List<UUID> interestIds) {
         jpaRepository.decreaseSubscriberCountIn(interestIds);
+    }
+
+    @Override
+    public List<Interest> findSubscribedWithKeywords() {
+        return jpaRepository.findSubscribedWithKeywords();
     }
 }

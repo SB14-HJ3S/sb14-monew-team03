@@ -11,6 +11,8 @@ public interface InterestService {
 
     PageResult<Interest> findPageByQuery(InterestQuery query);
 
+    List<Interest> findSubscribedWithKeywords();
+
     Interest update(UUID interestId, List<String> keywords);
 
     Interest getById(UUID interestId);
