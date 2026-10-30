@@ -94,6 +94,8 @@ class ArticleCollectionIntegrationTest {
                                 Long.class,
                                 interest.getId()))
                 .isEqualTo(1L);
+        await().atMost(Duration.ofSeconds(3))
+                .untilAsserted(() -> assertThat(notificationCount()).isEqualTo(1L));
     }
 
     @Test
@@ -134,6 +136,8 @@ class ArticleCollectionIntegrationTest {
                                     interest.getId()))
                     .isEqualTo(1L);
         }
+        await().atMost(Duration.ofSeconds(3))
+                .untilAsserted(() -> assertThat(notificationCount()).isEqualTo(1L));
     }
 
     @Test
@@ -143,12 +147,30 @@ class ArticleCollectionIntegrationTest {
         Interest interest = saveInterest(List.of("AI"));
         when(interestService.findSubscribedWithKeywords()).thenReturn(List.of(interest));
         when(rss.collect(ArticleSourceType.HANKYUNG)).thenReturn(List.of(collected()));
+        when(naver.search("AI"))
+                .thenReturn(
+                        List.of(
+                                new CollectedArticle(
+                                        ArticleSourceType.NAVER,
+                                        url + "/naver",
+                                        "AI 기사",
+                                        collected().publishedAt(),
+                                        "요약")));
         // when
         collectionUseCase.collectArticles();
         // then
         assertThat(articles.findBySourceUrl(url)).isPresent();
         await().atMost(Duration.ofSeconds(3))
-                .untilAsserted(() -> assertThat(notificationCount()).isEqualTo(1L));
+                .untilAsserted(
+                        () -> {
+                            assertThat(notificationCount()).isEqualTo(1L);
+                            assertThat(
+                                            jdbc.queryForObject(
+                                                    "select content from notifications where resource_id = ?",
+                                                    String.class,
+                                                    interest.getId()))
+                                    .isEqualTo(interest.getName() + "와 관련된 기사가 2건 등록되었습니다.");
+                        });
     }
 
     private long notificationCount() {
