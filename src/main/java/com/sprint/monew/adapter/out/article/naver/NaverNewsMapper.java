@@ -5,11 +5,10 @@ import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.ArticleErrorType;
 import com.sprint.monew.global.type.ArticleSourceType;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.Locale;
 import java.util.Objects;
 import org.jsoup.Jsoup;
 import org.springframework.stereotype.Component;
@@ -42,11 +41,8 @@ public class NaverNewsMapper {
         LocalDateTime publishedAt;
         try {
             publishedAt =
-                    OffsetDateTime.parse(
-                                    date,
-                                    DateTimeFormatter.ofPattern(
-                                            "dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH))
-                            .atZoneSameInstant(ZoneId.of("Asia/Seoul"))
+                    ZonedDateTime.parse(date, DateTimeFormatter.RFC_1123_DATE_TIME)
+                            .withZoneSameInstant(ZoneId.of("Asia/Seoul"))
                             .toLocalDateTime();
         } catch (DateTimeParseException e) {
             throw new MonewException(ArticleErrorType.ARTICLE_PUBLISHED_AT_INVALID, e);
