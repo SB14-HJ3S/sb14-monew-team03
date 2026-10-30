@@ -78,4 +78,9 @@ public class NotificationServiceImpl implements NotificationService {
 
         notification.markAsRead(LocalDateTime.now());
     }
+
+    @Override
+    public int deleteReadBefore(LocalDateTime threshold) {
+        return notificationRepository.deleteReadBefore(threshold);
+    }
 }

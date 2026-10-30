@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.UUID;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -180,6 +181,37 @@ class NotificationRepositoryTest {
                                 notificationJpaRepository.findByQuery(
                                         woody.getId(), NotificationQuery.of("abc", T, 2)))
                 .isInstanceOf(MonewException.class);
+    }
+
+    @Test
+    @DisplayName("확인한 지 기준 시각이 지난 알림만 삭제하고, 최근 확인·미확인 알림은 남긴다.")
+    void givenReadAndUnreadNotifications_whenDeleteReadBefore_thenDeletesOnlyOldRead() {
+        // given
+        LocalDateTime threshold = LocalDateTime.of(2026, 10, 22, 0, 0);
+
+        UUID oldRead = saveReadNotification(woody, threshold.minusDays(3)); // 기준 전에 확인 → 삭제
+        UUID recentRead = saveReadNotification(woody, threshold.plusDays(1)); // 기준 후에 확인 → 유지
+        UUID unread = saveNotification(woody, T, false); // 안 읽음 → 유지
+        clearContext();
+
+        // when
+        int deleted = notificationJpaRepository.deleteReadBefore(threshold);
+
+        // then
+        assertThat(deleted).isEqualTo(1);
+        assertThat(notificationJpaRepository.findById(oldRead)).isEmpty();
+        assertThat(notificationJpaRepository.findById(recentRead)).isPresent();
+        assertThat(notificationJpaRepository.findById(unread)).isPresent();
+    }
+
+    // 확인 시각을 지정해서 읽은 알림을 저장한다
+    private UUID saveReadNotification(User user, LocalDateTime readAt) {
+        Notification n =
+                Notification.create(user, ResourceType.COMMENT, UUID.randomUUID(), "테스트 알림");
+        n.markAsRead(readAt);
+        em.persist(n);
+        em.flush();
+        return n.getId();
     }
 
     private User saveUser(String email, String nickname) {

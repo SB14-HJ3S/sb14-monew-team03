@@ -36,20 +36,28 @@ class ArticleRepositoryAdapterTest {
 
     @Test
     @DisplayName("댓글 수를 늘리면 DB의 댓글 수가 1 늘고, 바뀐 줄 수 1을 돌려준다")
-    void increaseCommentCount() {
+    void givenExistingArticle_whenIncreaseCommentCount_thenIncrementAndReturnOne() {
+        // given
         UUID articleId = savedArticleId();
 
+        // when
         int updated = articleRepository.increaseCommentCount(articleId);
 
+        // then
         assertThat(updated).isEqualTo(1);
         assertThat(commentCountOf(articleId)).isEqualTo(1);
     }
 
     @Test
     @DisplayName("없는 기사면 바뀐 줄 수 0을 돌려준다")
-    void increaseCommentCountNotExist() {
-        int updated = articleRepository.increaseCommentCount(UUID.randomUUID());
+    void givenMissingArticle_whenIncreaseCommentCount_thenReturnZero() {
+        // given
+        UUID articleId = UUID.randomUUID();
 
+        // when
+        int updated = articleRepository.increaseCommentCount(articleId);
+
+        // then
         assertThat(updated).isZero();
     }
 }

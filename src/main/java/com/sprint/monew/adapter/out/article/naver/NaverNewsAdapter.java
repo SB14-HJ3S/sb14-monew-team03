@@ -62,12 +62,17 @@ public class NaverNewsAdapter implements NaverNewsPort {
         for (int start = 1; start <= MAX_RESULTS; start += PAGE_SIZE) {
             NaverNewsResponse response = requestPage(keyword, start);
 
-            if (Objects.isNull(response)
-                    || Objects.isNull(response.items())
-                    || response.items().isEmpty()) {
+            // 응답/ 기사 목록 누락
+            if (Objects.isNull(response) || Objects.isNull(response.items())) {
+                throw new MonewException(ExternalErrorType.EXTERNAL_API_CALL_FAILED);
+            }
+
+            // 볼 기사 없음 - 이미 모든 기사 조회
+            if (response.items().isEmpty()) {
                 break;
             }
 
+            // NaverNewsResponse.ArticleItem -> CollectedArticle
             for (NaverNewsResponse.ArticleItem item : response.items()) {
                 if (Objects.isNull(item)) {
                     log.warn("기사 항목 없음 - 건너뜀: keyword={}, start={}", keyword, start);

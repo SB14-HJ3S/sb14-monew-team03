@@ -1,7 +1,7 @@
 package com.sprint.monew.application.article;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -86,7 +87,10 @@ class ArticleCollectionIntegrationTest {
     }
 
     @Test
-    void collectionDoesNotWriteAndRunnerPersistsDistinctLinksWithoutHttpTransaction() {
+    @DisplayName("외부 수집은 트랜잭션 없이 수행하고 반복 저장해도 기사와 연결을 중복 생성하지 않는다.")
+    void
+            givenOverlappingKeywords_whenCollectAndRunRepeatedly_thenPersistDistinctArticlesAndLinks() {
+        // given
         saveInterest(List.of("AI", "인공지능"));
         saveInterest(List.of("AI"));
         CollectedArticle article = collected();
@@ -103,6 +107,7 @@ class ArticleCollectionIntegrationTest {
                             });
         }
 
+        // when: 수집 단계는 DB에 저장하지 않는다.
         List<Interest> targets = collectionUseCase.findCollectionInterests();
         assertThat(targets).hasSize(2);
         for (Interest target : targets) {
@@ -110,9 +115,11 @@ class ArticleCollectionIntegrationTest {
         }
         assertThat(articles.findBySourceUrl(url)).isEmpty();
 
+        // when: 저장 흐름을 반복 실행한다.
         runner.runCollection();
         runner.runCollection();
 
+        // then
         UUID articleId = articles.findBySourceUrl(url).orElseThrow().getId();
         assertThat(
                         jdbc.queryForObject(
@@ -127,31 +134,48 @@ class ArticleCollectionIntegrationTest {
     }
 
     @Test
-    void linkFailureRollsBackNewArticle() {
+    @DisplayName("관심사 연결에 실패하면 신규 기사 저장을 롤백한다.")
+    void givenMissingInterest_whenSaveArticlesAndLink_thenRollbackArticle() {
+        // given
         Interest missing = Interest.create("없는 관심사", List.of("AI"));
         ReflectionTestUtils.setField(missing, "id", UUID.randomUUID());
 
-        assertThatThrownBy(
-                        () -> collectionUseCase.saveArticlesAndLink(List.of(collected()), missing))
-                .isInstanceOf(RuntimeException.class);
+        // when
+        Throwable thrown =
+                catchThrowable(
+                        () -> collectionUseCase.saveArticlesAndLink(List.of(collected()), missing));
+
+        // then
+        assertThat(thrown).isInstanceOf(RuntimeException.class);
 
         assertThat(articles.findBySourceUrl(url)).isEmpty();
     }
 
     @Test
-    void collectionTargetsRequirePositiveSubscriberCount() {
+    @DisplayName("구독자 수가 양수인 관심사만 수집 대상으로 조회한다.")
+    void
+            givenSubscriberCountChanges_whenFindCollectionInterests_thenReturnOnlySubscribedInterests() {
+        // given
         Interest unsubscribed =
                 interests.saveAndFlush(Interest.create("미구독-" + UUID.randomUUID(), List.of("경제")));
         interestIds.add(unsubscribed.getId());
-        assertThat(collectionUseCase.findCollectionInterests()).isEmpty();
+        // when
+        List<Interest> beforeSubscription = collectionUseCase.findCollectionInterests();
         saveInterest(List.of("AI"));
-        assertThat(collectionUseCase.findCollectionInterests()).hasSize(1);
+        List<Interest> afterSubscription = collectionUseCase.findCollectionInterests();
         jdbc.update("update interests set subscriber_count = 0 where id = ?", interestIds.get(1));
-        assertThat(collectionUseCase.findCollectionInterests()).isEmpty();
+        List<Interest> afterUnsubscription = collectionUseCase.findCollectionInterests();
+
+        // then
+        assertThat(beforeSubscription).isEmpty();
+        assertThat(afterSubscription).hasSize(1);
+        assertThat(afterUnsubscription).isEmpty();
     }
 
     @Test
-    void publishesOneEventForNewArticlesAndNoneOnRepeat() {
+    @DisplayName("중복 기사를 반복 저장해도 신규 기사에 대한 이벤트와 알림만 한 번 생성한다.")
+    void givenDuplicateArticles_whenSaveRepeatedly_thenPublishOnceForNewArticles() {
+        // given
         Interest interest = saveInterest(List.of("AI"));
         CollectedArticle first = collected();
         CollectedArticle second =
@@ -162,9 +186,11 @@ class ArticleCollectionIntegrationTest {
                         first.publishedAt(),
                         first.summary());
 
+        // when
         collectionUseCase.saveArticlesAndLink(List.of(first, first, second), interest);
         collectionUseCase.saveArticlesAndLink(List.of(first, second), interest);
 
+        // then
         verify(eventPublisher, times(1))
                 .publish(new ArticlesSavedEvent(interest.getId(), interest.getName(), 2));
         verify(eventPublisher, times(1)).publish(any(ArticlesSavedEvent.class));
@@ -190,7 +216,9 @@ class ArticleCollectionIntegrationTest {
     }
 
     @Test
-    void laterInvalidArticleRollsBackEarlierArticleAndLink() {
+    @DisplayName("뒤의 기사 저장에 실패하면 앞서 저장한 기사와 관심사 연결도 롤백한다.")
+    void givenLaterInvalidArticle_whenSaveArticlesAndLink_thenRollbackAllChanges() {
+        // given
         Interest interest = saveInterest(List.of("AI"));
         CollectedArticle first = collected();
         CollectedArticle invalid =
@@ -201,11 +229,15 @@ class ArticleCollectionIntegrationTest {
                         first.publishedAt(),
                         first.summary());
 
-        assertThatThrownBy(
+        // when
+        Throwable thrown =
+                catchThrowable(
                         () ->
                                 collectionUseCase.saveArticlesAndLink(
-                                        List.of(first, invalid), interest))
-                .isInstanceOf(RuntimeException.class);
+                                        List.of(first, invalid), interest));
+
+        // then
+        assertThat(thrown).isInstanceOf(RuntimeException.class);
 
         assertThat(articles.findBySourceUrl(url)).isEmpty();
         assertThat(
@@ -218,8 +250,11 @@ class ArticleCollectionIntegrationTest {
     }
 
     @Test
-    void publishedEventDoesNotCreateNotificationWhenTransactionRollsBack() {
+    @DisplayName("이벤트를 발행했더라도 트랜잭션이 롤백되면 알림을 생성하지 않는다.")
+    void givenPublishedEvent_whenTransactionRollsBack_thenDoNotCreateNotification() {
+        // given
         Interest interest = saveInterest(List.of("AI"));
+        // when
         transactionTemplate.executeWithoutResult(
                 status -> {
                     collectionUseCase.saveArticlesAndLink(List.of(collected()), interest);
@@ -231,6 +266,7 @@ class ArticleCollectionIntegrationTest {
                     status.setRollbackOnly();
                 });
 
+        // then
         assertThat(articles.findBySourceUrl(url)).isEmpty();
         await().during(Duration.ofMillis(500))
                 .atMost(Duration.ofSeconds(2))
@@ -238,8 +274,11 @@ class ArticleCollectionIntegrationTest {
     }
 
     @Test
-    void notificationIsCreatedOnlyAfterOuterTransactionCommits() {
+    @DisplayName("외부 트랜잭션이 커밋된 후에만 알림을 생성한다.")
+    void givenOuterTransaction_whenCommitCompletes_thenCreateNotification() {
+        // given
         Interest interest = saveInterest(List.of("AI"));
+        // when
         transactionTemplate.executeWithoutResult(
                 status -> {
                     collectionUseCase.saveArticlesAndLink(List.of(collected()), interest);
@@ -247,6 +286,8 @@ class ArticleCollectionIntegrationTest {
                             .atMost(Duration.ofSeconds(2))
                             .untilAsserted(() -> assertThat(notificationCount()).isZero());
                 });
+
+        // then
         await().atMost(Duration.ofSeconds(5))
                 .untilAsserted(() -> assertThat(notificationCount()).isEqualTo(1L));
     }

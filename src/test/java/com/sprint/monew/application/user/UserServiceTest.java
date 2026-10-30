@@ -208,4 +208,30 @@ class UserServiceTest {
 
         verify(userEventPublisher).publish(new UserNicknameUpdatedEvent(userId, "새닉네임"));
     }
+
+    @Test
+    @DisplayName("탈퇴하면 deletedAt이 채워진다(논리 삭제)")
+    void givenActiveUser_whenSoftDelete_thenDeleted() {
+        UUID userId = UUID.randomUUID();
+        User user = User.create("me@monew.com", "탈퇴할사람", "암호화된비밀번호");
+        given(repository.findUser(userId)).willReturn(Optional.of(user));
+
+        userService.softDeleteUser(userId);
+
+        assertThat(user.isDeleted()).isTrue();
+        assertThat(user.getDeletedAt()).isNotNull();
+        verifyNoInteractions(userEventPublisher);
+    }
+
+    @Test
+    @DisplayName("이미 탈퇴했거나 없는 사용자면 USER_NOT_FOUND 예외가 난다")
+    void givenNoActiveUser_whenSoftDelete_thenThrowUserNotFound() {
+        UUID userId = UUID.randomUUID();
+        given(repository.findUser(userId)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userService.softDeleteUser(userId))
+                .isInstanceOf(MonewException.class)
+                .extracting("errorType")
+                .isEqualTo(UserErrorType.USER_NOT_FOUND);
+    }
 }

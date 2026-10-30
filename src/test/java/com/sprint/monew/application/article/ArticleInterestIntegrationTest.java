@@ -11,6 +11,7 @@ import jakarta.persistence.EntityManager;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +24,9 @@ class ArticleInterestIntegrationTest {
     @Autowired private EntityManager em;
 
     @Test
-    void repeatedCallsReuseLinkAndDifferentInterestCreatesSeparateLink() {
+    @DisplayName("같은 기사와 관심사의 연결은 재사용하고 다른 관심사에는 새 연결을 만든다.")
+    void givenArticleAndInterests_whenGetOrCreateRepeatedly_thenReuseOnlyMatchingLink() {
+        // given
         Article article =
                 Article.create(
                         ArticleSourceType.NAVER,
@@ -38,6 +41,7 @@ class ArticleInterestIntegrationTest {
         em.persist(chip);
         em.flush();
 
+        // when
         ArticleInterest created = service.getOrCreateArticleInterest(article, ai);
         UUID createdId = created.getId();
         em.flush();
@@ -52,6 +56,7 @@ class ArticleInterestIntegrationTest {
                         managedArticle, em.find(Interest.class, chip.getId()));
         em.flush();
 
+        // then
         assertThat(createdId).isNotNull();
         assertThat(existing.getId()).isEqualTo(createdId);
         assertThat(other.getId()).isNotEqualTo(createdId);
