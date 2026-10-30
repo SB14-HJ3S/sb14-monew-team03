@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class CommentApplication implements CommentUseCase {
 
-    private final ICommentService commentService;
+    private final CommentService commentService;
     private final IUserService userService;
     private final ArticleService articleService;
     private final CommentEventPublisherPort commentEventPublisher;

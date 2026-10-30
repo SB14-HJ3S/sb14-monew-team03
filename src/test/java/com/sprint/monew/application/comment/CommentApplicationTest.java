@@ -57,12 +57,12 @@ class CommentApplicationTest {
     private final UUID articleId = UUID.randomUUID();
     private final Instant createdAt = Instant.parse("2026-10-21T00:00:00Z");
 
-    // CommentService는 진짜로 쓰고 DB 포트만 가짜로 둔다 — 조립(Application)과 댓글 DB 처리(Service)를 함께 검증한다
+    // CommentServiceImpl은 진짜로 쓰고 DB 포트만 가짜로 둔다 — 조립(Application)과 댓글 DB 처리(Service)를 함께 검증한다
     @BeforeEach
     void setUp() {
         commentApplication =
                 new CommentApplication(
-                        new CommentService(commentRepository, commentLikeRepository),
+                        new CommentServiceImpl(commentRepository, commentLikeRepository),
                         userService,
                         articleService,
                         commentEventPublisher);
