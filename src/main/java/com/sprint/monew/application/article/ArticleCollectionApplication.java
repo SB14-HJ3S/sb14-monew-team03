@@ -143,7 +143,14 @@ public class ArticleCollectionApplication implements ArticleCollectionUseCase {
     // ---------- 이벤트 ----------
 
     private void publishArticlesSaved(Interest interest, int articleCount) {
-        eventPublisherPort.publish(
-                new ArticlesSavedEvent(interest.getId(), interest.getName(), articleCount));
+        // 트랜잭션으로 감싸지 않으면 publishArticlesSaved가 트랜잭션 밖에서 실행되고,
+        //      AFTER_COMMIT 리스너는 이벤트를 무시
+        transactionTemplate.execute(
+                status -> {
+                    eventPublisherPort.publish(
+                            new ArticlesSavedEvent(
+                                    interest.getId(), interest.getName(), articleCount));
+                    return null;
+                });
     }
 }
