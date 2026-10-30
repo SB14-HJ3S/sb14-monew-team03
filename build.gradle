@@ -85,6 +85,8 @@ dependencies {
 
 	// ── Batch (심화 요구사항) ─────────────────────────────
 	implementation 'org.springframework.boot:spring-boot-starter-batch'
+	implementation 'org.springframework.boot:spring-boot-starter-aop'               // 모든 @Scheduled에 잠금을 거는 Aspect용
+	implementation 'net.javacrumbs.shedlock:shedlock-provider-jdbc-template:6.10.0' // 배치 중복 실행 방지 (shedlock 표)
 
 	// ── 모니터링 ───────────────────────────────────────
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'  // /actuator/health 등 서버 상태 확인
