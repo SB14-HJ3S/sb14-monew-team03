@@ -12,6 +12,10 @@ assignees: ''
 
      예: 이슈 #110, 라벨 batch:배치, 키워드 article-collect → batch/110-article-collect 브랜치 자동 생성 -->
 
+## 💡 추천 브랜치 키워드
+아래 키워드를 복사해서, 바로 위 `추천 브랜치 키워드` 윗줄(🌿 Branch Keyword 칸)에 붙여 넣으세요.
+
+
 ## 📄 개요
 어떤 배치 작업인지 한 문장으로 작성해주세요.
 

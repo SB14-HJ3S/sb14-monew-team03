@@ -1,6 +1,6 @@
 package com.sprint.monew.application.interest;
 
-import com.sprint.monew.application.article.IArticleInterestService;
+import com.sprint.monew.application.article.ArticleInterestService;
 import com.sprint.monew.application.interest.provided.InterestUseCase;
 import com.sprint.monew.application.interest.provided.UserDeletionSubscriptionCleaner;
 import com.sprint.monew.application.interest.provided.dto.InterestQuery;
@@ -25,7 +25,7 @@ public class InterestApplication implements InterestUseCase, UserDeletionSubscri
 
     private final InterestService interestService;
     private final ISubscriptionService subscriptionService;
-    private final IArticleInterestService articleInterestService;
+    private final ArticleInterestService articleInterestService;
     private final IUserService userService;
 
     @Override

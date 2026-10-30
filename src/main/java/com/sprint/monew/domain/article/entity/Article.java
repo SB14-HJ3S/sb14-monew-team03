@@ -24,10 +24,10 @@ public class Article extends BaseSoftDeletableEntity {
     @Column(name = "source", nullable = false)
     private ArticleSourceType source;
 
-    @Column(name = "source_url", nullable = false, length = 255)
+    @Column(name = "source_url", nullable = false, columnDefinition = "text")
     private String sourceUrl;
 
-    @Column(name = "title", nullable = false, length = 255)
+    @Column(name = "title", nullable = false, columnDefinition = "text")
     private String title;
 
     @Column(name = "published_at", nullable = false)

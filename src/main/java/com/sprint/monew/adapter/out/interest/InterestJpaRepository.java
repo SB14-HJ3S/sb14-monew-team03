@@ -31,4 +31,13 @@ public interface InterestJpaRepository
                     + " WHERE i.id in :interestIds AND i.subscriberCount > 0")
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     void decreaseSubscriberCountIn(List<UUID> interestIds);
+
+    @Query(
+            """
+            select distinct i
+            from Interest i
+            join fetch i.keywords
+            where i.subscriberCount > 0
+            """)
+    List<Interest> findSubscribedWithKeywords();
 }

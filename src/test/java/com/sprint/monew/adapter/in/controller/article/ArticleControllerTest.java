@@ -2,9 +2,9 @@ package com.sprint.monew.adapter.in.controller.article;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -29,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 @WebMvcTest(ArticleController.class)
@@ -43,7 +44,8 @@ class ArticleControllerTest {
 
     @Test
     @DisplayName("모든 검색 조건과 커서를 전달하고 Swagger의 페이지 응답 필드를 반환한다")
-    void bindsFiltersAndReturnsPage() throws Exception {
+    void givenFiltersAndCursor_whenFindArticles_thenReturnPageAndPassConditions() throws Exception {
+        // given
         UUID interestId = UUID.randomUUID();
         UUID articleId = UUID.randomUUID();
         Instant after = Instant.parse("2026-10-22T00:00:00Z");
@@ -59,10 +61,12 @@ class ArticleControllerTest {
                         3L,
                         10L,
                         true);
-        given(articleUseCase.findArticlePage(any()))
-                .willReturn(new PageResult<>(List.of(item), "3", after, 1, 5, true));
+        when(articleUseCase.findArticlePage(any()))
+                .thenReturn(new PageResult<>(List.of(item), "3", after, 1, 5, true));
 
-        mockMvc.perform(
+        // when
+        ResultActions result =
+                mockMvc.perform(
                         request()
                                 .param("keyword", "경제")
                                 .param("interestId", interestId.toString())
@@ -70,8 +74,10 @@ class ArticleControllerTest {
                                 .param("publishDateFrom", "2026-10-20T00:00:00")
                                 .param("publishDateTo", "2026-10-22T23:59:59")
                                 .param("cursor", "5")
-                                .param("after", after.toString()))
-                .andExpect(status().isOk())
+                                .param("after", after.toString()));
+
+        // then
+        result.andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].id").value(articleId.toString()))
                 .andExpect(jsonPath("$.content[0].source").value("NAVER"))
                 .andExpect(jsonPath("$.content[0].sourceUrl").value("https://example.com/news"))
@@ -111,17 +117,22 @@ class ArticleControllerTest {
         "viewCount, VIEW_COUNT"
     })
     @DisplayName("camelCase 정렬값을 enum으로 변환하고 첫 페이지의 커서는 null로 전달한다")
-    void convertsSortField(String parameter, ArticleQuery.SortOrder expected) throws Exception {
-        given(articleUseCase.findArticlePage(any()))
-                .willReturn(new PageResult<>(List.of(), null, null, 0, 0, false));
+    void givenSortParameter_whenFindArticles_thenConvertSortField(
+            String parameter, ArticleQuery.SortOrder expected) throws Exception {
+        // given
+        when(articleUseCase.findArticlePage(any()))
+                .thenReturn(new PageResult<>(List.of(), null, null, 0, 0, false));
         MockHttpServletRequestBuilder request =
                 get("/api/articles")
                         .header(USER_HEADER, USER_ID)
                         .param("orderBy", parameter)
                         .param("direction", "DESC")
                         .param("limit", "2");
-        mockMvc.perform(request)
-                .andExpect(status().isOk())
+        // when
+        ResultActions result = mockMvc.perform(request);
+
+        // then
+        result.andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isEmpty())
                 .andExpect(jsonPath("$.hasNext").value(false));
         ArgumentCaptor<ArticleQuery> captor = ArgumentCaptor.forClass(ArticleQuery.class);
@@ -141,7 +152,9 @@ class ArticleControllerTest {
         "after, invalid-date"
     })
     @DisplayName("잘못된 파라미터는 400이며 유스케이스를 실행하지 않는다")
-    void rejectsInvalidParameters(String key, String value) throws Exception {
+    void givenInvalidParameters_whenFindArticles_thenReturnBadRequest(String key, String value)
+            throws Exception {
+        // given
         MockHttpServletRequestBuilder request = get("/api/articles").header(USER_HEADER, USER_ID);
         request.param("orderBy", key.equals("orderBy") ? value : "commentCount");
         request.param("direction", key.equals("direction") ? value : "DESC");
@@ -149,20 +162,30 @@ class ArticleControllerTest {
         if (!List.of("orderBy", "direction", "limit").contains(key)) {
             request.param(key, value);
         }
-        mockMvc.perform(request).andExpect(status().isBadRequest());
+        // when
+        ResultActions result = mockMvc.perform(request);
+
+        // then
+        result.andExpect(status().isBadRequest());
         verifyNoInteractions(articleUseCase);
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"orderBy", "direction", "limit", "header"})
     @DisplayName("필수 파라미터나 사용자 헤더가 없으면 400이다")
-    void rejectsMissingRequiredInput(String missing) throws Exception {
+    void givenMissingRequiredInput_whenFindArticles_thenReturnBadRequest(String missing)
+            throws Exception {
+        // given
         MockHttpServletRequestBuilder request = get("/api/articles");
         if (!missing.equals("header")) request.header(USER_HEADER, USER_ID);
         if (!missing.equals("orderBy")) request.param("orderBy", "commentCount");
         if (!missing.equals("direction")) request.param("direction", "DESC");
         if (!missing.equals("limit")) request.param("limit", "2");
-        mockMvc.perform(request).andExpect(status().isBadRequest());
+        // when
+        ResultActions result = mockMvc.perform(request);
+
+        // then
+        result.andExpect(status().isBadRequest());
         verifyNoInteractions(articleUseCase);
     }
 

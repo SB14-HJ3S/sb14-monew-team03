@@ -10,7 +10,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
-import com.sprint.monew.application.article.IArticleService;
+import com.sprint.monew.application.article.ArticleService;
 import com.sprint.monew.application.comment.provided.dto.CommentLikeResult;
 import com.sprint.monew.application.comment.provided.dto.CommentResult;
 import com.sprint.monew.application.comment.required.CommentEventPublisherPort;
@@ -48,7 +48,7 @@ class CommentApplicationTest {
     @Mock private CommentRepositoryPort commentRepository;
     @Mock private CommentLikeRepositoryPort commentLikeRepository;
     @Mock private IUserService userService;
-    @Mock private IArticleService articleService;
+    @Mock private ArticleService articleService;
     @Mock private CommentEventPublisherPort commentEventPublisher;
     private CommentApplication commentApplication;
 

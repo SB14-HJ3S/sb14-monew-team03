@@ -46,6 +46,11 @@ public class ArticleRepositoryAdapter implements ArticleRepositoryPort {
     }
 
     @Override
+    public Optional<Article> findBySourceUrl(String sourceUrl) {
+        return jpaRepository.findBySourceUrl(sourceUrl);
+    }
+
+    @Override
     public int increaseCommentCount(UUID articleId) {
         return jpaRepository.increaseCommentCount(articleId);
     }

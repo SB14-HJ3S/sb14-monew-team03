@@ -10,7 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import com.sprint.monew.application.article.IArticleInterestService;
+import com.sprint.monew.application.article.ArticleInterestService;
 import com.sprint.monew.application.interest.provided.dto.SubscriptionResult;
 import com.sprint.monew.application.user.IUserService;
 import com.sprint.monew.domain.interest.entity.Interest;
@@ -37,7 +37,7 @@ class InterestApplicationTest {
 
     @Mock private InterestService interestService;
     @Mock private ISubscriptionService subscriptionService;
-    @Mock private IArticleInterestService articleInterestService;
+    @Mock private ArticleInterestService articleInterestService;
     @Mock private IUserService userService;
 
     @InjectMocks private InterestApplication interestApplication;

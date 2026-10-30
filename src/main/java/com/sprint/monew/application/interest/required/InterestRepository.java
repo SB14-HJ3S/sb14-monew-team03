@@ -30,4 +30,6 @@ public interface InterestRepository {
     int countByIdIn(List<UUID> interestId);
 
     void decreaseSubscriberCountIn(List<UUID> interestIds);
+
+    List<Interest> findSubscribedWithKeywords();
 }

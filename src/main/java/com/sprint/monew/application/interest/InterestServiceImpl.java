@@ -69,6 +69,11 @@ public class InterestServiceImpl implements InterestService {
     }
 
     @Override
+    public List<Interest> findSubscribedWithKeywords() {
+        return repository.findSubscribedWithKeywords();
+    }
+
+    @Override
     public Interest update(UUID interestId, List<String> keywords) {
         Interest updating =
                 repository

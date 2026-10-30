@@ -1,6 +1,6 @@
 package com.sprint.monew.application.comment;
 
-import com.sprint.monew.application.article.IArticleService;
+import com.sprint.monew.application.article.ArticleService;
 import com.sprint.monew.application.comment.provided.CommentUseCase;
 import com.sprint.monew.application.comment.provided.dto.CommentLikeResult;
 import com.sprint.monew.application.comment.provided.dto.CommentQuery;
@@ -25,7 +25,7 @@ public class CommentApplication implements CommentUseCase {
 
     private final ICommentService commentService;
     private final IUserService userService;
-    private final IArticleService articleService;
+    private final ArticleService articleService;
     private final CommentEventPublisherPort commentEventPublisher;
 
     @Override
