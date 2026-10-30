@@ -20,6 +20,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Article extends BaseSoftDeletableEntity {
+
     @Enumerated(EnumType.STRING)
     @Column(name = "source", nullable = false)
     private ArticleSourceType source;

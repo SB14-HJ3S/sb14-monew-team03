@@ -50,6 +50,14 @@ public class ArticleCollectionApplication implements ArticleCollectionUseCase {
                     rssArticles.stream()
                             .filter(article -> matchesInterest(article, interest))
                             .toList();
+
+            log.info(
+                    "RSS 매칭: interest={}, keywords={}, matched={}/{}",
+                    interest.getName(),
+                    interest.getKeywordNames(),
+                    matchedRssArticles.size(),
+                    rssArticles.size());
+
             int newCount = saveArticleInterestInTransaction(matchedRssArticles, interest);
 
             //            // Naver - 관심사 키워드로 검색해서 연결
