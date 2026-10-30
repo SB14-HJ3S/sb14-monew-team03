@@ -9,6 +9,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -17,6 +18,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.util.UriComponentsBuilder;
 
+@Slf4j
 @Component
 public class NaverNewsAdapter implements NaverNewsPort {
 
@@ -67,13 +69,32 @@ public class NaverNewsAdapter implements NaverNewsPort {
             }
 
             for (NaverNewsResponse.ArticleItem item : response.items()) {
-                articles.add(mapper.toCollectedArticle(item));
+                if (Objects.isNull(item)) {
+                    log.warn("기사 항목 없음 - 건너뜀: keyword={}, start={}", keyword, start);
+                    continue;
+                }
+
+                try {
+                    articles.add(mapper.toCollectedArticle(item));
+                } catch (MonewException e) {
+                    log.warn(
+                            "기사 변환 실패로 건너뜀: keyword={}, start={}, errorType={}",
+                            keyword,
+                            start,
+                            e.getErrorType(),
+                            // ARTICLE_SOURCE_URL_MISSING,
+                            // ARTICLE_TITLE_MISSING,
+                            // ARTICLE_PUBLISHED_AT_INVALID 중 하나
+                            e);
+                }
             }
 
+            // 마지막 페이지
             if (response.items().size() < PAGE_SIZE) {
                 break;
             }
 
+            // 전체 검색 결과 모두 조희
             if (start + response.items().size() > response.total()) {
                 break;
             }
