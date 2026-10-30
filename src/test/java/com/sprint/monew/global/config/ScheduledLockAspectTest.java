@@ -3,9 +3,12 @@ package com.sprint.monew.global.config;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.sprint.monew.support.IntegrationTest;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,17 +42,23 @@ class ScheduledLockAspectTest {
     void runsOnceWhenCalledConcurrently() throws Exception {
         ExecutorService pool = Executors.newFixedThreadPool(2);
         CountDownLatch start = new CountDownLatch(1);
+        List<Future<Void>> futures = new ArrayList<>();
         for (int i = 0; i < 2; i++) {
-            pool.submit(
-                    () -> {
-                        start.await();
-                        fakeBatch.run();
-                        return null;
-                    });
+            futures.add(
+                    pool.submit(
+                            () -> {
+                                start.await();
+                                fakeBatch.run();
+                                return null;
+                            }));
         }
         start.countDown();
         pool.shutdown();
-        pool.awaitTermination(10, TimeUnit.SECONDS);
+
+        assertThat(pool.awaitTermination(10, TimeUnit.SECONDS)).isTrue();
+        for (Future<Void> future : futures) {
+            future.get();
+        }
 
         assertThat(fakeBatch.count()).isEqualTo(1);
         assertThat(

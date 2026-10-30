@@ -44,7 +44,7 @@ public class ScheduledLockAspect {
                                 Instant.now(), lockName, LOCK_AT_MOST_FOR, LOCK_AT_LEAST_FOR));
 
         if (!result.wasExecuted()) {
-            log.info("[배치 건너뜀] 다른 앱이 이미 실행 중: {}", lockName);
+            log.info("[배치 건너뜀] 이미 잠겨 있음(다른 앱 실행 중 또는 최소 잠금 시간 내): {}", lockName);
         }
         return null;
     }
