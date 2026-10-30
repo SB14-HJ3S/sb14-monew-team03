@@ -23,8 +23,9 @@ public class RssNewsMapper {
             throw new MonewException(ArticleErrorType.ARTICLE_SOURCE_URL_MISSING);
         }
 
-        String title = entry.getTitle();
-        if (Objects.isNull(title) || title.isBlank()) {
+        String rawTitle = entry.getTitle();
+        String title = Objects.isNull(rawTitle) ? "" : Jsoup.parse(rawTitle).text().strip();
+        if (title.isBlank()) {
             throw new MonewException(ArticleErrorType.ARTICLE_TITLE_MISSING);
         }
 
