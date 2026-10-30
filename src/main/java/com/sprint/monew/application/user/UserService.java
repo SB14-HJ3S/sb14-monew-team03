@@ -80,7 +80,17 @@ public class UserService implements IUserService {
 
     @Override
     public void validateDeactivatedUser(UUID userId) {
-        repository
+        getDeactivatedUser(userId);
+    }
+
+    @Override
+    @Transactional
+    public void hardDeleteUser(UUID userId) {
+        removeCompletely(getDeactivatedUser(userId));
+    }
+
+    private User getDeactivatedUser(UUID userId) {
+        return repository
                 .findUserIncludingDeleted(userId)
                 .filter(User::isDeleted)
                 .orElseThrow(
@@ -89,18 +99,7 @@ public class UserService implements IUserService {
                                         UserErrorType.USER_NOT_FOUND, Map.of("userId", userId)));
     }
 
-    @Override
-    @Transactional
-    public void hardDeleteUser(UUID userId) {
-        User user =
-                repository
-                        .findUserIncludingDeleted(userId)
-                        .filter(User::isDeleted)
-                        .orElseThrow(
-                                () ->
-                                        new MonewException(
-                                                UserErrorType.USER_NOT_FOUND,
-                                                Map.of("userId", userId)));
+    private void removeCompletely(User user) {
         repository.deleteById(user.getId());
     }
 
