@@ -5,11 +5,13 @@ import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.ArticleErrorType;
 import com.sprint.monew.global.type.ArticleSourceType;
 import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Locale;
 import java.util.Objects;
-import org.apache.commons.text.StringEscapeUtils;
+import org.jsoup.Jsoup;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -30,10 +32,21 @@ public class NaverNewsMapper {
             throw new MonewException(ArticleErrorType.ARTICLE_TITLE_MISSING);
         }
 
+        String date = articleItem.pubDate();
+        if (date == null) {
+            throw new MonewException(ArticleErrorType.ARTICLE_PUBLISHED_AT_INVALID);
+        }
+        if (date.contains(",")) {
+            date = date.substring(date.indexOf(',') + 1).strip();
+        }
         LocalDateTime publishedAt;
         try {
             publishedAt =
-                    ZonedDateTime.parse(articleItem.pubDate(), DateTimeFormatter.RFC_1123_DATE_TIME)
+                    OffsetDateTime.parse(
+                                    date,
+                                    DateTimeFormatter.ofPattern(
+                                            "dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH))
+                            .atZoneSameInstant(ZoneId.of("Asia/Seoul"))
                             .toLocalDateTime();
         } catch (DateTimeParseException e) {
             throw new MonewException(ArticleErrorType.ARTICLE_PUBLISHED_AT_INVALID, e);
@@ -51,8 +64,6 @@ public class NaverNewsMapper {
         if (Objects.isNull(value)) {
             return "";
         }
-        String highlightRemoved = value.replace("<b>", "").replace("</b>", "");
-
-        return StringEscapeUtils.unescapeHtml4(highlightRemoved).strip();
+        return Jsoup.parse(value).text().strip();
     }
 }

@@ -89,4 +89,9 @@ public class InterestRepositoryAdapter implements InterestRepository {
     public List<Interest> findSubscribedWithKeywords() {
         return jpaRepository.findSubscribedWithKeywords();
     }
+
+    @Override
+    public List<Interest> findAllWithKeywords() {
+        return jpaRepository.findAllWithKeywords();
+    }
 }

@@ -59,7 +59,7 @@ monew:
     rss:
       hankyung: https://www.hankyung.com/feed/all-news
       chosun: https://www.chosun.com/arc/outboundfeeds/rss/?outputType=xml
-      yonhap: https://www.yna.co.kr/rss/news.xml
+      yonhap: https://www.yonhapnewstv.co.kr/browse/feed/
 
   # 뉴스기사 수집용 네이버 뉴스 API 설정(주소·키) — 키는 .env의 NAVER_API_CLIENT_ID/SECRET을 읽음. 수집 코드는 이 이름으로 읽기
   naver:

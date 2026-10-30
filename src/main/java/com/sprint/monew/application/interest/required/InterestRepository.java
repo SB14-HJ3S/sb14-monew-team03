@@ -32,4 +32,6 @@ public interface InterestRepository {
     void decreaseSubscriberCountIn(List<UUID> interestIds);
 
     List<Interest> findSubscribedWithKeywords();
+
+    List<Interest> findAllWithKeywords();
 }
