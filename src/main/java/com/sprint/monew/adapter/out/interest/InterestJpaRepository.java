@@ -40,7 +40,4 @@ public interface InterestJpaRepository
             where i.subscriberCount > 0
             """)
     List<Interest> findSubscribedWithKeywords();
-
-    @Query("select distinct i from Interest i left join fetch i.keywords")
-    List<Interest> findAllWithKeywords();
 }

@@ -13,8 +13,6 @@ public interface InterestService {
 
     List<Interest> findSubscribedWithKeywords();
 
-    List<Interest> findAllWithKeywords();
-
     Interest update(UUID interestId, List<String> keywords);
 
     Interest getById(UUID interestId);

@@ -134,9 +134,4 @@ public class InterestServiceImpl implements InterestService {
                     InterestErrorType.INTEREST_NOT_FOUND, Map.of("id", interestId));
         }
     }
-
-    @Override
-    public List<Interest> findAllWithKeywords() {
-        return repository.findAllWithKeywords();
-    }
 }
