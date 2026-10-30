@@ -16,9 +16,6 @@ public class ArticleCollectionRunner {
     private final ArticleCollectionUseCase articleCollectionUseCase;
 
     public void runCollection() {
-        // 얘로 바꿀거임
-        articleCollectionUseCase.collectArticles();
-
         try {
             articleCollectionUseCase.collectArticles();
         } catch (MonewException e) {
