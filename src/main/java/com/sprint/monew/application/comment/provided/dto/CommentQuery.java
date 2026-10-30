@@ -23,7 +23,7 @@ public record CommentQuery(
         Instant after,
         @NotNull int limit,
         @NotNull UUID requestId)
-        implements SortedPageQuery<Comment, CommentQuery.SortOrder> {
+        implements SortedPageQuery<Comment> {
     public static CommentQuery of(
             UUID articleId,
             CommentQuery.SortOrder orderBy,
@@ -53,8 +53,8 @@ public record CommentQuery(
         Function<Comment, String> cursorExtractor;
 
         @Override
-        public String cursorToString(Comment cursor) {
-            return cursorExtractor.apply(cursor);
+        public String extractNextCursorFromLastEntity(Comment lastEntity) {
+            return cursorExtractor.apply(lastEntity);
         }
     }
 }

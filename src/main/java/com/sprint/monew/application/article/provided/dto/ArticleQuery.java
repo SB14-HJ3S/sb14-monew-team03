@@ -29,7 +29,7 @@ public record ArticleQuery(
         String cursor,
         Instant after,
         @Min(1) int limit)
-        implements SortedPageQuery<Article, ArticleQuery.SortOrder> {
+        implements SortedPageQuery<Article> {
 
     public static ArticleQuery of(
             String keyword,
@@ -67,8 +67,8 @@ public record ArticleQuery(
         Function<Article, String> cursorExtractor;
 
         @Override
-        public String cursorToString(Article cursor) {
-            return cursorExtractor.apply(cursor);
+        public String extractNextCursorFromLastEntity(Article lastEntity) {
+            return cursorExtractor.apply(lastEntity);
         }
     }
 }
