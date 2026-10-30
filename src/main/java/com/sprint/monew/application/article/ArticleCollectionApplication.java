@@ -60,9 +60,9 @@ public class ArticleCollectionApplication implements ArticleCollectionUseCase {
 
             int newCount = saveArticleInterestInTransaction(matchedRssArticles, interest);
 
-            //            // Naver - 관심사 키워드로 검색해서 연결
-            //            List<CollectedArticle> naverArticles = collectNaverArticles(interest);
-            //            newCount += saveArticleInterestInTransaction(naverArticles, interest);
+            // Naver - 관심사 키워드로 검색해서 연결
+            List<CollectedArticle> naverArticles = collectNaverArticles(interest);
+            newCount += saveArticleInterestInTransaction(naverArticles, interest);
 
             // 1 관심사 1 알림 생성 (1 사용자에 대해)
             if (newCount > 0) {
