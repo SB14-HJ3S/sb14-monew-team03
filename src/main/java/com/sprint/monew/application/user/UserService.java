@@ -79,10 +79,30 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public void validateDeactivatedUser(UUID userId) {}
+    public void validateDeactivatedUser(UUID userId) {
+        repository
+                .findUserIncludingDeleted(userId)
+                .filter(User::isDeleted)
+                .orElseThrow(
+                        () ->
+                                new MonewException(
+                                        UserErrorType.USER_NOT_FOUND, Map.of("userId", userId)));
+    }
 
     @Override
-    public void hardDeleteUser(UUID userId) {}
+    @Transactional
+    public void hardDeleteUser(UUID userId) {
+        User user =
+                repository
+                        .findUserIncludingDeleted(userId)
+                        .filter(User::isDeleted)
+                        .orElseThrow(
+                                () ->
+                                        new MonewException(
+                                                UserErrorType.USER_NOT_FOUND,
+                                                Map.of("userId", userId)));
+        repository.deleteById(user.getId());
+    }
 
     private MonewException loginFailed() {
         return new MonewException(UserErrorType.USER_LOGIN_FAILED);
