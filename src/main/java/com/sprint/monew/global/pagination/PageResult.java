@@ -16,9 +16,9 @@ public record PageResult<T>(
         long totalElements, // 총 요소 수
         boolean hasNext) {
 
-    public static <T extends BaseEntity, S extends SortOrder<T>> PageResult<T> of(
-            List<T> fetched, long totalElements, S orderBy, int limit) {
-        return create(fetched, totalElements, orderBy::cursorToString, limit);
+    public static <T extends BaseEntity> PageResult<T> of(
+            List<T> fetched, long totalElements, SortOrder<T> orderBy, int limit) {
+        return create(fetched, totalElements, orderBy::extractNextCursorFromLastEntity, limit);
     }
 
     public static <T extends BaseEntity> PageResult<T> of(
