@@ -64,6 +64,6 @@ public class NotificationRepositoryAdapter implements NotificationRepositoryPort
 
     @Override
     public int deleteByResource(ResourceType resourceType, UUID resourceId) {
-        return 0;
+        return jpaRepository.deleteByResource(resourceType, resourceId);
     }
 }
