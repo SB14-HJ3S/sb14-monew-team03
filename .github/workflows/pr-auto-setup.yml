@@ -8,7 +8,7 @@ name: PR Auto Setup
 
 on:
   pull_request:
-    types: [opened, edited]
+    types: [opened, edited, ready_for_review]
 
 permissions: {}
 
@@ -55,7 +55,8 @@ jobs:
             // → 원본 형식("chore: 설명" 또는 단축키 "c: 설명")과 변환된 형식("🖍️ [Chore] : 설명") 둘 다 인식
             const raw = title.match(/^\s*(\w+)\s*[:;]/);   // 세미콜론(;)도 콜론과 동일하게 인식
             const bracket = title.match(/^[^\w\[]*\[([A-Za-z]+)\]\s*:/);   // 제목 맨 앞쪽만 인식(설명 속 괄호 오매칭 방지)
-            const type = (raw ? raw[1] : bracket ? bracket[1] : '').toLowerCase();
+            const branchType = (pr.head.ref.match(/^([a-z]+)\//) || [])[1];
+            const type = (raw ? raw[1] : bracket ? bracket[1] : branchType || '').toLowerCase();
             if (!type) return;
 
             const typeToLabel = {
