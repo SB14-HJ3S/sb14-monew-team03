@@ -1,5 +1,6 @@
 package com.sprint.monew.application.user;
 
+import com.sprint.monew.application.user.event.UserHardDeletingEvent;
 import com.sprint.monew.application.user.event.UserNicknameUpdatedEvent;
 import com.sprint.monew.application.user.event.UserRegisteredEvent;
 import com.sprint.monew.application.user.required.UserEventPublisherPort;
@@ -100,6 +101,7 @@ public class UserService implements IUserService {
     }
 
     private void removeCompletely(User user) {
+        userEventPublisher.publish(new UserHardDeletingEvent(user.getId()));
         repository.deleteById(user.getId());
     }
 
