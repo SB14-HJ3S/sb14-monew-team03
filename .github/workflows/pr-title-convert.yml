@@ -2,7 +2,7 @@ name: PR Title Convert
 
 on:
   pull_request:
-    types: [opened, edited, reopened]
+    types: [opened, edited, reopened, ready_for_review]
 
 permissions:
   pull-requests: write
