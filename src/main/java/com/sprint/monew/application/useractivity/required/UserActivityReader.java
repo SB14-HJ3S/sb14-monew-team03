@@ -1,4 +1,4 @@
-package com.sprint.monew.application.notification.required;
+package com.sprint.monew.application.useractivity.required;
 
 import com.sprint.monew.application.useractivity.provided.dto.UserActivityResult;
 import java.util.Optional;

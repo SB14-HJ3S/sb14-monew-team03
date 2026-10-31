@@ -1,7 +1,8 @@
-package com.sprint.monew.application.useractivity.provided;
+package com.sprint.monew.application.useractivity;
 
-import com.sprint.monew.application.notification.required.UserActivityReader;
+import com.sprint.monew.application.useractivity.provided.UserActivityUseCase;
 import com.sprint.monew.application.useractivity.provided.dto.UserActivityResult;
+import com.sprint.monew.application.useractivity.required.UserActivityReader;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.UserErrorType;
 import java.util.Map;
