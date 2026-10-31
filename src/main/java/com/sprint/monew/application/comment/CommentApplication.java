@@ -138,12 +138,12 @@ public class CommentApplication implements CommentUseCase {
         commentService.deleteAllLikes(commentId);
         commentService.deleteComment(commentId);
 
-        // 물리 삭제 시 관련 정보도 모두 지운다 — 없는 댓글을 가리키는 좋아요 알림이 남지 않게
-        notificationService.deleteByResource(ResourceType.COMMENT, commentId);
-
         // 이미 논리 삭제된 댓글은 그때 1 줄였으므로 다시 줄이지 않는다
         if (wasActive) {
             articleService.decreaseCommentCount(articleId);
         }
+
+        // 물리 삭제 시 관련 정보도 모두 지운다 — 없는 댓글을 가리키는 좋아요 알림이 남지 않게
+        notificationService.deleteByResource(ResourceType.COMMENT, commentId);
     }
 }
