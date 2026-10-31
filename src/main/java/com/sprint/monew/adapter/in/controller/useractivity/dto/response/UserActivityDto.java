@@ -26,4 +26,4 @@ public record UserActivityDto(
                 r.commentLikes().stream().map(CommentLikeActivityDto::from).toList(),
                 r.articleViews().stream().map(ArticleViewActivityDto::from).toList());
     }
-} // 최근 본 기사 (최대 10건)
+}

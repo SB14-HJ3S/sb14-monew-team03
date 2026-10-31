@@ -151,6 +151,53 @@ class UserActivityRdbAdapterTest {
         assertThat(subs.get(0).interestKeywords()).containsExactlyInAnyOrder("손흥민", "EPL");
     }
 
+    @Test
+    @DisplayName("좋아요 누른 댓글은 좋아요 누른 최신순 최대 10건이다.")
+    void givenElevenLikes_whenFind_thenLatestTen() {
+        for (int i = 0; i < 11; i++) {
+            Comment c = persist(Comment.create(buzz, article, "댓글" + i));
+            CommentLike like = persist(CommentLike.create(woody, c));
+            setColumn(
+                    "comment_likes", "created_at", Timestamp.from(T.plusSeconds(i)), like.getId());
+        }
+        clear();
+
+        List<CommentLikeActivityResult> likes =
+                adapter.findByUserId(woody.getId()).orElseThrow().commentLikes();
+
+        assertThat(likes).hasSize(10);
+        assertThat(likes)
+                .extracting(CommentLikeActivityResult::commentContent)
+                .startsWith("댓글10", "댓글9") // 좋아요 누른 최신순
+                .doesNotContain("댓글0"); // 가장 오래된 11번째 제외
+    }
+
+    @Test
+    @DisplayName("본 기사는 마지막으로 본 순서로 최대 10건이다.")
+    void givenElevenViews_whenFind_thenLatestTen() {
+        for (int i = 0; i < 11; i++) {
+            Article a =
+                    persist(
+                            Article.create(
+                                    ArticleSourceType.NAVER,
+                                    "https://a.com/view/" + i,
+                                    "기사" + i,
+                                    LocalDateTime.of(2026, 10, 1, 9, 0),
+                                    "요약"));
+            persist(ArticleViewStatus.create(woody, a, LocalDateTime.of(2026, 10, 30, 9, i)));
+        }
+        clear();
+
+        List<ArticleViewActivityResult> views =
+                adapter.findByUserId(woody.getId()).orElseThrow().articleViews();
+
+        assertThat(views).hasSize(10);
+        assertThat(views)
+                .extracting(ArticleViewActivityResult::articleTitle)
+                .startsWith("기사10", "기사9") // 마지막으로 본 최신순
+                .doesNotContain("기사0"); // 가장 오래 전에 본 11번째 제외
+    }
+
     // ===== 도우미 =====
 
     private <T> T persist(T entity) {

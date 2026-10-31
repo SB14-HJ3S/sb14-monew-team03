@@ -29,4 +29,4 @@ public record CommentLikeActivityDto(
                 r.commentLikeCount(),
                 r.commentCreatedAt());
     }
-} // 작성된 날짜
+}
