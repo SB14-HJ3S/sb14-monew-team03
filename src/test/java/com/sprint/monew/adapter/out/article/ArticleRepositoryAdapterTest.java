@@ -60,4 +60,33 @@ class ArticleRepositoryAdapterTest {
         // then
         assertThat(updated).isZero();
     }
+
+    @Test
+    @DisplayName("댓글 수가 1 이상이면 DB의 댓글 수가 1 줄고, 바뀐 줄 수 1을 돌려준다")
+    void givenPositiveCommentCount_whenDecreaseCommentCount_thenDecrementAndReturnOne() {
+        // given
+        UUID articleId = savedArticleId();
+        articleRepository.increaseCommentCount(articleId);
+
+        // when
+        int updated = articleRepository.decreaseCommentCount(articleId);
+
+        // then
+        assertThat(updated).isEqualTo(1);
+        assertThat(commentCountOf(articleId)).isZero();
+    }
+
+    @Test
+    @DisplayName("댓글 수가 0이면 줄여도 0 그대로고, 바뀐 줄 수 0을 돌려준다")
+    void givenZeroCommentCount_whenDecreaseCommentCount_thenKeepZeroAndReturnZero() {
+        // given
+        UUID articleId = savedArticleId();
+
+        // when
+        int updated = articleRepository.decreaseCommentCount(articleId);
+
+        // then
+        assertThat(updated).isZero();
+        assertThat(commentCountOf(articleId)).isZero();
+    }
 }
