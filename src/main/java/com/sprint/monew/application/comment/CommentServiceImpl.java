@@ -90,4 +90,10 @@ public class CommentServiceImpl implements CommentService {
     public void deleteComment(UUID commentId) {
         commentRepository.deleteById(commentId);
     }
+
+    @Override
+    @Transactional
+    public boolean softDeleteIfActive(UUID commentId) {
+        return false;
+    }
 }
