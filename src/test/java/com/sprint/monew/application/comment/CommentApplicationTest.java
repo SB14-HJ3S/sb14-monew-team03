@@ -29,6 +29,7 @@ import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.ArticleErrorType;
 import com.sprint.monew.global.exception.errortype.CommentErrorType;
 import com.sprint.monew.global.exception.errortype.UserErrorType;
+import com.sprint.monew.global.type.ResourceType;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -52,8 +53,8 @@ class CommentApplicationTest {
     @Mock private IUserService userService;
     @Mock private ArticleService articleService;
     @Mock private CommentEventPublisherPort commentEventPublisher;
-    private CommentApplication commentApplication;
     @Mock private NotificationService notificationService;
+    private CommentApplication commentApplication;
 
     private final UUID commentId = UUID.randomUUID();
     private final UUID authorId = UUID.randomUUID();
@@ -524,6 +525,19 @@ class CommentApplicationTest {
         }
 
         @Test
+        @DisplayName("댓글을 물리 삭제하면 그 댓글을 가리키는 좋아요 알림도 지운다")
+        void deleteCommentNotifications() {
+            Comment comment = savedComment(mock(User.class), mock(Article.class));
+            given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
+            given(commentRepository.softDeleteIfActive(eq(commentId), any())).willReturn(1);
+
+            commentApplication.hardDeleteComment(commentId);
+
+            // 물리 삭제 시 관련 정보도 모두 지운다 — 남겨 두면 없는 댓글을 가리키는 알림이 된다
+            verify(notificationService).deleteByResource(ResourceType.COMMENT, commentId);
+        }
+
+        @Test
         @DisplayName("이미 논리 삭제된 댓글이면 좋아요와 댓글은 지우지만, 기사의 댓글 수는 다시 줄이지 않는다")
         void softDeletedComment() {
             Comment comment = savedComment(mock(User.class), mock(Article.class));
@@ -565,7 +579,7 @@ class CommentApplicationTest {
                     .isEqualTo(CommentErrorType.COMMENT_NOT_FOUND);
             verify(commentRepository, never()).softDeleteIfActive(any(), any());
             verify(commentRepository, never()).deleteById(any());
-            verifyNoInteractions(commentLikeRepository, articleService);
+            verifyNoInteractions(commentLikeRepository, articleService, notificationService);
         }
     }
 }
