@@ -5,7 +5,7 @@ on:
     types: [opened, synchronize, reopened]
 
 permissions:
-  pull-requests: write   # 커밋 목록 조회 + 누락 알림 댓글 작성·삭제
+  pull-requests: write
 
 jobs:
   check:
@@ -20,10 +20,9 @@ jobs:
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
         run: |
           # merge 커밋(부모 2개 이상)은 빼고, 나머지 커밋을 한 줄씩(SHA + 제목) 모은다
-          # 번호는 보통 commit-msg 훅이 브랜치명에서 자동으로 붙여주므로, 평소엔 이 검사에
-          # 걸릴 일이 없음 — 훅이 안 깔린 PC, GitHub 웹 수정, --no-verify처럼 훅을 거치지
-          # 않은 예외적인 경우의 안전망일 뿐이라, PR을 막으면 rebase/force-push가 필요해져서
-          # 초보 팀원한텐 그게 더 위험함 — 경고로 낮춤
+          # 번호는 보통 commit-msg 훅이 브랜치명에서 붙여 준다. 이 검사는 훅을 거치지 않은 경우
+          # (훅 미설치, GitHub 웹 수정, --no-verify)의 안전망이라 PR을 막지 않고 경고만 한다
+          # — 막으면 rebase/force-push가 필요해져 그쪽이 더 위험함
           COMMITS=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}/commits" --paginate \
             --jq '.[] | select((.parents | length) < 2) | "\(.sha)\u001f\(.author.login // "")\u001f\(.commit.message | split("\n")[0])"') || {
             echo "::warning::PR 커밋 목록을 가져오지 못해 이슈번호 검사를 건너뜁니다."
@@ -79,7 +78,7 @@ jobs:
 
       - name: 이슈번호 누락 알림 댓글 (PR당 1개 고정, push할 때마다 내용 갱신)
         if: steps.issue-ref.outputs.status == 'warn'
-        continue-on-error: true   # 포크 PR 등 토큰 권한이 부족해 실패해도 PR을 막지 않음
+        continue-on-error: true
         uses: marocchino/sticky-pull-request-comment@773744901bac0e8cbb5a0dc842800d45e9b2b405 # v2
         with:
           header: commit-issue-ref
@@ -87,7 +86,7 @@ jobs:
 
       - name: 이슈번호 누락 없음 (기존 알림 댓글 제거)
         if: steps.issue-ref.outputs.status == 'ok'
-        continue-on-error: true   # 포크 PR 등 토큰 권한이 부족해 실패해도 PR을 막지 않음
+        continue-on-error: true
         uses: marocchino/sticky-pull-request-comment@773744901bac0e8cbb5a0dc842800d45e9b2b405 # v2
         with:
           header: commit-issue-ref

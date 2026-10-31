@@ -25,13 +25,10 @@ jobs:
           sparse-checkout: .github/scripts
           sparse-checkout-cone-mode: false
 
-      # 본문 서식 변환 라이브러리(.github/scripts/package.json). 설치에 실패해도 서식 없이 연동은 계속함
       - name: 노션 변환 라이브러리 설치
         continue-on-error: true
         run: npm ci --prefix .github/scripts --ignore-scripts --no-audit --no-fund
 
-      # 사람이 쓴 디스커션의 제목·라벨은 기본 토큰(GITHUB_TOKEN)으로 못 고쳐서 조직 봇 토큰을 씀
-      # 봇 설정이 없거나 실패하면 제목·라벨 수정만 건너뛰고 노션 연동은 계속함
       - name: 봇 토큰 만들기
         id: bot
         if: vars.DISCUSSION_BOT_CLIENT_ID != ''
@@ -58,7 +55,6 @@ jobs:
             echo "category=$(echo "$RESULT" | jq -r '.category')"
           } >> "$GITHUB_OUTPUT"
 
-      # 제목을 기본 문구 그대로 뒀을 때만 "[26.10.19(월)] 강사님 피드백"으로 바꿈 (직접 쓴 제목은 그대로, 노션에도 그 제목)
       - name: 자동 제목 정하기
         id: title
         env:
@@ -75,7 +71,6 @@ jobs:
           echo "title=$TITLE" >> "$GITHUB_OUTPUT"
           echo "rename=$([[ "$TITLE" != "$CURRENT_TITLE" ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
 
-      # 제목이 바뀔 때만 고침 (create에서는 question:질문·피드백 종류 라벨도 붙임)
       - name: 디스커션 제목·라벨 정리
         continue-on-error: true
         env:
@@ -116,7 +111,6 @@ jobs:
               }' -f labelableId="$DISCUSSION_NODE_ID" "${LABEL_ARGS[@]}"
           fi
 
-      # 날짜·시간 칸을 비워 두고 올리면 GitHub가 "_No response_"로 남기므로, 글 올린 날짜·시간(예 26.10.19(월) 14:00)으로 채워 둔다
       - name: 비워 둔 날짜·시간 칸 채우고 칸 사이 구분선 넣기
         continue-on-error: true
         env:
@@ -127,7 +121,7 @@ jobs:
           DATE_HEADING: 📆 날짜·시간
         run: |
           FILLED=$(printf '%s' "$BODY" | bash .github/scripts/fill-date-field.sh)
-          # 멤버별·기타 칸(📝·📑) 위에 구분선도 넣는다. 이미 있으면 그대로 둔다 (#133)
+          # 멤버별·기타 칸(📝·📑) 위에 구분선도 넣는다. 이미 있으면 그대로 둔다
           NEW_BODY=$(printf '%s' "${FILLED:-$BODY}" | bash .github/scripts/add-dividers.sh)
           if [[ "$NEW_BODY" == "$(printf '%s' "$BODY" | tr -d '\r')" ]]; then
             echo "날짜·시간 칸이 채워져 있고 구분선도 있어 건너뜁니다."
@@ -155,7 +149,6 @@ jobs:
           FEEDBACK_TYPE: ${{ steps.fields.outputs.feedback_type }}
           NOTE: ${{ steps.fields.outputs.note }}
           CATEGORY: ${{ steps.fields.outputs.category }}
-          # 회의록과 같은 스크립트로 본문을 만들되 멘토링 항목 기준 (속성으로 들어가는 항목은 본문에서 뺌)
           NOTION_FIELDS: '["🗂️ 노션 카테고리","🧑‍🏫 피드백 종류","📆 날짜·시간","😄 질문자 및 참여자","⚠️ 특이사항","📝 내용"]'
           NOTION_SKIP: '["🗂️ 노션 카테고리","🧑‍🏫 피드백 종류","📆 날짜·시간","😄 질문자 및 참여자"]'
         run: |
@@ -212,7 +205,6 @@ jobs:
           echo "page_url=$PAGE_URL" >> "$GITHUB_OUTPUT"
           echo "synced_at=$SYNCED_AT" >> "$GITHUB_OUTPUT"
 
-      # 재연동 때 이 댓글을 고칠 수 있게 봇이 단다
       - name: 노션 링크 디스커션 댓글로 남기기
         env:
           GH_TOKEN: ${{ steps.bot.outputs.token || secrets.GITHUB_TOKEN }}
@@ -237,12 +229,10 @@ jobs:
           sparse-checkout: .github/scripts
           sparse-checkout-cone-mode: false
 
-      # 본문 서식 변환 라이브러리(.github/scripts/package.json). 설치에 실패해도 서식 없이 연동은 계속함
       - name: 노션 변환 라이브러리 설치
         continue-on-error: true
         run: npm ci --prefix .github/scripts --ignore-scripts --no-audit --no-fund
 
-      # 제목·라벨 수정용 봇 토큰 (이유는 위 create job 참고)
       - name: 봇 토큰 만들기
         id: bot
         if: vars.DISCUSSION_BOT_CLIENT_ID != ''
@@ -325,7 +315,6 @@ jobs:
           echo "comment_id=$COMMENT_ID" >> "$GITHUB_OUTPUT"
           echo "comment_author=$COMMENT_AUTHOR" >> "$GITHUB_OUTPUT"
 
-      # 연동 댓글의 최초 연동 시각·재연동 횟수로 이번 기록을 계산 (노션 본문과 댓글에 같은 값)
       - name: 연동 기록 계산
         id: sync_meta
         env:
@@ -355,7 +344,6 @@ jobs:
             echo "category=$(echo "$RESULT" | jq -r '.category')"
           } >> "$GITHUB_OUTPUT"
 
-      # 제목 정하기 (위 create job과 같음)
       - name: 자동 제목 정하기
         id: title
         env:
@@ -372,7 +360,6 @@ jobs:
           echo "title=$TITLE" >> "$GITHUB_OUTPUT"
           echo "rename=$([[ "$TITLE" != "$CURRENT_TITLE" ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
 
-      # 제목이 바뀔 때만 고침
       - name: 디스커션 제목 다시 맞추기
         continue-on-error: true
         env:
@@ -388,7 +375,6 @@ jobs:
               }' -f discussionId="$DISCUSSION_NODE_ID" -f title="$TITLE"
           fi
 
-      # 날짜·시간 칸을 비워 두고 올리면 글 올린 날짜·시간(예 26.10.19(월) 14:00)으로 채워 둔다
       - name: 비워 둔 날짜·시간 칸 채우고 칸 사이 구분선 넣기
         continue-on-error: true
         env:
@@ -399,7 +385,7 @@ jobs:
           DATE_HEADING: 📆 날짜·시간
         run: |
           FILLED=$(printf '%s' "$BODY" | bash .github/scripts/fill-date-field.sh)
-          # 멤버별·기타 칸(📝·📑) 위에 구분선도 넣는다. 이미 있으면 그대로 둔다 (#133)
+          # 멤버별·기타 칸(📝·📑) 위에 구분선도 넣는다. 이미 있으면 그대로 둔다
           NEW_BODY=$(printf '%s' "${FILLED:-$BODY}" | bash .github/scripts/add-dividers.sh)
           if [[ "$NEW_BODY" == "$(printf '%s' "$BODY" | tr -d '\r')" ]]; then
             echo "날짜·시간 칸이 채워져 있고 구분선도 있어 건너뜁니다."
@@ -410,7 +396,6 @@ jobs:
               updateDiscussion(input: {discussionId: $discussionId, body: $body}) { discussion { id } }
             }' -f discussionId="$DISCUSSION_NODE_ID" -f body="$NEW_BODY"
 
-      # 노션 페이지를 지웠으면 휴지통에서 꺼내고, 완전히 지워졌으면 새로 만든다 (새로 만들면 연동 댓글 주소도 바뀜)
       - name: 노션 페이지 확인
         id: page
         env:
@@ -544,8 +529,6 @@ jobs:
               }
             }"
 
-      # 새 댓글 대신 연동 댓글의 "마지막 반영" 시각·재연동 횟수를 고침
-      # 기본 토큰(github-actions)이 단 댓글은 봇이 못 고쳐서, 그때만 새 댓글을 단다
       - name: 연동 댓글에 재연동 시각 반영
         continue-on-error: true
         env:

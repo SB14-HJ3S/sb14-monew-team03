@@ -1,8 +1,4 @@
 name: Board In Progress
-# 이슈 브랜치에 첫 커밋을 push하면 Projects 보드 상태를 "Todo (할것)" → "In progress (진행중)"으로 옮긴다 (#111)
-# - 브랜치만 만든 경우(develop 대비 새 커밋 없음)는 건너뜀 — Branch Keyword로 이슈 생성과 동시에 브랜치가 생기기 때문
-# - 상태가 "Todo"일 때만 바꿈. 이미 진행중·PR·완료·취소면 그대로 둠 (손으로 바꾼 상태를 덮어쓰지 않음)
-# - 노션 일정 DB의 "진행 중" 반영(schedule-notion-sync.yml)과 같은 시점이지만, 한쪽이 실패해도 영향이 없도록 파일을 나눔
 on:
   push:
     branches-ignore: [main, develop, codecov-badge]
@@ -102,7 +98,6 @@ jobs:
       - name: 보드 상태가 Todo면 In progress로 변경
         if: steps.check.outputs.node != ''
         env:
-          # Projects 보드는 기본 토큰으로 못 건드려서 PROJECTS_PAT을 씀 (issue-auto-setup.yml과 같음)
           GH_TOKEN: ${{ secrets.PROJECTS_PAT }}
           ISSUE: ${{ steps.check.outputs.issue }}
           CONTENT_ID: ${{ steps.check.outputs.node }}
