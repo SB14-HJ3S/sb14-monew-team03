@@ -1,5 +1,4 @@
 #!/bin/bash
-
 set -euo pipefail
 
 notion() {
@@ -32,7 +31,6 @@ if [[ "$STATUS" == 200 ]]; then
   fi
   echo "::warning::휴지통의 노션 페이지를 꺼내지 못해 새로 만듭니다: $(body "$RESTORED")" >&2
 elif [[ "$STATUS" == 404 ]]; then
-
   DB_STATUS=$(status "$(notion GET "databases/$NOTION_DB_ID")")
   if [[ "$DB_STATUS" != 200 ]]; then
     echo "::error::노션 페이지와 DB 둘 다 찾을 수 없습니다($DB_STATUS). 노션 DB에 연동 봇 접근 권한이 있는지 확인해 주세요." >&2

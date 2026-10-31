@@ -1,12 +1,10 @@
 
-
 const DATA_SOURCE_ID = 'da79e310-9743-8272-8e01-87d6c9b6a45e';
 const ISSUE_PROPERTY = '깃이슈';
 const STATUS_PROPERTY = '진행상태';
 const START_PROPERTY = '시작일';
 const END_PROPERTY = '종료일';
 const BRANCH_PATTERN = /^[a-z]+\/(\d+)-/;
-
 const BASE_BRANCH = 'develop';
 
 function kstDate(iso) {
@@ -37,7 +35,6 @@ async function findRow(notion, issueUrl) {
 function statusOf(page) {
   return page.properties[STATUS_PROPERTY]?.status?.name || '';
 }
-
 
 async function start({ github, context, core }) {
   const notion = notionClient(process.env.NOTION_TOKEN);
@@ -92,7 +89,6 @@ async function finishIssue(notion, core, issueUrl, closedAt) {
   }
   core.info(`${issueUrl}: 종료일 ${endDate}, 완료로 바꿨습니다.`);
 }
-
 
 async function finish({ github, context, core }) {
   const notion = notionClient(process.env.NOTION_TOKEN);

@@ -1,5 +1,4 @@
 
-
 const fs = require('fs');
 const { extractImages, stripImages, imageBlocks } = require('./notion-images.js');
 
@@ -10,9 +9,7 @@ const CARDS_FILE = 'ts-cards.json';
 const CONTEXT_FILE = 'ts-context.md';
 const WRITTEN_FILE = 'ts-written.json';
 const DIFF_LIMIT = 12000;
-
 const DEFAULT_THUMBNAIL = `https://raw.githubusercontent.com/${process.env.GITHUB_REPOSITORY || 'SB14-HJ3S/sb14-monew-team03'}/develop/.github/assets/troubleshooting-cover.png`;
-
 
 const PLACEHOLDERS = [
   '어떤 문제가 발생했는지 한 문장으로 작성해주세요.',
@@ -33,7 +30,6 @@ function duration(fromIso, toIso) {
   if (hours > 0) return `약 ${hours}시간`;
   return `약 ${minutes}분`;
 }
-
 
 function sections(body) {
   const result = {};
@@ -57,16 +53,12 @@ function sections(body) {
   return result;
 }
 
-
 const cleanTitle = (title) => title.replace(/^[^\[\p{L}\p{N}]*\[[^\]]+\]\s*:\s*/u, '');
-
 
 const inline = (text) => (text || '').replace(/^\s*[-*]\s+/gm, '').replace(/\n+/g, ' ').trim();
 
 const richText = (content, extra = {}) =>
   [{ type: 'text', text: { content: String(content).slice(0, TEXT_LIMIT), ...(extra.link ? { link: { url: extra.link } } : {}) }, ...(extra.bold ? { annotations: { bold: true } } : {}) }];
-
-
 
 const INLINE_MD = /(`[^`\n]+`|\*\*[^*\n]+\*\*)/g;
 function richMarkdown(content, extra = {}) {
@@ -88,7 +80,6 @@ function richMarkdown(content, extra = {}) {
     last = INLINE_MD.lastIndex;
   }
   push(text.slice(last));
-
   if (parts.length === 0) return richText(content, extra);
   return parts.length <= 100 ? parts : richText(content, extra);
 }
@@ -103,8 +94,6 @@ function chunks(text) {
   for (let i = 0; i < text.length; i += TEXT_LIMIT) out.push(text.slice(i, i + TEXT_LIMIT));
   return out.length ? out : [''];
 }
-
-
 
 function markdownBlocks(rawText) {
   const text = stripImages(rawText).trim();
@@ -136,7 +125,6 @@ function markdownBlocks(rawText) {
 }
 
 function overviewTable(rows) {
-
   const cell = (t, bold) => (Array.isArray(t) ? t : richMarkdown(t, { bold }));
   return {
     object: 'block',
@@ -154,7 +142,6 @@ function overviewTable(rows) {
   };
 }
 
-
 function solvers(prs, userMap) {
   const logins = [...new Set(prs.map((pr) => pr.author?.login).filter(Boolean))];
   if (logins.length === 0) return '-';
@@ -164,14 +151,8 @@ function solvers(prs, userMap) {
   ]);
 }
 
-
-
-
-
 function buildBlocks({ issue, prs, closedAt }, written, historyLine = '', images = {}, userMap = {}) {
   const screenshots = (title, list) => (list?.length ? [heading(3, title), ...list] : []);
-
-
   const isImage = (b) => b.type === 'image';
   const issueImages = [...(images.issue || [])];
   const prImages = [...(images.prs || [])];
@@ -193,7 +174,6 @@ function buildBlocks({ issue, prs, closedAt }, written, historyLine = '', images
     s['기대 결과'] && `기대 결과: ${inline(s['기대 결과'])}`,
     s['실제 결과'] && `실제 결과:\n${s['실제 결과']}`,
   ].filter(Boolean).join('\n\n');
-
   const missing = '-';
   const list = (items, type) => (Array.isArray(items) && items.length ? items.map((t) => block(type, t)) : [block('paragraph', missing)]);
 
@@ -227,7 +207,6 @@ function buildBlocks({ issue, prs, closedAt }, written, historyLine = '', images
     heading(3, '재현 방법'),
     ...markdownBlocks(written?.reproduce || s['재현 방법']),
     heading(3, '에러 메시지 / 로그'),
-
     ...(s['에러 로그'] ? markdownBlocks(s['에러 로그'].includes('```') ? s['에러 로그'] : '```\n' + s['에러 로그'] + '\n```') : [code('-')]),
     divider(),
     heading(2, '원인 분석'),
@@ -270,7 +249,6 @@ function notionClient(token) {
 
 const PR_FIELDS = 'number title body url createdAt mergedAt merged author { login }';
 
-
 async function loadIssueCard(github, owner, repo, number) {
   const q = await github.graphql(
     `query($o: String!, $r: String!, $n: Int!) { repository(owner: $o, name: $r) { issue(number: $n) {
@@ -282,7 +260,6 @@ async function loadIssueCard(github, owner, repo, number) {
   const issue = q.repository.issue;
   return { issue, prs: issue.closedByPullRequestsReferences.nodes.filter((pr) => pr.merged) };
 }
-
 
 async function loadPrCards(github, owner, repo, number) {
   const q = await github.graphql(
@@ -335,7 +312,6 @@ function contextHeader() {
   ];
 }
 
-
 async function appendCardContext(contextMd, { issue, prs }, github, owner, repo) {
   contextMd.push(`## 카드 키: ${cardKey({ issue, prs })}`, '');
   if (issue) contextMd.push(`### 이슈 #${issue.number} ${issue.title}`, '', issue.body || '(본문 없음)', '');
@@ -352,7 +328,6 @@ async function appendCardContext(contextMd, { issue, prs }, github, owner, repo)
     }
   }
 }
-
 
 async function prepare({ github, context, core }) {
   const notion = notionClient(process.env.NOTION_TOKEN);
@@ -373,7 +348,6 @@ async function prepare({ github, context, core }) {
   const out = [];
   for (const card of cards) {
     const key = cardKey(card);
-
     if (resync && !card.issue?.closedAt && !card.prs.some((p) => p.merged)) {
       core.warning(`아직 해결되지 않아(이슈 열림, 머지된 PR 없음) 카드를 만들지 않습니다: ${key}`);
       continue;
@@ -397,14 +371,12 @@ async function prepare({ github, context, core }) {
   core.info(`카드 ${out.length}개: ${out.map((c) => `${c.action} ${c.key}`).join(', ')}`);
 }
 
-
 const AUDIT_CREATE_LIMIT = 10;
 
 async function audit({ github, context, core }) {
   const notion = notionClient(process.env.NOTION_TOKEN);
   const { owner, repo } = context.repo;
   const mode = process.env.AUDIT_MODE === 'create' ? 'create' : 'report';
-
 
   const closed = await github.paginate(github.rest.issues.listForRepo, { owner, repo, state: 'closed', labels: 'fix:수정', per_page: 100 });
   const cards = new Map();
@@ -419,7 +391,6 @@ async function audit({ github, context, core }) {
     }
     for (const card of found) if (!cards.has(cardKey(card))) cards.set(cardKey(card), card);
   }
-
 
   const links = new Map();
   let cursor;
@@ -461,7 +432,6 @@ async function audit({ github, context, core }) {
   core.info(`빠진 것 ${missing.length}개, 중복 ${duplicates.length}개, 이번에 만들 것 ${out.length}개`);
 }
 
-
 function kstStamp(iso) {
   const t = iso ? new Date(iso).getTime() : Date.now();
   return new Date(t + 9 * 3600 * 1000).toISOString().replace('T', ' ').slice(0, 16);
@@ -500,7 +470,6 @@ async function commentSynced(github, context, core, number, isPr, pageUrl, meta,
   }
 }
 
-
 async function write({ github, context, core }) {
   const notion = notionClient(process.env.NOTION_TOKEN);
   const userMap = JSON.parse(process.env.NOTION_USER_MAP || '{}');
@@ -535,17 +504,14 @@ async function write({ github, context, core }) {
       continue;
     }
 
-
     const target = context.payload.issue || context.payload.pull_request;
     const oldComment = card.action === 'rewrite' && target ? await findSyncComment(github, context, core, target.number) : null;
     const meta = syncMeta(card.action === 'rewrite' ? oldComment || { body: '', created_at: null } : null);
-
     const warn = (m) => core.warning(m);
     const images = {
       issue: await imageBlocks(extractImages(card.issue?.body), process.env.NOTION_TOKEN, warn),
       prs: await imageBlocks(card.prs.flatMap((pr) => extractImages(pr.body)), process.env.NOTION_TOKEN, warn),
     };
-
     if (![...images.issue, ...images.prs].some((b) => b.type === 'image')) {
       [images.cover] = await imageBlocks([{ url: DEFAULT_THUMBNAIL, alt: '' }], process.env.NOTION_TOKEN, warn);
     }
@@ -556,14 +522,12 @@ async function write({ github, context, core }) {
         await notion('PATCH', `/blocks/${page.id}/children`, { children: blocks.slice(i, i + 100) });
       }
       core.info(`노션 트러블슈팅 카드 생성: ${page.url}`);
-
       if (context.eventName !== 'workflow_dispatch') {
         if (card.issue) await commentSynced(github, context, core, card.issue.number, false, page.url, meta);
         for (const pr of card.prs) await commentSynced(github, context, core, pr.number, true, page.url, meta);
       }
       continue;
     }
-
 
     await notion('PATCH', `/pages/${card.pageId}`, { properties });
     const old = [];
@@ -578,7 +542,6 @@ async function write({ github, context, core }) {
     }
     for (const id of old) await notion('DELETE', `/blocks/${id}`);
     core.info(`resync로 카드 본문을 다시 씀: ${card.key}`);
-
     try {
       const pageUrl = (await notion('GET', `/pages/${card.pageId}`)).url;
       await commentSynced(github, context, core, target.number, Boolean(context.payload.pull_request), pageUrl, meta, oldComment);

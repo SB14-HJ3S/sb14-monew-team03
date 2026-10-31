@@ -1,5 +1,4 @@
 #!/bin/bash
-
 set -euo pipefail
 
 CLEAN="$(cat | tr -d '\r')"
@@ -23,7 +22,6 @@ if [[ "$FEEDBACK_TYPE" != "강사님" && "$FEEDBACK_TYPE" != "멘토님" && "$FE
 fi
 
 RAW="$(extract_heading "📆 날짜·시간" | head -1)"
-
 RAW="$(printf '%s' "$RAW" | sed -E 's/\([^)]*\)//')"
 DATE=""
 TIME=""
@@ -34,7 +32,6 @@ if [[ "$RAW" =~ ^([0-9]{2}|[0-9]{4})[.-]?([0-9]{2})[.-]?([0-9]{2})([[:space:]]+(
   if [[ -n "${BASH_REMATCH[4]}" ]] && (( 10#${BASH_REMATCH[5]} <= 23 && 10#${BASH_REMATCH[6]} <= 59 )); then
     TIME="$(printf '%02d:%s' "$((10#${BASH_REMATCH[5]}))" "${BASH_REMATCH[6]}")"
   fi
-
   if [[ "$(date -d "$DATE" +%Y-%m-%d 2>/dev/null)" != "$DATE" ]]; then
     DATE=""
     TIME=""
@@ -57,11 +54,9 @@ if [[ -n "$TIME" ]]; then
   NOTION_DATE="${DATE}T${TIME}:00+09:00"
 fi
 
-
 PARTICIPANTS_JSON="$(extract_heading "😄 질문자 및 참여자" | head -1 \
   | jq -R -c 'if . == "_No response_" or . == "None" then [] else split(",") | map(gsub("^\\s+|\\s+$"; "")) | map(select(length > 0)) end')"
 PARTICIPANTS_JSON="${PARTICIPANTS_JSON:-[]}"
-
 
 NOTE="$(extract_heading "⚠️ 특이사항" | paste -sd' ' -)"
 [[ "$NOTE" == "_No response_" ]] && NOTE=""

@@ -36,7 +36,7 @@ jobs:
 
       - name: 제목의 "타입:" 접두사로 라벨 자동 설정(교체)
         if: ${{ !cancelled() }}
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           script: |
             // context.payload는 이벤트 발생 시점에 고정된 스냅샷이라, opened 직후 바로
@@ -100,10 +100,9 @@ jobs:
               });
             }
 
-
       - name: PR 본문에 이슈 연결 자동 추가
         if: ${{ !cancelled() }}
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           script: |
             // 제목 변환·라벨 단계가 PR을 고쳤을 수 있어 최신 본문을 다시 조회

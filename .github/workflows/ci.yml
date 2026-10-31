@@ -8,7 +8,6 @@ on:
   push:
     branches: [develop]   # 머지된 뒤 커버리지 뱃지를 갱신하기 위한 트리거 (PR 중에는 뱃지 커밋 안 함)
     # 문서만 바뀐 머지는 CI·배포를 아예 안 돌림
-
     paths-ignore:
       - '**.md'
       - 'docs/**'
@@ -175,7 +174,6 @@ jobs:
           reviewdog -f=checkstyle -name=checkstyle-test -reporter=github-pr-check -fail-level=none \
             < build/reports/checkstyle/test.xml
 
-
       - name: Checkstyle 위반 개수 집계 및 알림 댓글 본문 만들기
         id: checkstyle-count
         if: github.event_name == 'pull_request'
@@ -205,7 +203,6 @@ jobs:
               problemBody: count > 0 ? fs.readFileSync('checkstyle-comment.md', 'utf8') : '',
               okBody: '### ✅ 이 PR에서 생긴 Checkstyle 위반 없어요',
             });
-
 
       - name: Codecov 업로드 토큰 확인
         id: codecov-token

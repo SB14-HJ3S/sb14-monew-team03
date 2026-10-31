@@ -1,5 +1,4 @@
 #!/bin/bash
-
 set -euo pipefail
 
 BODY="$(cat | tr -d '\r')"

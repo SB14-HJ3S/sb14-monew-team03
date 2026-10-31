@@ -10,7 +10,7 @@ permissions:
 
 env:
   NOTION_DB_ID: "4a89e310-9743-831e-a003-01a1c5314951"
-
+  # ⚠️ b-daily-scrum.yml의 기본 title과 같아야 함 (이 문구 그대로면 자동 제목으로 바꿈)
   PLACEHOLDER_TITLE: "제목을 수정하지 않으면 자동 제목으로 채워집니다"
 
 jobs:
@@ -23,11 +23,9 @@ jobs:
           sparse-checkout: .github/scripts
           sparse-checkout-cone-mode: false
 
-
       - name: 노션 변환 라이브러리 설치
         continue-on-error: true
         run: npm ci --prefix .github/scripts --ignore-scripts --no-audit --no-fund
-
 
       - name: 봇 토큰 만들기
         id: bot
@@ -52,7 +50,6 @@ jobs:
             echo "meeting_type=$(echo "$RESULT" | jq -r '.meeting_type')"
             echo "category=$(echo "$RESULT" | jq -r '.category')"
           } >> "$GITHUB_OUTPUT"
-
 
       - name: 자동 제목 정하기
         id: title
@@ -95,7 +92,6 @@ jobs:
             -f discussionId="$DISCUSSION_NODE_ID" \
             -f title="$TITLE"
 
-
       - name: 비워 둔 날짜 칸 채우고 칸 사이 구분선 넣기
         continue-on-error: true
         env:
@@ -118,7 +114,6 @@ jobs:
             mutation($discussionId: ID!, $body: String!) {
               updateDiscussion(input: {discussionId: $discussionId, body: $body}) { discussion { id } }
             }' -f discussionId="$DISCUSSION_NODE_ID" -f body="$NEW_BODY"
-
 
       - name: 디스커션에 회의 종류 라벨 붙이기
         continue-on-error: true
@@ -172,9 +167,7 @@ jobs:
           NOTE: ${{ steps.fields.outputs.note }}
           CATEGORY: ${{ steps.fields.outputs.category }}
           PARTICIPANTS: ${{ steps.fields.outputs.participants }}
-
           NOTION_USER_MAP: ${{ vars.NOTION_USER_MAP }}
-
           NOTION_PARTICIPANT_MAP: ${{ vars.NOTION_PARTICIPANT_MAP }}
           MEETING_TYPE: ${{ steps.fields.outputs.meeting_type }}
           DATE_LABEL: ${{ steps.title.outputs.date_label }}
@@ -233,7 +226,6 @@ jobs:
           echo "page_url=$PAGE_URL" >> "$GITHUB_OUTPUT"
           echo "synced_at=$SYNCED_AT" >> "$GITHUB_OUTPUT"
 
-
       - name: 노션 링크 디스커션 댓글로 남기기
         env:
           GH_TOKEN: ${{ steps.bot.outputs.token || secrets.GITHUB_TOKEN }}
@@ -261,11 +253,9 @@ jobs:
           sparse-checkout: .github/scripts
           sparse-checkout-cone-mode: false
 
-
       - name: 노션 변환 라이브러리 설치
         continue-on-error: true
         run: npm ci --prefix .github/scripts --ignore-scripts --no-audit --no-fund
-
 
       - name: 봇 토큰 만들기
         id: bot
@@ -349,7 +339,6 @@ jobs:
           echo "comment_id=$COMMENT_ID" >> "$GITHUB_OUTPUT"
           echo "comment_author=$COMMENT_AUTHOR" >> "$GITHUB_OUTPUT"
 
-
       - name: 연동 기록 계산
         id: sync_meta
         env:
@@ -375,7 +364,6 @@ jobs:
             echo "meeting_type=$(echo "$RESULT" | jq -r '.meeting_type')"
             echo "category=$(echo "$RESULT" | jq -r '.category')"
           } >> "$GITHUB_OUTPUT"
-
 
       - name: 자동 제목 정하기
         id: title
@@ -418,7 +406,6 @@ jobs:
             -f discussionId="$DISCUSSION_NODE_ID" \
             -f title="$TITLE"
 
-
       - name: 비워 둔 날짜 칸 채우고 칸 사이 구분선 넣기
         continue-on-error: true
         env:
@@ -442,7 +429,6 @@ jobs:
               updateDiscussion(input: {discussionId: $discussionId, body: $body}) { discussion { id } }
             }' -f discussionId="$DISCUSSION_NODE_ID" -f body="$NEW_BODY"
 
-
       - name: 노션 페이지 확인
         id: page
         env:
@@ -461,12 +447,10 @@ jobs:
           TITLE: ${{ steps.title.outputs.title }}
           NOTE: ${{ steps.fields.outputs.note }}
           CATEGORY: ${{ steps.fields.outputs.category }}
-
           DATE_OVERRIDE: ${{ steps.fields.outputs.date_override || (steps.page.outputs.created == 'true' && steps.title.outputs.date) || '' }}
           PARTICIPANTS: ${{ steps.fields.outputs.participants }}
           AUTHOR: ${{ github.event.discussion.user.login }}
           NOTION_USER_MAP: ${{ vars.NOTION_USER_MAP }}
-
           NOTION_PARTICIPANT_MAP: ${{ vars.NOTION_PARTICIPANT_MAP }}
           MEETING_TYPE: ${{ steps.fields.outputs.meeting_type }}
         run: |
@@ -575,7 +559,6 @@ jobs:
                 clientMutationId
               }
             }"
-
 
       - name: 연동 댓글에 재연동 시각 반영
         continue-on-error: true

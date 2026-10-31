@@ -22,9 +22,7 @@ turndown.remove(['head', 'style', 'script']);
 
 const LEX_OPTIONS = { gfm: true, breaks: true }; // GitHub 디스커션은 줄바꿈 한 번도 그대로 줄바꿈
 
-
 const plain = (content, annotations = {}, link = null) => ({ content, annotations, link });
-
 
 function inline(tokens, annotations = {}, link = null) {
   const out = [];
@@ -51,7 +49,6 @@ function inline(tokens, annotations = {}, link = null) {
         out.push(plain('\n', annotations, link));
         break;
       case 'image':
-
         if (token.text) out.push(plain(token.text, annotations, link));
         break;
       case 'html':
@@ -70,7 +67,6 @@ function inline(tokens, annotations = {}, link = null) {
   return out;
 }
 
-
 function inlineHtml(html, annotations, link) {
   if (/^<br\s*\/?>$/i.test(html.trim())) return [plain('\n', annotations, link)];
   const text = decode(html.replace(/<[^>]*>/g, ''));
@@ -86,7 +82,6 @@ function decode(text) {
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&');
 }
-
 
 function richText(parts) {
   const merged = [];
@@ -107,7 +102,6 @@ function richText(parts) {
       out.push(item);
     }
   }
-
   if (out.length > RICH_TEXT_LIMIT) {
     const rest = out.splice(RICH_TEXT_LIMIT - 1).map((t) => t.text.content).join('');
     out.push({ type: 'text', text: { content: rest.slice(0, TEXT_LIMIT) } });
@@ -133,7 +127,6 @@ function textBlocks(type, parts, extra = {}) {
   if (!rich.length) return [];
   return [{ object: 'block', type, [type]: { rich_text: rich, ...extra } }];
 }
-
 
 let images = [];
 
@@ -195,9 +188,7 @@ function block(token, depth) {
 function list(token, depth) {
   const out = [];
   for (const item of token.items) {
-
     const type = item.task ? 'to_do' : token.ordered ? 'numbered_list_item' : 'bulleted_list_item';
-
     let first = null;
     const rest = [];
     for (const child of item.tokens) {
@@ -207,15 +198,12 @@ function list(token, depth) {
     }
     const parts = first ? inline(first.tokens || [{ type: 'text', text: first.text }]) : [];
     const extra = item.task ? { checked: Boolean(item.checked) } : {};
-
     const [itemBlock = { object: 'block', type, [type]: { rich_text: [], ...extra } }] = textBlocks(type, parts, extra);
     const children = blocks(rest, depth + 1);
     out.push(...nest(itemBlock, children, depth));
   }
   return out;
 }
-
-
 
 function nest(parent, children, depth) {
   if (!children.length) return [parent];
@@ -230,7 +218,6 @@ function table(token, depth) {
   const header = token.header.map((cell) => inline(cell.tokens));
   const rows = token.rows.map((row) => row.map((cell) => inline(cell.tokens)));
   const width = Math.max(header.length, ...rows.map((r) => r.length));
-
   if (depth >= MAX_DEPTH) {
     return [header, ...rows].flatMap((cells) =>
       textBlocks('paragraph', cells.flatMap((c, i) => (i ? [plain(' | '), ...c] : c))),
@@ -241,7 +228,6 @@ function table(token, depth) {
     type: 'table_row',
     table_row: { cells: Array.from({ length: width }, (_, i) => richText(trimParts(cells[i] || []))) },
   });
-
   const tables = [];
   for (let i = 0; i === 0 || i < rows.length; i += MAX_CHILDREN - 1) {
     tables.push({
@@ -258,14 +244,12 @@ function table(token, depth) {
   return tables;
 }
 
-
 function html(source, depth) {
   const trimmed = source.trim();
   if (/^<!--[\s\S]*-->$/.test(trimmed)) return []; // 주석은 GitHub에서도 안 보임
   const markdown = turndown.turndown(source).trim();
   if (!markdown) return [];
   const tokens = new Lexer(LEX_OPTIONS).lex(markdown);
-
   if (tokens.every((t) => t.type === 'html' || t.type === 'space')) {
     return textBlocks('paragraph', [plain(decode(markdown.replace(/<[^>]*>/g, '')))]);
   }
@@ -275,8 +259,6 @@ function html(source, depth) {
 function convert(markdown) {
   return blocks(new Lexer(LEX_OPTIONS).lex(markdown));
 }
-
-
 
 function main() {
   images = JSON.parse(process.env.NOTION_IMAGES || '[]');

@@ -3,7 +3,6 @@ const NOTION_VERSION = '2022-06-28';
 const MAX_BYTES = 5 * 1024 * 1024;
 const MARKER = (i) => `[[NOTION_IMAGE:${i}]]`;
 
-
 const IMAGE_PATTERN = /<img\b[^>]*>|!\[([^\]]*)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/gi;
 
 function parseMatch(match) {
@@ -42,7 +41,6 @@ function extractImages(text) {
 
 const stripImages = (text) => outsideCode(text, (part) => part.replace(IMAGE_PATTERN, '')).replace(/\n{3,}/g, '\n\n');
 
-
 function markImages(text) {
   let i = 0;
   return outsideCode(text, (part) =>
@@ -66,7 +64,6 @@ async function uploadToNotion(token, { url }, index) {
   if (!res.ok) throw new Error(`이미지 내려받기 실패(${res.status})`);
   const type = (res.headers.get('content-type') || '').split(';')[0].trim();
   if (!EXTENSIONS[type]) throw new Error(`이미지가 아님(${type || '형식 모름'})`);
-
   const length = Number(res.headers.get('content-length') || 0);
   if (length > MAX_BYTES) {
     await res.body?.cancel().catch(() => {});
@@ -117,7 +114,6 @@ if (require.main === module) {
   process.stdin.setEncoding('utf8');
   process.stdin.on('data', (chunk) => (input += chunk));
   process.stdin.on('end', async () => {
-
     try {
       const images = await imageBlocks(extractImages(input), process.env.NOTION_TOKEN, (m) => console.error(`::warning::${m}`));
       process.stdout.write(JSON.stringify({ body: markImages(input), images }));

@@ -1,5 +1,4 @@
 name: Board In Progress
-
 on:
   push:
     branches-ignore: [main, develop, codecov-badge]
@@ -99,7 +98,6 @@ jobs:
       - name: 보드 상태가 Todo면 In progress로 변경
         if: steps.check.outputs.node != ''
         env:
-
           GH_TOKEN: ${{ secrets.PROJECTS_PAT }}
           ISSUE: ${{ steps.check.outputs.issue }}
           CONTENT_ID: ${{ steps.check.outputs.node }}

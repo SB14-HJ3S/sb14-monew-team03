@@ -31,7 +31,6 @@ jobs:
             --jq 'length' 2>/dev/null || echo 0)
           COUNT=${COUNT:-0}
 
-
           if ! EARLIER_APPROVALS=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}/reviews" \
             --paginate 2>/dev/null \
             | jq -s --arg sha "$PR_HEAD_SHA" --argjson rid "$REVIEW_ID" \
