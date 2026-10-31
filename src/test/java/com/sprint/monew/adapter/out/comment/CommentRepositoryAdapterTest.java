@@ -9,6 +9,7 @@ import com.sprint.monew.domain.comment.entity.Comment;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.type.ArticleSourceType;
 import com.sprint.monew.support.IntegrationTest;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -76,5 +77,33 @@ class CommentRepositoryAdapterTest {
 
         assertThat(updated).isZero();
         assertThat(likeCountOf(commentId)).isZero();
+    }
+
+    @Test
+    @DisplayName("살아 있는 댓글을 논리 삭제하면 삭제 시각이 들어가고, 바뀐 줄 수 1을 돌려준다")
+    void softDeleteIfActive() {
+        UUID commentId = savedCommentId(0L);
+        Instant deletedAt = Instant.parse("2026-10-31T00:00:00Z");
+
+        int updated = commentRepository.softDeleteIfActive(commentId, deletedAt);
+
+        assertThat(updated).isEqualTo(1);
+        assertThat(commentRepository.findById(commentId).orElseThrow().getDeletedAt())
+                .isEqualTo(deletedAt);
+    }
+
+    @Test
+    @DisplayName("이미 논리 삭제된 댓글이면 삭제 시각을 바꾸지 않고, 바뀐 줄 수 0을 돌려준다")
+    void softDeleteIfActiveAlreadyDeleted() {
+        UUID commentId = savedCommentId(0L);
+        Instant firstDeletedAt = Instant.parse("2026-10-31T00:00:00Z");
+        commentRepository.softDeleteIfActive(commentId, firstDeletedAt);
+
+        int updated =
+                commentRepository.softDeleteIfActive(commentId, firstDeletedAt.plusSeconds(60));
+
+        assertThat(updated).isZero();
+        assertThat(commentRepository.findById(commentId).orElseThrow().getDeletedAt())
+                .isEqualTo(firstDeletedAt);
     }
 }
