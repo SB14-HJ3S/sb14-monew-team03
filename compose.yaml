@@ -45,6 +45,12 @@ services:
     image: 'grafana/grafana:13.2.4'
     ports:
       - '3000:3000'
+    environment:
+      PROMETHEUS_URL: 'http://prometheus:9090'
+    volumes:
+      - './monitoring/grafana/provisioning/datasources/prometheus.yml:/etc/grafana/provisioning/datasources/prometheus.yml:ro'
+      - './monitoring/grafana/provisioning/dashboards/monew.yml:/etc/grafana/provisioning/dashboards/monew.yml:ro'
+      - './monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro'
     depends_on:
       - prometheus
 
