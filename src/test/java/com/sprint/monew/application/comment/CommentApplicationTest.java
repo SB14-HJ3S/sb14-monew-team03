@@ -61,7 +61,7 @@ class CommentApplicationTest {
     private final UUID articleId = UUID.randomUUID();
     private final Instant createdAt = Instant.parse("2026-10-21T00:00:00Z");
 
-    // CommentServiceImpl은 진짜로 쓰고 DB 포트만 가짜로 둔다 — 조립(Application)과 댓글 DB 처리(Service)를 함께 검증한다
+    // CommentServiceImpl은 진짜로 쓰고 DB 포트만 가짜로 둬서 Application과 Service를 같이 검증한다
     @BeforeEach
     void setUp() {
         commentApplication =
@@ -533,7 +533,7 @@ class CommentApplicationTest {
 
             commentApplication.hardDeleteComment(commentId);
 
-            // 물리 삭제 시 관련 정보도 모두 지운다 — 남겨 두면 없는 댓글을 가리키는 알림이 된다
+            // 물리 삭제할 때는 그 댓글의 좋아요 알림도 같이 지워야 한다
             verify(notificationService).deleteByResource(ResourceType.COMMENT, commentId);
         }
 

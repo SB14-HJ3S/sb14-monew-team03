@@ -8,6 +8,8 @@ import com.sprint.monew.adapter.out.user.UserRepositoryAdapter;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.comment.entity.Comment;
 import com.sprint.monew.domain.user.entity.User;
+import com.sprint.monew.global.exception.MonewException;
+import com.sprint.monew.global.exception.errortype.CommentErrorType;
 import com.sprint.monew.global.type.ArticleSourceType;
 import com.sprint.monew.support.IntegrationTest;
 import java.time.LocalDateTime;
@@ -103,30 +105,38 @@ class CommentDeleteConcurrencyTest {
     }
 
     // 모든 스레드가 준비되면 한꺼번에 출발시킨다
-    // 늦게 온 요청은 404 등으로 실패하는 게 정상이라 예외는 무시하고, 결과는 DB 값으로만 본다
+    // 늦게 온 요청은 COMMENT_NOT_FOUND로 실패하는 게 정상이고, 그 밖의 예외가 나면 테스트를 실패시킨다
     private void runConcurrently(DeleteRequest request) throws Exception {
         ExecutorService executor = Executors.newFixedThreadPool(REQUEST_COUNT);
-        CountDownLatch start = new CountDownLatch(1);
-        List<Future<?>> results = new ArrayList<>();
-        for (int i = 0; i < REQUEST_COUNT; i++) {
-            int index = i;
-            results.add(
-                    executor.submit(
-                            () -> {
-                                start.await();
-                                request.run(index);
-                                return null;
-                            }));
-        }
-        start.countDown();
-        for (Future<?> result : results) {
-            try {
-                result.get(30, TimeUnit.SECONDS);
-            } catch (ExecutionException ignored) {
-                // 먼저 지운 요청에 밀린 요청
+        try {
+            CountDownLatch start = new CountDownLatch(1);
+            List<Future<?>> results = new ArrayList<>();
+            for (int i = 0; i < REQUEST_COUNT; i++) {
+                int index = i;
+                results.add(
+                        executor.submit(
+                                () -> {
+                                    start.await();
+                                    request.run(index);
+                                    return null;
+                                }));
             }
+            start.countDown();
+            for (Future<?> result : results) {
+                try {
+                    result.get(30, TimeUnit.SECONDS);
+                } catch (ExecutionException e) {
+                    // 먼저 지운 요청에 밀린 요청
+                    assertThat(e.getCause())
+                            .isInstanceOf(MonewException.class)
+                            .extracting("errorType")
+                            .isEqualTo(CommentErrorType.COMMENT_NOT_FOUND);
+                }
+            }
+        } finally {
+            // 시간 초과로 끝나도 스레드가 남아 cleanUp과 겹치지 않게 멈춘다
+            executor.shutdownNow();
         }
-        executor.shutdown();
     }
 
     private Integer commentCount() {

@@ -114,7 +114,7 @@ public class CommentApplication implements CommentUseCase {
         // 삭제 쿼리 뒤에는 댓글 정보를 못 읽을 수 있어서 먼저 꺼내 둔다
         UUID articleId = comment.getArticle().getId();
 
-        // 읽은 뒤 다른 요청이 먼저 지웠으면 없는 댓글로 본다 — 댓글 수를 두 번 줄이지 않게
+        // 읽은 뒤에 다른 요청이 먼저 지웠으면 없는 댓글로 보고 댓글 수는 안 줄인다
         if (!commentService.softDeleteIfActive(commentId)) {
             throw new MonewException(CommentErrorType.COMMENT_NOT_FOUND);
         }
@@ -143,7 +143,7 @@ public class CommentApplication implements CommentUseCase {
             articleService.decreaseCommentCount(articleId);
         }
 
-        // 물리 삭제 시 관련 정보도 모두 지운다 — 없는 댓글을 가리키는 좋아요 알림이 남지 않게
+        // 물리 삭제할 때는 이 댓글의 좋아요 알림도 같이 지운다
         notificationService.deleteByResource(ResourceType.COMMENT, commentId);
     }
 }
