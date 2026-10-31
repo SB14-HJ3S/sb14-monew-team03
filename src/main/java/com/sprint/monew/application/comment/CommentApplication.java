@@ -14,6 +14,8 @@ import com.sprint.monew.domain.comment.event.CommentLikedEvent;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.annotation.ApplicationService;
 import com.sprint.monew.global.context.RequestIdContext;
+import com.sprint.monew.global.exception.MonewException;
+import com.sprint.monew.global.exception.errortype.CommentErrorType;
 import com.sprint.monew.global.pagination.PageResult;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -106,9 +108,15 @@ public class CommentApplication implements CommentUseCase {
     public void softDeleteComment(UUID commentId) {
         Comment comment = commentService.getActiveComment(commentId);
 
-        comment.softDelete();
+        // 삭제 쿼리 뒤에는 댓글 정보를 못 읽을 수 있어서 먼저 꺼내 둔다
+        UUID articleId = comment.getArticle().getId();
 
-        articleService.decreaseCommentCount(comment.getArticle().getId());
+        // 읽은 뒤 다른 요청이 먼저 지웠으면 없는 댓글로 본다 — 댓글 수를 두 번 줄이지 않게
+        if (!commentService.softDeleteIfActive(commentId)) {
+            throw new MonewException(CommentErrorType.COMMENT_NOT_FOUND);
+        }
+
+        articleService.decreaseCommentCount(articleId);
     }
 
     @Override
@@ -117,8 +125,11 @@ public class CommentApplication implements CommentUseCase {
         Comment comment = commentService.getComment(commentId);
 
         // 삭제 쿼리 뒤에는 댓글 정보를 못 읽을 수 있어서 먼저 꺼내 둔다
-        boolean wasActive = !comment.isDeleted();
         UUID articleId = comment.getArticle().getId();
+
+        // 살아 있었는지는 읽은 값 말고 DB에서 조건부로 지워 보고 판단한다
+        // 동시에 온 논리 삭제와 겹쳐도 둘 중 한 요청만 댓글 수를 줄인다
+        boolean wasActive = commentService.softDeleteIfActive(commentId);
 
         // 좋아요가 댓글을 가리키고 있어서 좋아요부터 지운다
         commentService.deleteAllLikes(commentId);

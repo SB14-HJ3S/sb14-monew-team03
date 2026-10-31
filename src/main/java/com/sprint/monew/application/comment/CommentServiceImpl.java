@@ -7,6 +7,7 @@ import com.sprint.monew.domain.comment.entity.CommentLike;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.CommentErrorType;
+import java.time.Instant;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -91,9 +92,10 @@ public class CommentServiceImpl implements CommentService {
         commentRepository.deleteById(commentId);
     }
 
+    // 살아 있던 댓글을 이번 요청이 지웠으면 true, 이미 지워져 있었으면 false
     @Override
     @Transactional
     public boolean softDeleteIfActive(UUID commentId) {
-        return false;
+        return commentRepository.softDeleteIfActive(commentId, Instant.now()) == 1;
     }
 }
