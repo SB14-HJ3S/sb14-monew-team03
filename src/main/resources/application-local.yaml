@@ -28,3 +28,8 @@ spring:
 logging:
   level:
     org.hibernate.SQL: DEBUG
+
+monew:
+  notification:
+    cleanup:
+      cron: "*/10 * * * * *"
