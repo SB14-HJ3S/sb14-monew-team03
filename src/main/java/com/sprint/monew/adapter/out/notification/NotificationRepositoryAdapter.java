@@ -3,6 +3,7 @@ package com.sprint.monew.adapter.out.notification;
 import com.sprint.monew.application.notification.provided.dto.NotificationQuery;
 import com.sprint.monew.application.notification.required.NotificationRepositoryPort;
 import com.sprint.monew.domain.notification.entity.Notification;
+import com.sprint.monew.global.type.ResourceType;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -59,5 +60,10 @@ public class NotificationRepositoryAdapter implements NotificationRepositoryPort
     @Override
     public int deleteReadBefore(LocalDateTime threshold) {
         return jpaRepository.deleteReadBefore(threshold);
+    }
+
+    @Override
+    public int deleteByResource(ResourceType resourceType, UUID resourceId) {
+        return 0;
     }
 }
