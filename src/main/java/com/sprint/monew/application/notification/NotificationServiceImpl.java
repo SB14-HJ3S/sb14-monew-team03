@@ -83,4 +83,9 @@ public class NotificationServiceImpl implements NotificationService {
     public int deleteReadBefore(LocalDateTime threshold) {
         return notificationRepository.deleteReadBefore(threshold);
     }
+
+    @Override
+    public int deleteByResource(ResourceType resourceType, UUID resourceId) {
+        return 0;
+    }
 }

@@ -6,6 +6,7 @@ import com.sprint.monew.application.comment.provided.dto.CommentLikeResult;
 import com.sprint.monew.application.comment.provided.dto.CommentQuery;
 import com.sprint.monew.application.comment.provided.dto.CommentResult;
 import com.sprint.monew.application.comment.required.CommentEventPublisherPort;
+import com.sprint.monew.application.notification.NotificationService;
 import com.sprint.monew.application.user.IUserService;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.comment.entity.Comment;
@@ -29,6 +30,7 @@ public class CommentApplication implements CommentUseCase {
     private final IUserService userService;
     private final ArticleService articleService;
     private final CommentEventPublisherPort commentEventPublisher;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional

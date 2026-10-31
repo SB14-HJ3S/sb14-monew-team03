@@ -17,6 +17,7 @@ import com.sprint.monew.application.comment.provided.dto.CommentResult;
 import com.sprint.monew.application.comment.required.CommentEventPublisherPort;
 import com.sprint.monew.application.comment.required.CommentLikeRepositoryPort;
 import com.sprint.monew.application.comment.required.CommentRepositoryPort;
+import com.sprint.monew.application.notification.NotificationService;
 import com.sprint.monew.application.user.IUserService;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.comment.entity.Comment;
@@ -52,6 +53,7 @@ class CommentApplicationTest {
     @Mock private ArticleService articleService;
     @Mock private CommentEventPublisherPort commentEventPublisher;
     private CommentApplication commentApplication;
+    @Mock private NotificationService notificationService;
 
     private final UUID commentId = UUID.randomUUID();
     private final UUID authorId = UUID.randomUUID();
@@ -66,7 +68,8 @@ class CommentApplicationTest {
                         new CommentServiceImpl(commentRepository, commentLikeRepository),
                         userService,
                         articleService,
-                        commentEventPublisher);
+                        commentEventPublisher,
+                        notificationService);
     }
 
     // 단위 테스트에선 인터셉터가 안 돌아서 요청자 ID를 직접 넣는다 — 다른 테스트에 남지 않게 지운다
