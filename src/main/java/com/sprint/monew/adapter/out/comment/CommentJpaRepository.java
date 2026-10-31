@@ -1,6 +1,7 @@
 package com.sprint.monew.adapter.out.comment;
 
 import com.sprint.monew.domain.comment.entity.Comment;
+import java.time.Instant;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -21,4 +22,11 @@ public interface CommentJpaRepository extends JpaRepository<Comment, UUID> {
             "UPDATE Comment c SET c.likeCount = c.likeCount - 1"
                     + " WHERE c.id = :id AND c.likeCount > 0")
     int decreaseLikeCount(@Param("id") UUID id);
+
+    // 살아 있을 때만 삭제 시각을 넣는다. 이 UPDATE가 댓글 줄을 잠가서, 동시에 지워도 한 요청만 1을 받는다
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query(
+            "UPDATE Comment c SET c.deletedAt = :deletedAt"
+                    + " WHERE c.id = :id AND c.deletedAt IS NULL")
+    int softDeleteIfActive(@Param("id") UUID id, @Param("deletedAt") Instant deletedAt);
 }

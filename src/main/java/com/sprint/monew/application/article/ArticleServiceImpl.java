@@ -84,6 +84,12 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
+    @Transactional
+    public void decreaseCommentCount(UUID articleId) {
+        repository.decreaseCommentCount(articleId);
+    }
+
+    @Override
     public Optional<Article> findBySourceUrl(String sourceUrl) {
         return repository.findBySourceUrl(sourceUrl);
     }

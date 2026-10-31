@@ -32,6 +32,7 @@ class NotificationRepositoryTest {
     private static final Instant T = Instant.parse("2026-10-27T01:05:00Z");
 
     @Autowired NotificationJpaRepository notificationJpaRepository;
+    @Autowired NotificationRepositoryAdapter notificationRepositoryAdapter;
     @Autowired EntityManager em;
     @Autowired JdbcTemplate jdbcTemplate;
 
@@ -202,6 +203,41 @@ class NotificationRepositoryTest {
         assertThat(notificationJpaRepository.findById(oldRead)).isEmpty();
         assertThat(notificationJpaRepository.findById(recentRead)).isPresent();
         assertThat(notificationJpaRepository.findById(unread)).isPresent();
+    }
+
+    @Test
+    @DisplayName("리소스 종류와 ID가 모두 같은 알림만 삭제하고, 나머지 알림은 남긴다.")
+    void givenNotificationsOfResources_whenDeleteByResource_thenDeletesOnlyMatching() {
+        // given
+        UUID commentId = UUID.randomUUID();
+        UUID otherCommentId = UUID.randomUUID();
+
+        UUID target1 = saveResourceNotification(woody, ResourceType.COMMENT, commentId); // 삭제
+        UUID target2 = saveResourceNotification(woody, ResourceType.COMMENT, commentId); // 삭제
+        UUID otherComment =
+                saveResourceNotification(woody, ResourceType.COMMENT, otherCommentId); // 다른 댓글 → 유지
+        UUID sameIdInterest =
+                saveResourceNotification(buzz, ResourceType.INTEREST, commentId); // ID만 같음 → 유지
+        clearContext();
+
+        // when
+        int deleted =
+                notificationRepositoryAdapter.deleteByResource(ResourceType.COMMENT, commentId);
+
+        // then
+        assertThat(deleted).isEqualTo(2);
+        assertThat(notificationJpaRepository.findById(target1)).isEmpty();
+        assertThat(notificationJpaRepository.findById(target2)).isEmpty();
+        assertThat(notificationJpaRepository.findById(otherComment)).isPresent();
+        assertThat(notificationJpaRepository.findById(sameIdInterest)).isPresent();
+    }
+
+    // 리소스 종류와 ID를 지정해서 알림을 저장한다
+    private UUID saveResourceNotification(User user, ResourceType resourceType, UUID resourceId) {
+        Notification n = Notification.create(user, resourceType, resourceId, "테스트 알림");
+        em.persist(n);
+        em.flush();
+        return n.getId();
     }
 
     // 확인 시각을 지정해서 읽은 알림을 저장한다

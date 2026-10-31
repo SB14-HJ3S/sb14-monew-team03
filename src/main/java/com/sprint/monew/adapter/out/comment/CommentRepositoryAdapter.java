@@ -2,6 +2,7 @@ package com.sprint.monew.adapter.out.comment;
 
 import com.sprint.monew.application.comment.required.CommentRepositoryPort;
 import com.sprint.monew.domain.comment.entity.Comment;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -42,5 +43,10 @@ public class CommentRepositoryAdapter implements CommentRepositoryPort {
     @Override
     public int decreaseLikeCount(UUID commentId) {
         return jpaRepository.decreaseLikeCount(commentId);
+    }
+
+    @Override
+    public int softDeleteIfActive(UUID commentId, Instant deletedAt) {
+        return jpaRepository.softDeleteIfActive(commentId, deletedAt);
     }
 }

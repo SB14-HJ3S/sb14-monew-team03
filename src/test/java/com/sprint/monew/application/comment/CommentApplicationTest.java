@@ -3,6 +3,7 @@ package com.sprint.monew.application.comment;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
@@ -16,6 +17,7 @@ import com.sprint.monew.application.comment.provided.dto.CommentResult;
 import com.sprint.monew.application.comment.required.CommentEventPublisherPort;
 import com.sprint.monew.application.comment.required.CommentLikeRepositoryPort;
 import com.sprint.monew.application.comment.required.CommentRepositoryPort;
+import com.sprint.monew.application.notification.NotificationService;
 import com.sprint.monew.application.user.IUserService;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.comment.entity.Comment;
@@ -27,6 +29,7 @@ import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.ArticleErrorType;
 import com.sprint.monew.global.exception.errortype.CommentErrorType;
 import com.sprint.monew.global.exception.errortype.UserErrorType;
+import com.sprint.monew.global.type.ResourceType;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -50,6 +53,7 @@ class CommentApplicationTest {
     @Mock private IUserService userService;
     @Mock private ArticleService articleService;
     @Mock private CommentEventPublisherPort commentEventPublisher;
+    @Mock private NotificationService notificationService;
     private CommentApplication commentApplication;
 
     private final UUID commentId = UUID.randomUUID();
@@ -57,15 +61,16 @@ class CommentApplicationTest {
     private final UUID articleId = UUID.randomUUID();
     private final Instant createdAt = Instant.parse("2026-10-21T00:00:00Z");
 
-    // CommentService는 진짜로 쓰고 DB 포트만 가짜로 둔다 — 조립(Application)과 댓글 DB 처리(Service)를 함께 검증한다
+    // CommentServiceImpl은 진짜로 쓰고 DB 포트만 가짜로 둬서 Application과 Service를 같이 검증한다
     @BeforeEach
     void setUp() {
         commentApplication =
                 new CommentApplication(
-                        new CommentService(commentRepository, commentLikeRepository),
+                        new CommentServiceImpl(commentRepository, commentLikeRepository),
                         userService,
                         articleService,
-                        commentEventPublisher);
+                        commentEventPublisher,
+                        notificationService);
     }
 
     // 단위 테스트에선 인터셉터가 안 돌아서 요청자 ID를 직접 넣는다 — 다른 테스트에 남지 않게 지운다
@@ -431,6 +436,150 @@ class CommentApplicationTest {
                     .isEqualTo(ArticleErrorType.ARTICLE_NOT_FOUND);
             verifyNoInteractions(commentRepository);
             verify(articleService, never()).increaseCommentCount(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("댓글 논리 삭제")
+    class SoftDelete {
+
+        @Test
+        @DisplayName("댓글을 논리 삭제하면 DB에서 살아 있을 때만 삭제 시각을 넣고, 바뀐 줄이 1이면 기사의 댓글 수를 1 줄인다")
+        void success() {
+            Article article = mock(Article.class);
+            given(article.getId()).willReturn(articleId);
+            Comment comment = savedComment(mock(User.class), article);
+            given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
+            given(commentRepository.softDeleteIfActive(eq(commentId), any())).willReturn(1);
+
+            commentApplication.softDeleteComment(commentId);
+
+            verify(commentRepository).softDeleteIfActive(eq(commentId), any());
+            verify(articleService).decreaseCommentCount(articleId);
+        }
+
+        @Test
+        @DisplayName("읽은 뒤 다른 요청이 먼저 논리 삭제해서 바뀐 줄이 0이면 COMMENT_NOT_FOUND 예외가 나고 기사의 댓글 수를 줄이지 않는다")
+        void deletedByOtherRequest() {
+            Comment comment = savedComment(mock(User.class), mock(Article.class));
+            given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
+            given(commentRepository.softDeleteIfActive(eq(commentId), any())).willReturn(0);
+
+            assertThatThrownBy(() -> commentApplication.softDeleteComment(commentId))
+                    .isInstanceOf(MonewException.class)
+                    .extracting("errorType")
+                    .isEqualTo(CommentErrorType.COMMENT_NOT_FOUND);
+            verify(articleService, never()).decreaseCommentCount(any());
+        }
+
+        @Test
+        @DisplayName("이미 삭제된 댓글이면 COMMENT_NOT_FOUND 예외가 나고 기사의 댓글 수를 줄이지 않는다")
+        void deletedComment() {
+            Comment comment = savedComment(mock(User.class), mock(Article.class));
+            comment.softDelete();
+            given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
+
+            assertThatThrownBy(() -> commentApplication.softDeleteComment(commentId))
+                    .isInstanceOf(MonewException.class)
+                    .extracting("errorType")
+                    .isEqualTo(CommentErrorType.COMMENT_NOT_FOUND);
+            verify(commentRepository, never()).softDeleteIfActive(any(), any());
+            verify(articleService, never()).decreaseCommentCount(any());
+        }
+
+        @Test
+        @DisplayName("없는 댓글이면 COMMENT_NOT_FOUND 예외가 나고 기사의 댓글 수를 줄이지 않는다")
+        void notExistComment() {
+            given(commentRepository.findById(commentId)).willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> commentApplication.softDeleteComment(commentId))
+                    .isInstanceOf(MonewException.class)
+                    .extracting("errorType")
+                    .isEqualTo(CommentErrorType.COMMENT_NOT_FOUND);
+            verifyNoInteractions(articleService);
+        }
+    }
+
+    @Nested
+    @DisplayName("댓글 물리 삭제")
+    class HardDelete {
+
+        @Test
+        @DisplayName("살아 있는 댓글을 물리 삭제하면 좋아요를 먼저 지운 뒤 댓글을 지우고, 기사의 댓글 수를 1 줄인다")
+        void activeComment() {
+            Article article = mock(Article.class);
+            given(article.getId()).willReturn(articleId);
+            Comment comment = savedComment(mock(User.class), article);
+            given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
+            given(commentRepository.softDeleteIfActive(eq(commentId), any())).willReturn(1);
+
+            commentApplication.hardDeleteComment(commentId);
+
+            // 살아 있는지는 DB에서 조건부로 바꿔 보고 판단한다
+            // 좋아요가 댓글을 가리키고 있어서 좋아요를 먼저 지워야 댓글을 지울 수 있다
+            InOrder inOrder = inOrder(commentLikeRepository, commentRepository);
+            inOrder.verify(commentRepository).softDeleteIfActive(eq(commentId), any());
+            inOrder.verify(commentLikeRepository).deleteAllByCommentId(commentId);
+            inOrder.verify(commentRepository).deleteById(commentId);
+            verify(articleService).decreaseCommentCount(articleId);
+        }
+
+        @Test
+        @DisplayName("댓글을 물리 삭제하면 그 댓글을 가리키는 좋아요 알림도 지운다")
+        void deleteCommentNotifications() {
+            Comment comment = savedComment(mock(User.class), mock(Article.class));
+            given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
+            given(commentRepository.softDeleteIfActive(eq(commentId), any())).willReturn(1);
+
+            commentApplication.hardDeleteComment(commentId);
+
+            // 물리 삭제할 때는 그 댓글의 좋아요 알림도 같이 지워야 한다
+            verify(notificationService).deleteByResource(ResourceType.COMMENT, commentId);
+        }
+
+        @Test
+        @DisplayName("이미 논리 삭제된 댓글이면 좋아요와 댓글은 지우지만, 기사의 댓글 수는 다시 줄이지 않는다")
+        void softDeletedComment() {
+            Comment comment = savedComment(mock(User.class), mock(Article.class));
+            comment.softDelete();
+            given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
+            given(commentRepository.softDeleteIfActive(eq(commentId), any())).willReturn(0);
+
+            commentApplication.hardDeleteComment(commentId);
+
+            // 논리 삭제할 때 이미 1 줄였으므로 또 줄이면 댓글 수가 실제보다 적어진다
+            verify(commentLikeRepository).deleteAllByCommentId(commentId);
+            verify(commentRepository).deleteById(commentId);
+            verify(articleService, never()).decreaseCommentCount(any());
+        }
+
+        @Test
+        @DisplayName("읽을 땐 살아 있었어도 그 사이 다른 요청이 논리 삭제해서 바뀐 줄이 0이면, 지우기만 하고 기사의 댓글 수는 줄이지 않는다")
+        void softDeletedByOtherRequest() {
+            Comment comment = savedComment(mock(User.class), mock(Article.class));
+            given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
+            given(commentRepository.softDeleteIfActive(eq(commentId), any())).willReturn(0);
+
+            commentApplication.hardDeleteComment(commentId);
+
+            // 다른 요청의 논리 삭제가 이미 1 줄였다
+            verify(commentLikeRepository).deleteAllByCommentId(commentId);
+            verify(commentRepository).deleteById(commentId);
+            verify(articleService, never()).decreaseCommentCount(any());
+        }
+
+        @Test
+        @DisplayName("없는 댓글이면 COMMENT_NOT_FOUND 예외가 나고 아무것도 지우지 않는다")
+        void notExistComment() {
+            given(commentRepository.findById(commentId)).willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> commentApplication.hardDeleteComment(commentId))
+                    .isInstanceOf(MonewException.class)
+                    .extracting("errorType")
+                    .isEqualTo(CommentErrorType.COMMENT_NOT_FOUND);
+            verify(commentRepository, never()).softDeleteIfActive(any(), any());
+            verify(commentRepository, never()).deleteById(any());
+            verifyNoInteractions(commentLikeRepository, articleService, notificationService);
         }
     }
 }

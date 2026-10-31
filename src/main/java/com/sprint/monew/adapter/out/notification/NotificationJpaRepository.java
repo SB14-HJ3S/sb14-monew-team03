@@ -1,6 +1,7 @@
 package com.sprint.monew.adapter.out.notification;
 
 import com.sprint.monew.domain.notification.entity.Notification;
+import com.sprint.monew.global.type.ResourceType;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -26,4 +27,14 @@ public interface NotificationJpaRepository
             where n.isRead = true and n.readAt < :threshold
             """)
     int deleteReadBefore(@Param("threshold") LocalDateTime threshold);
+
+    // 앞에서 지운 댓글이 같이 날아가지 않게 쿼리 전에 먼저 반영한다
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query(
+            """
+            delete from Notification n
+            where n.resourceType = :resourceType and n.resourceId = :resourceId
+            """)
+    int deleteByResource(
+            @Param("resourceType") ResourceType resourceType, @Param("resourceId") UUID resourceId);
 }

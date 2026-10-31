@@ -6,6 +6,7 @@ import com.sprint.monew.application.comment.provided.dto.CommentLikeResult;
 import com.sprint.monew.application.comment.provided.dto.CommentQuery;
 import com.sprint.monew.application.comment.provided.dto.CommentResult;
 import com.sprint.monew.application.comment.required.CommentEventPublisherPort;
+import com.sprint.monew.application.notification.NotificationService;
 import com.sprint.monew.application.user.IUserService;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.comment.entity.Comment;
@@ -14,7 +15,10 @@ import com.sprint.monew.domain.comment.event.CommentLikedEvent;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.annotation.ApplicationService;
 import com.sprint.monew.global.context.RequestIdContext;
+import com.sprint.monew.global.exception.MonewException;
+import com.sprint.monew.global.exception.errortype.CommentErrorType;
 import com.sprint.monew.global.pagination.PageResult;
+import com.sprint.monew.global.type.ResourceType;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,10 +27,11 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class CommentApplication implements CommentUseCase {
 
-    private final ICommentService commentService;
+    private final CommentService commentService;
     private final IUserService userService;
     private final ArticleService articleService;
     private final CommentEventPublisherPort commentEventPublisher;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional
@@ -102,8 +107,43 @@ public class CommentApplication implements CommentUseCase {
     }
 
     @Override
-    public void softDeleteComment(UUID commentId) {}
+    @Transactional
+    public void softDeleteComment(UUID commentId) {
+        Comment comment = commentService.getActiveComment(commentId);
+
+        // 삭제 쿼리 뒤에는 댓글 정보를 못 읽을 수 있어서 먼저 꺼내 둔다
+        UUID articleId = comment.getArticle().getId();
+
+        // 읽은 뒤에 다른 요청이 먼저 지웠으면 없는 댓글로 보고 댓글 수는 안 줄인다
+        if (!commentService.softDeleteIfActive(commentId)) {
+            throw new MonewException(CommentErrorType.COMMENT_NOT_FOUND);
+        }
+
+        articleService.decreaseCommentCount(articleId);
+    }
 
     @Override
-    public void hardDeleteComment(UUID commentId) {}
+    @Transactional
+    public void hardDeleteComment(UUID commentId) {
+        Comment comment = commentService.getComment(commentId);
+
+        // 삭제 쿼리 뒤에는 댓글 정보를 못 읽을 수 있어서 먼저 꺼내 둔다
+        UUID articleId = comment.getArticle().getId();
+
+        // 살아 있었는지는 읽은 값 말고 DB에서 조건부로 지워 보고 판단한다
+        // 동시에 온 논리 삭제와 겹쳐도 둘 중 한 요청만 댓글 수를 줄인다
+        boolean wasActive = commentService.softDeleteIfActive(commentId);
+
+        // 좋아요가 댓글을 가리키고 있어서 좋아요부터 지운다
+        commentService.deleteAllLikes(commentId);
+        commentService.deleteComment(commentId);
+
+        // 이미 논리 삭제된 댓글은 그때 1 줄였으므로 다시 줄이지 않는다
+        if (wasActive) {
+            articleService.decreaseCommentCount(articleId);
+        }
+
+        // 물리 삭제할 때는 이 댓글의 좋아요 알림도 같이 지운다
+        notificationService.deleteByResource(ResourceType.COMMENT, commentId);
+    }
 }

@@ -9,11 +9,14 @@ import com.sprint.monew.domain.comment.entity.Comment;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.type.ArticleSourceType;
 import com.sprint.monew.support.IntegrationTest;
+import jakarta.persistence.EntityManager;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +27,8 @@ class CommentRepositoryAdapterTest {
     @Autowired private CommentRepositoryAdapter commentRepository;
     @Autowired private UserRepositoryAdapter userRepository;
     @Autowired private ArticleRepositoryAdapter articleRepository;
+    @Autowired private EntityManager em;
+    @Autowired private JdbcTemplate jdbcTemplate;
 
     // 좋아요 수가 likeCount인 댓글을 저장한다
     private UUID savedCommentId(long likeCount) {
@@ -76,5 +81,59 @@ class CommentRepositoryAdapterTest {
 
         assertThat(updated).isZero();
         assertThat(likeCountOf(commentId)).isZero();
+    }
+
+    @Test
+    @DisplayName("살아 있는 댓글을 논리 삭제하면 삭제 시각이 들어가고, 바뀐 줄 수 1을 돌려준다")
+    void softDeleteIfActive() {
+        UUID commentId = savedCommentId(0L);
+        Instant deletedAt = Instant.parse("2026-10-31T00:00:00Z");
+
+        int updated = commentRepository.softDeleteIfActive(commentId, deletedAt);
+
+        assertThat(updated).isEqualTo(1);
+        assertThat(commentRepository.findById(commentId).orElseThrow().getDeletedAt())
+                .isEqualTo(deletedAt);
+    }
+
+    @Test
+    @DisplayName("이미 논리 삭제된 댓글이면 삭제 시각을 바꾸지 않고, 바뀐 줄 수 0을 돌려준다")
+    void softDeleteIfActiveAlreadyDeleted() {
+        UUID commentId = savedCommentId(0L);
+        Instant firstDeletedAt = Instant.parse("2026-10-31T00:00:00Z");
+        commentRepository.softDeleteIfActive(commentId, firstDeletedAt);
+
+        int updated =
+                commentRepository.softDeleteIfActive(commentId, firstDeletedAt.plusSeconds(60));
+
+        assertThat(updated).isZero();
+        assertThat(commentRepository.findById(commentId).orElseThrow().getDeletedAt())
+                .isEqualTo(firstDeletedAt);
+    }
+
+    @Test
+    @DisplayName("댓글을 읽은 뒤 다른 요청이 삭제하고 좋아요를 눌러도, 내용 수정은 삭제 시각과 좋아요 수를 덮어쓰지 않는다")
+    void changeContentKeepsColumnsChangedByOthers() {
+        UUID commentId = savedCommentId(0L);
+        em.flush();
+        em.clear();
+
+        // 수정 요청이 댓글을 먼저 읽어 둔다
+        Comment comment = commentRepository.findById(commentId).orElseThrow();
+        UUID authorId = comment.getUser().getId();
+
+        // 그 사이 다른 요청이 논리 삭제하고 좋아요를 눌러 DB 값이 바뀐다
+        jdbcTemplate.update(
+                "UPDATE comments SET deleted_at = now(), like_count = 5 WHERE id = ?", commentId);
+
+        // 먼저 읽어 둔 댓글로 수정한 내용이 저장된다
+        comment.changeContent(authorId, "수정 후");
+        em.flush();
+        em.clear();
+
+        Comment saved = commentRepository.findById(commentId).orElseThrow();
+        assertThat(saved.getContent()).isEqualTo("수정 후");
+        assertThat(saved.getDeletedAt()).isNotNull();
+        assertThat(saved.getLikeCount()).isEqualTo(5L);
     }
 }

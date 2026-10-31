@@ -54,4 +54,9 @@ public class ArticleRepositoryAdapter implements ArticleRepositoryPort {
     public int increaseCommentCount(UUID articleId) {
         return jpaRepository.increaseCommentCount(articleId);
     }
+
+    @Override
+    public int decreaseCommentCount(UUID articleId) {
+        return jpaRepository.decreaseCommentCount(articleId);
+    }
 }

@@ -20,6 +20,8 @@ public interface ArticleService {
 
     void increaseCommentCount(UUID articleId);
 
+    void decreaseCommentCount(UUID articleId);
+
     Optional<Article> findBySourceUrl(String sourceUrl);
 
     Article createCollectedArticle(CollectedArticle collectedArticle);
