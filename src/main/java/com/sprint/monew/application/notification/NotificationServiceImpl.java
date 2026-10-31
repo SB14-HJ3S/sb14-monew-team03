@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @RequiredArgsConstructor
@@ -85,6 +86,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    @Transactional
     public int deleteByResource(ResourceType resourceType, UUID resourceId) {
         return notificationRepository.deleteByResource(resourceType, resourceId);
     }
