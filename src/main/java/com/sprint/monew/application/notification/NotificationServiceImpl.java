@@ -86,6 +86,6 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public int deleteByResource(ResourceType resourceType, UUID resourceId) {
-        return 0;
+        return notificationRepository.deleteByResource(resourceType, resourceId);
     }
 }

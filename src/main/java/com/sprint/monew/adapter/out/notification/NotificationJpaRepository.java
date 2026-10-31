@@ -28,7 +28,8 @@ public interface NotificationJpaRepository
             """)
     int deleteReadBefore(@Param("threshold") LocalDateTime threshold);
 
-    @Modifying(clearAutomatically = true)
+    // 비우기 전에 먼저 반영한다 — 같은 트랜잭션에서 앞서 지운 댓글 같은 변경이 사라지지 않게
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query(
             """
             delete from Notification n

@@ -18,6 +18,7 @@ import com.sprint.monew.global.context.RequestIdContext;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.CommentErrorType;
 import com.sprint.monew.global.pagination.PageResult;
+import com.sprint.monew.global.type.ResourceType;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
@@ -136,6 +137,9 @@ public class CommentApplication implements CommentUseCase {
         // 좋아요가 댓글을 가리키고 있어서 좋아요부터 지운다
         commentService.deleteAllLikes(commentId);
         commentService.deleteComment(commentId);
+
+        // 물리 삭제 시 관련 정보도 모두 지운다 — 없는 댓글을 가리키는 좋아요 알림이 남지 않게
+        notificationService.deleteByResource(ResourceType.COMMENT, commentId);
 
         // 이미 논리 삭제된 댓글은 그때 1 줄였으므로 다시 줄이지 않는다
         if (wasActive) {
