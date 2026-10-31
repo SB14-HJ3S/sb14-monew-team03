@@ -35,4 +35,9 @@ public class UserApplication implements UserUseCase {
         User user = userService.updateNickname(userId, nickname);
         return UserResult.from(user);
     }
+
+    @Override
+    public void softDeleteUser(UUID userId) {
+        userService.softDeleteUser(userId);
+    }
 }

@@ -24,4 +24,6 @@ public interface NotificationRepositoryPort {
     long countByQuery(UUID userId, NotificationQuery query);
 
     int markAllAsRead(UUID userId, LocalDateTime readAt);
+
+    int deleteReadBefore(LocalDateTime threshold);
 }

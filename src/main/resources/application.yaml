@@ -34,6 +34,10 @@ spring:
       # H2 같은 내장 DB에서만 만들어서, Postgres에서는 첫 Job 실행 때 테이블이 없어 실패함
       initialize-schema: always
 
+  sql:
+    init:
+      mode: always # schema.sql(shedlock 표)을 Postgres에서도 앱 기동 시 실행
+
 # 로드밸런서(ALB) 뒤에서도 실제 사용자 IP를 얻는 설정 (사용자가 헤더를 위조해도 무시됨)
 server:
   forward-headers-strategy: native
@@ -67,6 +71,11 @@ monew:
     news-url: https://naverapihub.apigw.ntruss.com/search/v1/news
     client-id: ${NAVER_API_CLIENT_ID:}
     client-secret: ${NAVER_API_CLIENT_SECRET:}
+
+  # 확인한 지 7일 지난 알림 삭제 배치 실행 시각
+  notification:
+    cleanup:
+      cron: "0 0 3 * * *" # 매일 새벽 3시, Asia/Seoul
 
   # 뉴스기사 백업/로그 적재용 S3 버킷. 버킷 이름 환경변수가 환경별로 달라서
   # (로컬: AWS_S3_BUCKET, 배포 ECS 태스크 정의: BACKUP_BUCKET_NAME) 둘 다 받도록 중첩 기본값 사용

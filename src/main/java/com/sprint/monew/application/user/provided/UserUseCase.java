@@ -13,4 +13,6 @@ public interface UserUseCase {
     UserResult login(String email, String password);
 
     UserResult updateNickname(UUID userId, String nickname);
+
+    void softDeleteUser(UUID userId);
 }
