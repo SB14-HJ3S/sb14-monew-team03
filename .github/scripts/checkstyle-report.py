@@ -1,21 +1,14 @@
-# Checkstyle 리포트(main.xml·test.xml)를 읽어 PR 알림 댓글 본문과 위반 개수를 만든다 (#113, #135)
-# - pr_count: 이 PR에서 추가·수정한 줄에 걸린 위반 (Checks 탭에 reviewdog가 표시하는 기준과 같음)
-# - total: 프로젝트 전체 위반 (PR과 무관하게 이미 쌓여 있던 것 포함)
-# - 댓글: 이 PR 위반은 표로, 기존 위반은 접기/펼치기 표로. 위치를 누르면 해당 줄로 이동
-# 입력: pr.diff(git diff -U0 결과), 환경변수 GITHUB_WORKSPACE·GITHUB_REPOSITORY·GITHUB_SHA
-# 출력: 표준출력 pr_count=…/total=… (GITHUB_OUTPUT용), 파일 checkstyle-comment.md
+
 import os
 import re
 from urllib.parse import quote
 import xml.etree.ElementTree as ET
 
 REPORTS = ("build/reports/checkstyle/main.xml", "build/reports/checkstyle/test.xml")
-# 댓글 길이 제한(65,536자) 안에 들어가게 표마다 최대 줄 수를 둔다. 한 줄이 300자 안팎이라 두 표 합쳐 150줄이면 여유 있음
 MAX_ROWS_MINE = 100
 MAX_ROWS_OLD = 50
-MAX_BODY = 60000  # 그래도 길면 기존 위반 표를 빼고 안내만 남긴다
+MAX_BODY = 60000
 
-# 자주 나오는 규칙의 한글 설명. 없는 규칙은 영어 규칙 이름 그대로 보여 준다
 RULES = {
     "AvoidStarImport": "`*` import 금지 → 쓰는 클래스만 하나씩 import",
     "MagicNumber": "숫자를 바로 쓰지 말고 상수(static final)로",
@@ -39,9 +32,6 @@ RULES = {
     "TypeName": "클래스 이름 규칙(PascalCase) 위반",
 }
 
-# diff에서 파일별로 추가·수정된 줄 번호 모으기
-# "+++ " 줄은 "diff --git" 다음(파일 헤더)에서만 파일 이름으로 읽는다. 추가한 소스 줄이 "++"로 시작해도 "+++ "로 보이기 때문
-# 한글 경로는 ci.yml에서 core.quotePath=false로 diff를 만들어 따옴표·이스케이프 없이 들어온다
 added, current, in_header = {}, None, False
 for line in open("pr.diff", encoding="utf-8", errors="ignore"):
     if line.startswith("diff --git "):
@@ -77,7 +67,6 @@ base = f"https://github.com/{os.environ['GITHUB_REPOSITORY']}/blob/{os.environ['
 
 
 def cell(text):
-    # 표 칸을 깨는 | 와 줄바꿈, HTML 태그로 읽힐 수 있는 < > (예: GenericWhitespace의 '<') 를 바꾼다
     text = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
     return text.replace("|", "\\|").replace("\n", " ")
 

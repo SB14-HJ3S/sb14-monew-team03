@@ -1,7 +1,4 @@
 #!/bin/bash
-# 노션 블록 배열(JSON, 표준입력)을 페이지 맨 끝에 붙인다
-# 노션 API는 한 번에 블록 100개까지만 받아서 100개씩 나눠 보낸다
-# 사용: bash append-notion-blocks.sh 페이지ID  (환경변수 NOTION_TOKEN)
 set -euo pipefail
 
 PAGE_ID="$1"

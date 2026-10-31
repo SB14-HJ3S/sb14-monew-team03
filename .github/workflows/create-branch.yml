@@ -72,8 +72,7 @@ jobs:
         if: steps.extract_keyword.outputs.keyword != '' && steps.set_type.outputs.type != ''
         id: sanitize
         env:
-          # 반드시 env로 전달 — run 스크립트에 ${{ }}로 직접 치환하면 이슈 작성자가
-          # 키워드에 셸 특수문자를 넣어 임의 명령을 실행할 수 있음(스크립트 인젝션)
+
           RAW_KEYWORD: ${{ steps.extract_keyword.outputs.keyword }}
         run: |
           CLEAN=$(echo "$RAW_KEYWORD" \

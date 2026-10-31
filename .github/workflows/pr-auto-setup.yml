@@ -5,21 +5,22 @@ name: PR Auto Setup
 # 2) 제목의 타입(feat:·chore: 등)에 맞는 라벨을 붙임 — 타입을 바꾸면 타입 라벨만 교체, 다른 라벨은 그대로
 # 3) 본문에 이슈 연결(close #번호)이 없으면 브랜치 이름의 이슈 번호로 넣어 줌 (main으로 가는 PR은 제외)
 # 이슈 마감일은 issue-auto-setup.yml이 이슈가 닫힐 때 처리함
+
 on:
   pull_request:
     types: [opened, edited]
 
-permissions: {}   # 필요한 권한은 job 단위로만 부여
+permissions: {}
 
 jobs:
   auto-setup:
     runs-on: ubuntu-latest
     concurrency:
       group: pr-auto-setup-${{ github.event.pull_request.number }}
-      cancel-in-progress: false   # opened/edited가 거의 동시에 와도 순서대로 실행 (오래된 실행이 나중에 끝나 라벨을 덮어쓰는 것 방지)
+      cancel-in-progress: false
     permissions:
-      issues: write        # 담당자 지정 + 라벨 추가/삭제는 PR이어도 Issues API를 사용함
-      pull-requests: write # 대상이 PR이면 Issues API로 담당자·라벨을 달아도 이 권한이 같이 필요함(read면 403) + pulls.get() 재조회
+      issues: write
+      pull-requests: write
     steps:
       - name: 담당자를 작성자로 지정
         if: github.event.action == 'opened'
@@ -34,8 +35,8 @@ jobs:
             });
 
       - name: 제목의 "타입:" 접두사로 라벨 자동 설정(교체)
-        if: ${{ !cancelled() }}   # 담당자 지정이 실패해도 라벨은 계속 시도
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        if: ${{ !cancelled() }}
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b
         with:
           script: |
             // context.payload는 이벤트 발생 시점에 고정된 스냅샷이라, opened 직후 바로
@@ -99,10 +100,10 @@ jobs:
               });
             }
 
-      # 템플릿의 "close #이슈번호"를 안 고쳐도 머지 때 이슈가 닫히도록 브랜치 이름의 번호로 채운다
+
       - name: PR 본문에 이슈 연결 자동 추가
-        if: ${{ !cancelled() }}   # 위 단계가 실패해도 이슈 연결은 계속 시도
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        if: ${{ !cancelled() }}
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b
         with:
           script: |
             // 제목 변환·라벨 단계가 PR을 고쳤을 수 있어 최신 본문을 다시 조회

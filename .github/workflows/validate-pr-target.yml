@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - name: Check PR source branch
-        # 브랜치 이름은 PR 작성자가 정하는 값이라 run:에 직접 넣지 않고 env:로 넘긴다 (스크립트 인젝션 방지)
+
         env:
           BASE_REF: ${{ github.base_ref }}
           HEAD_REF: ${{ github.head_ref }}

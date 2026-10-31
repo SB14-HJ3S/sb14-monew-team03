@@ -31,10 +31,7 @@ jobs:
             --jq 'length' 2>/dev/null || echo 0)
           COUNT=${COUNT:-0}
 
-          # "승인 완료" 알림은 지금 커밋 기준 첫 승인일 때만 보낸다 — 이미 승인된 PR에 다른 사람이
-          # 코멘트·추가 승인을 남겨도 다시 안 가고, 작성자가 새 커밋을 올린 뒤 다시 승인되면 한 번 더 감
-          # 리뷰 ID는 등록 순서대로 커지므로 "이 리뷰보다 먼저 달린 같은 커밋 승인"만 센다 — 두 사람이 거의
-          # 동시에 승인해도 먼저 단 쪽만 0건이 됨. 목록 조회에 실패하면 알림을 보내지 않는다
+
           if ! EARLIER_APPROVALS=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}/reviews" \
             --paginate 2>/dev/null \
             | jq -s --arg sha "$PR_HEAD_SHA" --argjson rid "$REVIEW_ID" \

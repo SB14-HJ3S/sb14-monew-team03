@@ -14,7 +14,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: 도메인 라벨 하나 붙이기
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b
         with:
           script: |
             const DOMAINS = {

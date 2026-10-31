@@ -1,9 +1,4 @@
-// 노션 "요구사항 구현 일정관리" DB의 시작일·종료일·진행상태를 GitHub 작업 흐름에 맞춰 채운다
-// - 이슈 브랜치({타입}/{이슈번호}-{이름})에 첫 push → 그 브랜치의 가장 이른 커밋 날짜를 시작일로, 진행상태 "진행 중"
-//   (행이 "시작 전"일 때만 바꾼다. 이후 push는 무시)
-// - 이슈가 완료로 닫히거나, 그 이슈를 닫는 PR이 머지됨 → 닫힌 날짜를 종료일로, 진행상태 "완료"
-// - 어느 행인지는 노션 "깃이슈"(URL) 속성이 이 저장소의 이슈 URL과 같은지로 찾는다. 없으면 조용히 넘어간다
-// 이 DB는 데이터 소스가 여러 개라 노션 API 2025-09-03 버전의 data_sources 경로를 쓴다
+
 
 const DATA_SOURCE_ID = 'da79e310-9743-8272-8e01-87d6c9b6a45e';
 const ISSUE_PROPERTY = '깃이슈';
@@ -11,7 +6,7 @@ const STATUS_PROPERTY = '진행상태';
 const START_PROPERTY = '시작일';
 const END_PROPERTY = '종료일';
 const BRANCH_PATTERN = /^[a-z]+\/(\d+)-/;
-// 작업 브랜치는 항상 develop에서 만들므로 develop과 비교해 이 브랜치에만 있는 커밋을 고른다
+
 const BASE_BRANCH = 'develop';
 
 function kstDate(iso) {
@@ -43,7 +38,7 @@ function statusOf(page) {
   return page.properties[STATUS_PROPERTY]?.status?.name || '';
 }
 
-// push 이벤트: 브랜치 이름에서 이슈 번호를 읽고, develop과 비교해 가장 이른 커밋 날짜를 시작일로 넣는다
+
 async function start({ github, context, core }) {
   const notion = notionClient(process.env.NOTION_TOKEN);
   const { owner, repo } = context.repo;
@@ -98,7 +93,7 @@ async function finishIssue(notion, core, issueUrl, closedAt) {
   core.info(`${issueUrl}: 종료일 ${endDate}, 완료로 바꿨습니다.`);
 }
 
-// 이슈 닫힘(완료) 또는 PR 머지 이벤트
+
 async function finish({ github, context, core }) {
   const notion = notionClient(process.env.NOTION_TOKEN);
   const { owner, repo } = context.repo;
