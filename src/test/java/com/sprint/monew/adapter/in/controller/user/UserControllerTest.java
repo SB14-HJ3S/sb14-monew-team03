@@ -241,4 +241,24 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.details.userId").exists());
         verifyNoInteractions(userUseCase);
     }
+
+    @Test
+    @DisplayName("물리 삭제에 성공하면 204를 응답한다")
+    void givenUser_whenHardDelete_thenNoContent() throws Exception {
+        mockMvc.perform(delete("/api/users/{userId}/hard", userId))
+                .andExpect(status().isNoContent());
+        verify(userUseCase).hardDeleteUser(userId);
+    }
+
+    @Test
+    @DisplayName("없거나 탈퇴하지 않은 사용자를 물리 삭제하면 404와 USER_NOT_FOUND를 응답한다")
+    void givenNoDeactivatedUser_whenHardDelete_thenNotFound() throws Exception {
+        willThrow(new MonewException(UserErrorType.USER_NOT_FOUND))
+                .given(userUseCase)
+                .hardDeleteUser(userId);
+
+        mockMvc.perform(delete("/api/users/{userId}/hard", userId))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("USER_NOT_FOUND"));
+    }
 }
