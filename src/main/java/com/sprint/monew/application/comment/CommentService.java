@@ -22,9 +22,8 @@ public interface CommentService {
 
     void decreaseLikeCount(UUID commentId);
 
-    void deleteAllLikes(UUID commentId);
+    void softDelete(UUID commentId);
 
-    boolean deleteComment(UUID commentId);
-
-    boolean softDeleteIfActive(UUID commentId);
+    // 지우기 전에 살아 있던 댓글이었으면 true
+    boolean hardDelete(UUID commentId);
 }

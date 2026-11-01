@@ -80,23 +80,30 @@ public class CommentServiceImpl implements CommentService {
         commentRepository.decreaseLikeCount(commentId);
     }
 
+    // 읽은 뒤에 다른 요청이 먼저 지웠으면 없는 댓글로 본다
     @Override
     @Transactional
-    public void deleteAllLikes(UUID commentId) {
+    public void softDelete(UUID commentId) {
+        if (commentRepository.softDeleteIfActive(commentId, Instant.now()) == 0) {
+            throw new MonewException(CommentErrorType.COMMENT_NOT_FOUND);
+        }
+    }
+
+    // 지우기 전에 살아 있던 댓글이었으면 true를 돌려준다 (댓글 수를 줄일지 판단용)
+    @Override
+    @Transactional
+    public boolean hardDelete(UUID commentId) {
+        // 살아 있었는지는 읽은 값 말고 DB에서 조건부로 지워 보고 판단한다
+        // 동시에 온 논리 삭제와 겹쳐도 둘 중 한 요청만 true를 받는다
+        boolean wasActive = commentRepository.softDeleteIfActive(commentId, Instant.now()) == 1;
+
+        // 좋아요가 댓글을 가리키고 있어서 좋아요부터 지운다
         commentLikeRepository.deleteAllByCommentId(commentId);
-    }
 
-    // 이번 요청이 지웠으면 true, 다른 요청이 먼저 지워서 없었으면 false
-    @Override
-    @Transactional
-    public boolean deleteComment(UUID commentId) {
-        return commentRepository.hardDeleteById(commentId) == 1;
-    }
-
-    // 살아 있던 댓글을 이번 요청이 지웠으면 true, 이미 지워져 있었으면 false
-    @Override
-    @Transactional
-    public boolean softDeleteIfActive(UUID commentId) {
-        return commentRepository.softDeleteIfActive(commentId, Instant.now()) == 1;
+        // 다른 물리 삭제 요청이 먼저 지웠으면 없는 댓글로 본다
+        if (commentRepository.hardDeleteById(commentId) == 0) {
+            throw new MonewException(CommentErrorType.COMMENT_NOT_FOUND);
+        }
+        return wasActive;
     }
 }
