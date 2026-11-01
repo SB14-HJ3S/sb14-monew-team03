@@ -58,4 +58,9 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
     public Optional<User> findUserIncludingDeleted(UUID id) {
         return jpaRepository.findById(id);
     }
+
+    @Override
+    public Optional<User> findUserIncludingDeletedForUpdate(UUID id) {
+        return jpaRepository.findByIdForUpdate(id);
+    }
 }

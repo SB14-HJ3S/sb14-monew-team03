@@ -25,4 +25,6 @@ public interface UserRepositoryPort {
     List<User> findUsers(List<UUID> ids);
 
     Optional<User> findUserIncludingDeleted(UUID id);
+
+    Optional<User> findUserIncludingDeletedForUpdate(UUID id);
 }
