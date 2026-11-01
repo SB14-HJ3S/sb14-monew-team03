@@ -16,6 +16,12 @@ import com.sprint.monew.support.IntegrationTest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -83,6 +89,40 @@ class UserHardDeleteIntegrationTest {
                 .extracting("errorType")
                 .isEqualTo(UserErrorType.USER_NOT_FOUND);
         assertThat(userRepository.findUser(target.getId())).isPresent();
+        assertThat(subscriberCountOf(economy)).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("같은 탈퇴 사용자를 동시에 두 번 물리 삭제해도 한 번만 지워지고 구독자 수도 한 번만 준다")
+    void givenConcurrentHardDelete_whenHardDeleteTwice_thenDeletedOnce() throws Exception {
+        User target = saveUser("동시삭제");
+        User other = saveUser("다른사람");
+        Interest economy = saveInterest("경제");
+        subscribe(target, economy);
+        subscribe(other, economy);
+        userUseCase.softDeleteUser(target.getId());
+
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        CountDownLatch start = new CountDownLatch(1);
+        Callable<Boolean> hardDelete =
+                () -> {
+                    start.await();
+                    try {
+                        userUseCase.hardDeleteUser(target.getId());
+                        return true;
+                    } catch (MonewException e) {
+                        return false;
+                    }
+                };
+        Future<Boolean> first = executor.submit(hardDelete);
+        Future<Boolean> second = executor.submit(hardDelete);
+        start.countDown();
+        List<Boolean> results =
+                List.of(first.get(10, TimeUnit.SECONDS), second.get(10, TimeUnit.SECONDS));
+        executor.shutdown();
+
+        assertThat(results).containsExactlyInAnyOrder(true, false);
+        assertThat(userRepository.findUserIncludingDeleted(target.getId())).isEmpty();
         assertThat(subscriberCountOf(economy)).isEqualTo(1L);
     }
 

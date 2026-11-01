@@ -99,6 +99,17 @@ class UserRepositoryAdapterTest {
     }
 
     @Test
+    @DisplayName("탈퇴한 사용자도 findUserIncludingDeletedForUpdate로 잠그고 찾는다")
+    void givenDeletedUser_whenFindUserIncludingDeletedForUpdate_thenFound() {
+        User saved = userRepository.save(User.create("locked@monew.com", "잠금", "password1!"));
+        saved.softDelete();
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThat(userRepository.findUserIncludingDeletedForUpdate(saved.getId())).isPresent();
+    }
+
+    @Test
     @DisplayName("사용자를 물리 삭제하면 그 사용자의 알림도 DB에서 같이 지워진다(ON DELETE CASCADE)")
     void givenUserWithNotification_whenDeleteById_thenNotificationDeleted() {
         User saved = userRepository.save(User.create("hard@monew.com", "완전삭제", "password1!"));
