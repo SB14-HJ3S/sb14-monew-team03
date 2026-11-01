@@ -213,7 +213,8 @@ class NotificationRepositoryTest {
         UUID otherCommentId = UUID.randomUUID();
 
         UUID target1 = saveResourceNotification(woody, ResourceType.COMMENT, commentId); // 삭제
-        UUID target2 = saveResourceNotification(woody, ResourceType.COMMENT, commentId); // 삭제
+        UUID target2 =
+                saveResourceNotification(buzz, ResourceType.COMMENT, commentId); // 다른 사용자 알림도 삭제
         UUID otherComment =
                 saveResourceNotification(woody, ResourceType.COMMENT, otherCommentId); // 다른 댓글 → 유지
         UUID sameIdInterest =
