@@ -86,10 +86,11 @@ public class CommentServiceImpl implements CommentService {
         commentLikeRepository.deleteAllByCommentId(commentId);
     }
 
+    // 이번 요청이 지웠으면 true, 다른 요청이 먼저 지워서 없었으면 false
     @Override
     @Transactional
-    public void deleteComment(UUID commentId) {
-        commentRepository.deleteById(commentId);
+    public boolean deleteComment(UUID commentId) {
+        return commentRepository.hardDeleteById(commentId) == 1;
     }
 
     // 살아 있던 댓글을 이번 요청이 지웠으면 true, 이미 지워져 있었으면 false

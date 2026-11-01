@@ -24,7 +24,7 @@ public interface CommentService {
 
     void deleteAllLikes(UUID commentId);
 
-    void deleteComment(UUID commentId);
+    boolean deleteComment(UUID commentId);
 
     boolean softDeleteIfActive(UUID commentId);
 }

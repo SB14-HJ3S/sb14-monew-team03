@@ -49,4 +49,9 @@ public class CommentRepositoryAdapter implements CommentRepositoryPort {
     public int softDeleteIfActive(UUID commentId, Instant deletedAt) {
         return jpaRepository.softDeleteIfActive(commentId, deletedAt);
     }
+
+    @Override
+    public int hardDeleteById(UUID commentId) {
+        return jpaRepository.hardDeleteById(commentId);
+    }
 }

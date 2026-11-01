@@ -23,4 +23,7 @@ public interface CommentRepositoryPort {
 
     // 살아 있을 때만 삭제 시각을 넣는다. 동시에 지워도 한 요청만 1을 받는다
     int softDeleteIfActive(UUID commentId, Instant deletedAt);
+
+    // 물리 삭제용. 동시에 지워서 이미 없으면 예외 없이 0을 받는다
+    int hardDeleteById(UUID commentId);
 }

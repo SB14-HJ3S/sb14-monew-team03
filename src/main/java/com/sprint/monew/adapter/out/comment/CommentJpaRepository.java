@@ -29,4 +29,9 @@ public interface CommentJpaRepository extends JpaRepository<Comment, UUID> {
             "UPDATE Comment c SET c.deletedAt = :deletedAt"
                     + " WHERE c.id = :id AND c.deletedAt IS NULL")
     int softDeleteIfActive(@Param("id") UUID id, @Param("deletedAt") Instant deletedAt);
+
+    // deleteById는 읽어 둔 댓글을 지우다가 이미 없으면 예외가 나서, DELETE 한 번으로 지우고 지운 줄 수만 받는다
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("DELETE FROM Comment c WHERE c.id = :id")
+    int hardDeleteById(@Param("id") UUID id);
 }

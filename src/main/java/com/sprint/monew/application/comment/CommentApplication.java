@@ -136,7 +136,12 @@ public class CommentApplication implements CommentUseCase {
 
         // 좋아요가 댓글을 가리키고 있어서 좋아요부터 지운다
         commentService.deleteAllLikes(commentId);
-        commentService.deleteComment(commentId);
+
+        // 읽은 뒤에 다른 물리 삭제 요청이 먼저 지웠으면 없는 댓글로 본다
+        // 댓글 수와 알림은 먼저 지운 요청이 이미 정리했다
+        if (!commentService.deleteComment(commentId)) {
+            throw new MonewException(CommentErrorType.COMMENT_NOT_FOUND);
+        }
 
         // 이미 논리 삭제된 댓글은 그때 1 줄였으므로 다시 줄이지 않는다
         if (wasActive) {
