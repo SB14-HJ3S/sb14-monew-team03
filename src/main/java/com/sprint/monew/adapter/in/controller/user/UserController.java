@@ -61,6 +61,9 @@ public class UserController {
         log.info("사용자 논리 삭제 완료: userId={}", userId);
     }
 
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{userId}/hard")
-    public void hardDeleteUser(@PathVariable UUID userId) {}
+    public void hardDeleteUser(@PathVariable UUID userId) {
+        userUseCase.hardDeleteUser(userId);
+    }
 }
