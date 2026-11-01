@@ -24,6 +24,11 @@ spring:
       hibernate:
         format_sql: true
 
+monew:
+  log:
+    backup:
+      cron: "*/30 * * * * *"
+
 logging:
   logback:
     rollingpolicy:

@@ -57,6 +57,10 @@ management:
 
 # 뉴스기사 RSS 수집용 피드 URL
 monew:
+  log:
+    backup:
+      cron: "0 0 3 * * *"
+
   news:
     collection:
       cron: "0 0 * * * *" # 매시간 정각, Asia/Seoul
