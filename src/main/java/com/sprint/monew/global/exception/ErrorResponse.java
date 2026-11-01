@@ -8,14 +8,11 @@ import org.springframework.http.HttpStatusCode;
 // 모든 에러 응답의 공통 형식 — GlobalExceptionHandler가 예외를 이 형식으로 바꿔 내려준다
 public record ErrorResponse(
         @Schema(description = "에러 발생 시각", example = "2026-11-01T12:00:00Z") Instant timestamp,
-        @Schema(description = "에러 코드", example = "USER_NOT_FOUND") String code,
-        @Schema(description = "에러 메시지", example = "사용자 정보를 찾을 수 없습니다") String message,
-        @Schema(
-                        description = "에러 상세 정보",
-                        example = "{\"userId\": \"7f1d6c2a-3b4e-4f5a-9c8d-1e2f3a4b5c6d\"}")
-                Map<String, Object> details,
-        @Schema(description = "예외 종류", example = "MonewException") String exceptionType,
-        @Schema(description = "HTTP 상태 코드", example = "404") int status) {
+        @Schema(description = "에러 코드") String code,
+        @Schema(description = "에러 메시지") String message,
+        @Schema(description = "에러 상세 정보") Map<String, Object> details,
+        @Schema(description = "예외 종류") String exceptionType,
+        @Schema(description = "HTTP 상태 코드") int status) {
 
     public static ErrorResponse of(
             ErrorType errorType, Map<String, Object> details, Exception exception, int status) {
