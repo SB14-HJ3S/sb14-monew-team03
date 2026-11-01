@@ -19,13 +19,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @Slf4j
 @ApplicationService
-@RequiredArgsConstructor
 public class ArticleCollectionApplication implements ArticleCollectionUseCase {
 
     private static final List<ArticleSourceType> RSS_SOURCES =
@@ -43,6 +42,23 @@ public class ArticleCollectionApplication implements ArticleCollectionUseCase {
     private final ArticleEventPublisherPort eventPublisherPort;
 
     private final TransactionTemplate transactionTemplate;
+
+    public ArticleCollectionApplication(
+            InterestService interestService,
+            ArticleService articleService,
+            ArticleInterestService articleInterestService,
+            NaverNewsPort naverNewsPort,
+            RssNewsPort rssNewsPort,
+            ArticleEventPublisherPort eventPublisherPort,
+            @Qualifier("articleSaveTransactionTemplate") TransactionTemplate transactionTemplate) {
+        this.interestService = interestService;
+        this.articleService = articleService;
+        this.articleInterestService = articleInterestService;
+        this.naverNewsPort = naverNewsPort;
+        this.rssNewsPort = rssNewsPort;
+        this.eventPublisherPort = eventPublisherPort;
+        this.transactionTemplate = transactionTemplate;
+    }
 
     @Override
     public ArticleCollectionReport collectArticles() {
@@ -142,36 +158,54 @@ public class ArticleCollectionApplication implements ArticleCollectionUseCase {
     // ---------- 저장 ----------
     private record SaveOutcome(int newArticleCount, int failureCount) {}
 
-    // 저장할때만 트랜잭션으로 감싼다
+    // 저장한 기사 수 + 저장 실패한 기사 수 (=SaveOutcome) 반환
     private SaveOutcome saveArticleInterestInTransaction(
             List<CollectedArticle> articles, Interest interest) {
-        try {
-            Integer count =
-                    transactionTemplate.execute(status -> saveArticleInterest(articles, interest));
-            return new SaveOutcome(count != null ? count : 0, 0);
-        } catch (RuntimeException e) {
-            log.error("기사 저장 실패: interest={}", interest.getName(), e);
-            return new SaveOutcome(0, 1);
+
+        int newArticleCount = 0;
+        int failureCount = 0;
+
+        for (CollectedArticle collected : articles) {
+            try {
+                Integer count =
+                        transactionTemplate.execute(
+                                status -> saveOneArticleInterest(collected, interest));
+
+                newArticleCount += count != null ? count : 0;
+            } catch (RuntimeException e) {
+                failureCount++;
+                log.error(
+                        "기사 저장 실패: interest={}, sourceUrl={}",
+                        interest.getName(),
+                        collected.sourceUrl(),
+                        e);
+            }
         }
+
+        return new SaveOutcome(newArticleCount, failureCount);
     }
 
     // 저장한 기사 수 반환
-    private int saveArticleInterest(List<CollectedArticle> articles, Interest interest) {
+    private int saveOneArticleInterest(CollectedArticle collected, Interest interest) {
+
+        Optional<Article> existing = articleService.findBySourceUrl(collected.sourceUrl());
+
+        Article article;
         int newCount = 0;
-        for (CollectedArticle collected : articles) {
-            Optional<Article> existing = articleService.findBySourceUrl(collected.sourceUrl());
-            Article article;
-            if (existing.isPresent()) {
-                article = existing.get();
-                if (article.isDeleted()) {
-                    continue;
-                }
-            } else {
-                article = articleService.save(collected.toArticle());
-                newCount++;
+
+        if (existing.isPresent()) {
+            article = existing.get();
+
+            if (article.isDeleted()) {
+                return 0;
             }
-            articleInterestService.getOrCreateArticleInterest(article, interest);
+        } else {
+            article = articleService.save(collected.toArticle());
+            newCount = 1;
         }
+
+        articleInterestService.getOrCreateArticleInterest(article, interest);
+
         return newCount;
     }
 
