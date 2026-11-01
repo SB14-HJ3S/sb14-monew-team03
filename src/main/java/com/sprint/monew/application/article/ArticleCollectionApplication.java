@@ -27,7 +27,10 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class ArticleCollectionApplication implements ArticleCollectionUseCase {
 
     private static final List<ArticleSourceType> RSS_SOURCES =
-            List.of(ArticleSourceType.HANKYUNG, ArticleSourceType.CHOSUN, ArticleSourceType.YONHAP);
+            List.of(
+                    ArticleSourceType.HANKYUNG,
+                    ArticleSourceType.CHOSUN,
+                    ArticleSourceType.YEONHAP);
 
     private final InterestService interestService;
     private final ArticleService articleService;

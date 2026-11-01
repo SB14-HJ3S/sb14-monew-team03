@@ -70,7 +70,7 @@ class ArticleCollectionApplicationTest {
                 List.of(
                         ArticleSourceType.HANKYUNG,
                         ArticleSourceType.CHOSUN,
-                        ArticleSourceType.YONHAP)) {
+                        ArticleSourceType.YEONHAP)) {
             verify(rss).collect(source);
         }
     }
@@ -136,7 +136,7 @@ class ArticleCollectionApplicationTest {
         application.collectArticles();
         // then
         verify(articles, times(2)).save(any());
-        verify(rss).collect(ArticleSourceType.YONHAP);
+        verify(rss).collect(ArticleSourceType.YEONHAP);
         verify(events).publish(new ArticlesSavedEvent(interest.getId(), interest.getName(), 2));
     }
 
