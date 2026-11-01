@@ -2,7 +2,9 @@ package com.sprint.monew.application.article;
 
 import com.sprint.monew.application.article.event.ArticlesSavedEvent;
 import com.sprint.monew.application.article.provided.ArticleCollectionUseCase;
+import com.sprint.monew.application.article.provided.dto.ArticleCollectionReport;
 import com.sprint.monew.application.article.provided.dto.CollectedArticle;
+import com.sprint.monew.application.article.provided.dto.SourceResult;
 import com.sprint.monew.application.article.required.ArticleEventPublisherPort;
 import com.sprint.monew.application.article.required.NaverNewsPort;
 import com.sprint.monew.application.article.required.RssNewsPort;
@@ -43,9 +45,16 @@ public class ArticleCollectionApplication implements ArticleCollectionUseCase {
     private final TransactionTemplate transactionTemplate;
 
     @Override
-    public void collectArticles() {
+    public ArticleCollectionReport collectArticles() {
         List<Interest> validInterests = interestService.findSubscribedWithKeywords();
-        List<CollectedArticle> rssArticles = collectRssArticles();
+
+        CollectionOutcome rssResult = collectRssArticles();
+        List<CollectedArticle> rssArticles = rssResult.articles();
+
+        int naverCollectedCount = 0;
+        int naverFailureCount = 0;
+        int totalNewArticleCount = 0;
+        int saveFailureCount = 0;
 
         for (Interest interest : validInterests) {
             // RSS - 관심사 키워드 매칭된 기사만 연결
@@ -61,47 +70,67 @@ public class ArticleCollectionApplication implements ArticleCollectionUseCase {
                     matchedRssArticles.size(),
                     rssArticles.size());
 
-            int newCount = saveArticleInterestInTransaction(matchedRssArticles, interest);
+            SaveOutcome rssSave = saveArticleInterestInTransaction(matchedRssArticles, interest);
 
             // Naver - 관심사 키워드로 검색해서 연결
-            List<CollectedArticle> naverArticles = collectNaverArticles(interest);
-            newCount += saveArticleInterestInTransaction(naverArticles, interest);
+            CollectionOutcome naverResult = collectNaverArticles(interest);
+            List<CollectedArticle> naverArticles = naverResult.articles();
+            SaveOutcome naverSave = saveArticleInterestInTransaction(naverArticles, interest);
+
+            // 관심사에 대한 기사 수집 작업에 대한 데이터 집계
+            int newCount = rssSave.newArticleCount() + naverSave.newArticleCount();
+            naverCollectedCount += naverResult.articles().size();
+            naverFailureCount += naverResult.failureCount();
+            totalNewArticleCount += newCount;
+            saveFailureCount += rssSave.failureCount() + naverSave.failureCount();
 
             // 1 관심사 1 알림 생성 (1 사용자에 대해)
             if (newCount > 0) {
                 publishArticlesSaved(interest, newCount);
             }
         }
+        return new ArticleCollectionReport(
+                new SourceResult(naverCollectedCount, naverFailureCount),
+                new SourceResult(rssResult.articles().size(), rssResult.failureCount()),
+                totalNewArticleCount,
+                saveFailureCount);
     }
 
     // ---------- 수집 ----------
+    private record CollectionOutcome(List<CollectedArticle> articles, int failureCount) {}
+
     // ArticleService로 뺄 수 있지만 CollectedArticle이 /provided의 dto여서 일단 여기로 뺌
-    private List<CollectedArticle> collectRssArticles() {
+    private CollectionOutcome collectRssArticles() {
         Map<String, CollectedArticle> byUrl = new LinkedHashMap<>(); // url 중복 제거
+        int failureCount = 0;
         for (ArticleSourceType source : RSS_SOURCES) {
             try {
                 for (CollectedArticle article : rssNewsPort.collect(source)) {
                     byUrl.putIfAbsent(article.sourceUrl(), article);
                 }
             } catch (MonewException e) {
+                failureCount++;
                 log.error("RSS 수집 실패: source={}", source, e);
             }
         }
-        return new ArrayList<>(byUrl.values());
+        return new CollectionOutcome(new ArrayList<>(byUrl.values()), failureCount);
     }
 
-    private List<CollectedArticle> collectNaverArticles(Interest interest) {
+    private CollectionOutcome collectNaverArticles(Interest interest) {
         Map<String, CollectedArticle> byUrl = new LinkedHashMap<>(); // url 중복 제거
+        int failureCount = 0;
+
         for (String keyword : interest.getKeywordNames()) {
             try {
                 for (CollectedArticle article : naverNewsPort.search(keyword)) {
                     byUrl.putIfAbsent(article.sourceUrl(), article);
                 }
             } catch (MonewException e) {
+                failureCount++;
                 log.error("NAVER 수집 실패: interest={}, keyword={}", interest.getName(), keyword, e);
             }
         }
-        return new ArrayList<>(byUrl.values());
+        return new CollectionOutcome(new ArrayList<>(byUrl.values()), failureCount);
     }
 
     private boolean matchesInterest(CollectedArticle article, Interest interest) {
@@ -111,19 +140,22 @@ public class ArticleCollectionApplication implements ArticleCollectionUseCase {
     }
 
     // ---------- 저장 ----------
+    private record SaveOutcome(int newArticleCount, int failureCount) {}
+
     // 저장할때만 트랜잭션으로 감싼다
-    private int saveArticleInterestInTransaction(
+    private SaveOutcome saveArticleInterestInTransaction(
             List<CollectedArticle> articles, Interest interest) {
         try {
             Integer count =
                     transactionTemplate.execute(status -> saveArticleInterest(articles, interest));
-            return count != null ? count : 0;
+            return new SaveOutcome(count != null ? count : 0, 0);
         } catch (RuntimeException e) {
             log.error("기사 저장 실패: interest={}", interest.getName(), e);
-            return 0;
+            return new SaveOutcome(0, 1);
         }
     }
 
+    // 저장한 기사 수 반환
     private int saveArticleInterest(List<CollectedArticle> articles, Interest interest) {
         int newCount = 0;
         for (CollectedArticle collected : articles) {
