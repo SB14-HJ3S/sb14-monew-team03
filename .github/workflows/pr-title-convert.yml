@@ -2,11 +2,11 @@ name: PR Title Convert
 
 on:
   pull_request:
-    types: [opened, edited, reopened]
+    types: [opened, edited, reopened, ready_for_review]
 
 permissions:
   pull-requests: write
-  issues: read           # 형식 밖 제목일 때 브랜치의 이슈 제목을 가져오기 위해
+  issues: read
 
 jobs:
   convert-title:

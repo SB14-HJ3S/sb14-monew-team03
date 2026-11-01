@@ -1,7 +1,6 @@
 name: Issue Title Convert
 
 # 이슈 제목을 "feat: 설명"이나 단축키 "f: 설명"으로 쓰면 "[Feat] : 설명"으로 바꾼다
-# 템플릿으로 만든 이슈는 이미 "[Feat] : "로 시작해서, 템플릿 없이 만든 이슈에만 적용됨
 on:
   issues:
     types: [opened, edited]

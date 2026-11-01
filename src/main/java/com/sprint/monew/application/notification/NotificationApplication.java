@@ -6,6 +6,7 @@ import com.sprint.monew.application.notification.provided.dto.NotificationQuery;
 import com.sprint.monew.application.notification.provided.dto.NotificationResult;
 import com.sprint.monew.application.user.IUserService;
 import com.sprint.monew.domain.user.entity.User;
+import com.sprint.monew.global.annotation.ApplicationService;
 import com.sprint.monew.global.context.RequestIdContext;
 import com.sprint.monew.global.pagination.PageResult;
 import java.time.LocalDateTime;
@@ -13,12 +14,11 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
-@Service
+@ApplicationService
 @RequiredArgsConstructor
 public class NotificationApplication implements NotificationUseCase {
 

@@ -150,7 +150,6 @@ print_examples() {
   echo "  t1 : 관심사 등록 실패 테스트 추가  →  test(red) : 관심사 등록 실패 테스트 추가 [#30]"
 }
 
-# 제목 비어있는지 검사
 if [ -z "$TITLE" ]; then
   echo ""
   echo "커밋 메시지를 입력해주세요."
