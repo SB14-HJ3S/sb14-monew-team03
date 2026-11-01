@@ -2,7 +2,7 @@ package com.sprint.monew.global.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.sprint.monew.support.MongoIntegrationTest; // 2번에서 본 실제 위치로
+import com.sprint.monew.support.MongoIntegrationTest;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
