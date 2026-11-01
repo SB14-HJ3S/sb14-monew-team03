@@ -9,12 +9,10 @@ ArticleCollectionScheduler.collect()
   ↓
 ArticleCollectionRunner.runCollection()
   │
-  ├─ collectArticles() 첫 번째 호출 — try-catch 밖
-  │
-  └─ 첫 호출이 정상 반환하면 두 번째 호출 — try-catch 안
+  └─ collectArticles() 호출
 
-각 collectArticles() 호출
-  ↓
+↓
+
 ArticleCollectionApplication.collectArticles()
   │
   ├─ 구독자가 있는 관심사와 키워드 조회
