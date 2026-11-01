@@ -87,22 +87,28 @@ public class UserService implements IUserService {
     @Override
     @Transactional
     public void hardDeleteUser(UUID userId) {
-        removeCompletely(getDeactivatedUser(userId));
+        User user =
+                repository
+                        .findUserIncludingDeletedForUpdate(userId)
+                        .filter(User::isDeleted)
+                        .orElseThrow(() -> userNotFound(userId));
+        removeCompletely(user);
     }
 
     private User getDeactivatedUser(UUID userId) {
         return repository
                 .findUserIncludingDeleted(userId)
                 .filter(User::isDeleted)
-                .orElseThrow(
-                        () ->
-                                new MonewException(
-                                        UserErrorType.USER_NOT_FOUND, Map.of("userId", userId)));
+                .orElseThrow(() -> userNotFound(userId));
     }
 
     private void removeCompletely(User user) {
         userEventPublisher.publish(new UserHardDeletingEvent(user.getId()));
         repository.deleteById(user.getId());
+    }
+
+    private MonewException userNotFound(UUID userId) {
+        return new MonewException(UserErrorType.USER_NOT_FOUND, Map.of("userId", userId));
     }
 
     private MonewException loginFailed() {
