@@ -3,6 +3,7 @@ package com.sprint.monew.adapter.out.user;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.sprint.monew.domain.article.entity.Article;
+import com.sprint.monew.domain.article.entity.ArticleViewStatus;
 import com.sprint.monew.domain.comment.entity.Comment;
 import com.sprint.monew.domain.comment.entity.CommentLike;
 import com.sprint.monew.domain.notification.entity.Notification;
@@ -140,5 +141,59 @@ class UserRepositoryAdapterTest {
 
         assertThat(userRepository.findById(liker.getId())).isEmpty();
         assertThat(entityManager.find(Comment.class, comment.getId())).isNotNull();
+    }
+
+    @Test
+    @DisplayName("사용자를 물리 삭제하면 그 사용자가 쓴 댓글과 그 댓글에 달린 좋아요도 DB에서 같이 지워진다")
+    void givenUserWithWrittenComment_whenDeleteById_thenCommentAndLikesDeleted() {
+        User writer = userRepository.save(User.create("author@monew.com", "작성자", "password1!"));
+        User liker = userRepository.save(User.create("fan@monew.com", "좋아요", "password1!"));
+        Article article = saveArticle("https://news.example.com/2");
+        Comment comment = Comment.create(writer, article, "댓글");
+        entityManager.persist(comment);
+        CommentLike like = CommentLike.create(liker, comment);
+        entityManager.persist(like);
+        entityManager.flush();
+        entityManager.clear();
+
+        userRepository.deleteById(writer.getId());
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThat(entityManager.find(Comment.class, comment.getId())).isNull();
+        assertThat(entityManager.find(CommentLike.class, like.getId())).isNull();
+        assertThat(entityManager.find(Article.class, article.getId())).isNotNull();
+        assertThat(userRepository.findById(liker.getId())).isPresent();
+    }
+
+    @Test
+    @DisplayName("사용자를 물리 삭제하면 그 사용자의 기사 조회 기록도 DB에서 같이 지워진다")
+    void givenUserWithArticleView_whenDeleteById_thenArticleViewStatusDeleted() {
+        User viewer = userRepository.save(User.create("viewer@monew.com", "조회자", "password1!"));
+        Article article = saveArticle("https://news.example.com/3");
+        ArticleViewStatus viewStatus =
+                ArticleViewStatus.create(viewer, article, LocalDateTime.of(2026, 10, 22, 10, 0));
+        entityManager.persist(viewStatus);
+        entityManager.flush();
+        entityManager.clear();
+
+        userRepository.deleteById(viewer.getId());
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThat(entityManager.find(ArticleViewStatus.class, viewStatus.getId())).isNull();
+        assertThat(entityManager.find(Article.class, article.getId())).isNotNull();
+    }
+
+    private Article saveArticle(String sourceUrl) {
+        Article article =
+                Article.create(
+                        ArticleSourceType.NAVER,
+                        sourceUrl,
+                        "기사 제목",
+                        LocalDateTime.of(2026, 10, 22, 9, 0),
+                        "기사 요약");
+        entityManager.persist(article);
+        return article;
     }
 }
