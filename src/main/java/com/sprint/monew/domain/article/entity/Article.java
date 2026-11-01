@@ -20,6 +20,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Article extends BaseSoftDeletableEntity {
+
     @Enumerated(EnumType.STRING)
     @Column(name = "source", nullable = false)
     private ArticleSourceType source;
@@ -33,7 +34,7 @@ public class Article extends BaseSoftDeletableEntity {
     @Column(name = "published_at", nullable = false)
     private LocalDateTime publishedAt;
 
-    @Column(name = "summary", nullable = false, length = 1000)
+    @Column(name = "summary", nullable = false, columnDefinition = "text")
     private String summary;
 
     @Column(name = "view_count", nullable = false)
@@ -64,5 +65,10 @@ public class Article extends BaseSoftDeletableEntity {
             LocalDateTime publishedAt,
             String summary) {
         return new Article(source, sourceUrl, title, publishedAt, summary);
+    }
+
+    public void updateContent(String title, String summary) {
+        this.title = title;
+        this.summary = summary;
     }
 }
