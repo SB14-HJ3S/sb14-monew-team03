@@ -112,6 +112,35 @@ class CommentRepositoryAdapterTest {
     }
 
     @Test
+    @DisplayName("댓글을 물리 삭제하면 DB에서 사라지고, 지운 줄 수 1을 돌려준다")
+    void hardDeleteById() {
+        UUID commentId = savedCommentId(0L);
+
+        int deleted = commentRepository.hardDeleteById(commentId);
+
+        assertThat(deleted).isEqualTo(1);
+        assertThat(commentRepository.findById(commentId)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("댓글을 읽은 뒤 다른 요청이 먼저 지웠으면, 예외 없이 지운 줄 수 0을 돌려준다")
+    void hardDeleteByIdAlreadyDeleted() {
+        UUID commentId = savedCommentId(0L);
+        em.flush();
+        em.clear();
+
+        // 물리 삭제 요청이 댓글을 먼저 읽어 둔다
+        commentRepository.findById(commentId).orElseThrow();
+
+        // 그 사이 다른 물리 삭제 요청이 먼저 지운다
+        jdbcTemplate.update("DELETE FROM comments WHERE id = ?", commentId);
+
+        int deleted = commentRepository.hardDeleteById(commentId);
+
+        assertThat(deleted).isZero();
+    }
+
+    @Test
     @DisplayName("댓글을 읽은 뒤 다른 요청이 삭제하고 좋아요를 눌러도, 내용 수정은 삭제 시각과 좋아요 수를 덮어쓰지 않는다")
     void changeContentKeepsColumnsChangedByOthers() {
         UUID commentId = savedCommentId(0L);

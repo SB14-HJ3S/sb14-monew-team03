@@ -104,6 +104,18 @@ class CommentDeleteConcurrencyTest {
         assertThat(commentRepository.findById(commentId)).isEmpty();
     }
 
+    @Test
+    @DisplayName("이미 논리 삭제된 댓글에 물리 삭제가 동시에 와도 댓글 수는 그대로고 댓글은 지워진다")
+    void concurrentHardDeletesOnSoftDeletedComment() throws Exception {
+        // 논리 삭제할 때 댓글 수는 이미 줄었다고 보고 삭제 시각만 넣어 둔다
+        jdbcTemplate.update("UPDATE comments SET deleted_at = now() WHERE id = ?", commentId);
+
+        runConcurrently(i -> commentApplication.hardDeleteComment(commentId));
+
+        assertThat(commentCount()).isEqualTo(INITIAL_COMMENT_COUNT);
+        assertThat(commentRepository.findById(commentId)).isEmpty();
+    }
+
     // 모든 스레드가 준비되면 한꺼번에 출발시킨다
     // 늦게 온 요청은 COMMENT_NOT_FOUND로 실패하는 게 정상이고, 그 밖의 예외가 나면 테스트를 실패시킨다
     private void runConcurrently(DeleteRequest request) throws Exception {

@@ -512,6 +512,7 @@ class CommentApplicationTest {
             Comment comment = savedComment(mock(User.class), article);
             given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
             given(commentRepository.softDeleteIfActive(eq(commentId), any())).willReturn(1);
+            given(commentRepository.hardDeleteById(commentId)).willReturn(1);
 
             commentApplication.hardDeleteComment(commentId);
 
@@ -520,7 +521,7 @@ class CommentApplicationTest {
             InOrder inOrder = inOrder(commentLikeRepository, commentRepository);
             inOrder.verify(commentRepository).softDeleteIfActive(eq(commentId), any());
             inOrder.verify(commentLikeRepository).deleteAllByCommentId(commentId);
-            inOrder.verify(commentRepository).deleteById(commentId);
+            inOrder.verify(commentRepository).hardDeleteById(commentId);
             verify(articleService).decreaseCommentCount(articleId);
         }
 
@@ -530,6 +531,7 @@ class CommentApplicationTest {
             Comment comment = savedComment(mock(User.class), mock(Article.class));
             given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
             given(commentRepository.softDeleteIfActive(eq(commentId), any())).willReturn(1);
+            given(commentRepository.hardDeleteById(commentId)).willReturn(1);
 
             commentApplication.hardDeleteComment(commentId);
 
@@ -544,12 +546,13 @@ class CommentApplicationTest {
             comment.softDelete();
             given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
             given(commentRepository.softDeleteIfActive(eq(commentId), any())).willReturn(0);
+            given(commentRepository.hardDeleteById(commentId)).willReturn(1);
 
             commentApplication.hardDeleteComment(commentId);
 
             // 논리 삭제할 때 이미 1 줄였으므로 또 줄이면 댓글 수가 실제보다 적어진다
             verify(commentLikeRepository).deleteAllByCommentId(commentId);
-            verify(commentRepository).deleteById(commentId);
+            verify(commentRepository).hardDeleteById(commentId);
             verify(articleService, never()).decreaseCommentCount(any());
         }
 
@@ -559,13 +562,33 @@ class CommentApplicationTest {
             Comment comment = savedComment(mock(User.class), mock(Article.class));
             given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
             given(commentRepository.softDeleteIfActive(eq(commentId), any())).willReturn(0);
+            given(commentRepository.hardDeleteById(commentId)).willReturn(1);
 
             commentApplication.hardDeleteComment(commentId);
 
             // 다른 요청의 논리 삭제가 이미 1 줄였다
             verify(commentLikeRepository).deleteAllByCommentId(commentId);
-            verify(commentRepository).deleteById(commentId);
+            verify(commentRepository).hardDeleteById(commentId);
             verify(articleService, never()).decreaseCommentCount(any());
+        }
+
+        @Test
+        @DisplayName("읽은 뒤 다른 요청이 먼저 물리 삭제해서 지운 줄이 0이면 COMMENT_NOT_FOUND 예외가 나고 댓글 수와 알림은 건드리지 않는다")
+        void hardDeletedByOtherRequest() {
+            Comment comment = savedComment(mock(User.class), mock(Article.class));
+            comment.softDelete();
+            given(commentRepository.findById(commentId)).willReturn(Optional.of(comment));
+            given(commentRepository.softDeleteIfActive(eq(commentId), any())).willReturn(0);
+            given(commentRepository.hardDeleteById(commentId)).willReturn(0);
+
+            assertThatThrownBy(() -> commentApplication.hardDeleteComment(commentId))
+                    .isInstanceOf(MonewException.class)
+                    .extracting("errorType")
+                    .isEqualTo(CommentErrorType.COMMENT_NOT_FOUND);
+
+            // 먼저 지운 요청이 댓글 수와 알림을 이미 정리했다
+            verify(articleService, never()).decreaseCommentCount(any());
+            verifyNoInteractions(notificationService);
         }
 
         @Test
@@ -578,7 +601,7 @@ class CommentApplicationTest {
                     .extracting("errorType")
                     .isEqualTo(CommentErrorType.COMMENT_NOT_FOUND);
             verify(commentRepository, never()).softDeleteIfActive(any(), any());
-            verify(commentRepository, never()).deleteById(any());
+            verify(commentRepository, never()).hardDeleteById(any());
             verifyNoInteractions(commentLikeRepository, articleService, notificationService);
         }
     }
