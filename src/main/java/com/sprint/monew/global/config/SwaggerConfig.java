@@ -42,7 +42,8 @@ public class SwaggerConfig {
             |---|---|
             | 요청자 확인 | 요청자가 필요한 API는 **Monew-Request-User-ID** 헤더에 사용자 ID(UUID)를 넣어 주세요 |
             | 목록 조회 | 커서 기반 페이지네이션 (cursor, after, limit) |
-            | 에러 응답 | 모든 에러는 **ErrorResponse** 형식 (timestamp, code, message, details, exceptionType, status) |
+            | 에러 응답 | 모든 에러는 **ErrorResponse** 형식 \
+            (timestamp, code, message, details, exceptionType, status) |
             """;
 
     @Bean
