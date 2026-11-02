@@ -1,6 +1,7 @@
 package com.sprint.monew.adapter.out.article;
 
 import com.sprint.monew.domain.article.entity.Article;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -27,4 +28,15 @@ public interface ArticleJpaRepository extends JpaRepository<Article, UUID>, Arti
             "UPDATE Article a SET a.commentCount = a.commentCount - 1"
                     + " WHERE a.id = :id AND a.commentCount > 0")
     int decreaseCommentCount(@Param("id") UUID id);
+
+    @Query(
+            """
+            SELECT a
+            FROM Article a
+            WHERE a.createdAt >= :from
+                AND a.createdAt < :to
+                AND a.deletedAt IS NULL
+            ORDER BY a.createdAt ASC, a.id ASC
+            """)
+    List<Article> getArticlesInDateRange(@Param("from") Instant from, @Param("to") Instant to);
 }

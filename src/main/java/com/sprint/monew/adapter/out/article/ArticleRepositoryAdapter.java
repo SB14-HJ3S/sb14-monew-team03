@@ -3,6 +3,7 @@ package com.sprint.monew.adapter.out.article;
 import com.sprint.monew.application.article.provided.dto.ArticleQuery;
 import com.sprint.monew.application.article.required.ArticleRepositoryPort;
 import com.sprint.monew.domain.article.entity.Article;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -64,5 +65,10 @@ public class ArticleRepositoryAdapter implements ArticleRepositoryPort {
     @Override
     public int decreaseCommentCount(UUID articleId) {
         return jpaRepository.decreaseCommentCount(articleId);
+    }
+
+    @Override
+    public List<Article> getArticlesInDateRange(Instant from, Instant to) {
+        return jpaRepository.getArticlesInDateRange(from, to);
     }
 }
