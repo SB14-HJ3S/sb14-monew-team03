@@ -1,5 +1,6 @@
 package com.sprint.monew.adapter.out.user;
 
+import com.sprint.monew.application.user.event.UserHardDeletingEvent;
 import com.sprint.monew.application.user.event.UserNicknameUpdatedEvent;
 import com.sprint.monew.application.user.event.UserRegisteredEvent;
 import com.sprint.monew.application.user.required.UserEventPublisherPort;
@@ -20,6 +21,11 @@ public class UserEventPublisherAdapter implements UserEventPublisherPort {
 
     @Override
     public void publish(UserNicknameUpdatedEvent event) {
+        eventPublisher.publishEvent(event);
+    }
+
+    @Override
+    public void publish(UserHardDeletingEvent event) {
         eventPublisher.publishEvent(event);
     }
 }

@@ -9,6 +9,7 @@ WORKDIR /app
 # 보안을 위해 관리자(root) 권한 없이, 앱 전용 일반 사용자(spring)로 실행
 RUN addgroup --system spring && adduser --system --ingroup spring spring
 COPY --from=builder --chown=spring:spring /app/build/libs/*-SNAPSHOT.jar app.jar
+RUN mkdir -p /app/logs && chown spring:spring /app/logs
 USER spring:spring
 # 힙 크기 등을 바꿀 때 태스크 정의에서 JVM_OPTS만 넣으면 됨 (기본은 비어 있음)
 ENV JVM_OPTS=""
