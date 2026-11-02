@@ -45,4 +45,9 @@ public class UserApplication implements UserUseCase {
     public void hardDeleteUser(UUID userId) {
         userService.hardDeleteUser(userId);
     }
+
+    @Override
+    public int purgeDeletedUsers() {
+        return 0;
+    }
 }

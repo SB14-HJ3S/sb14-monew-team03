@@ -8,6 +8,7 @@ import com.sprint.monew.application.user.required.UserRepositoryPort;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.UserErrorType;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -93,6 +94,11 @@ public class UserService implements IUserService {
                         .filter(User::isDeleted)
                         .orElseThrow(() -> userNotFound(userId));
         removeCompletely(user);
+    }
+
+    @Override
+    public List<UUID> findPurgeTargetIds(Instant threshold) {
+        return List.of();
     }
 
     private User getDeactivatedUser(UUID userId) {
