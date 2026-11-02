@@ -26,6 +26,11 @@ public class ArticleController {
 
     private final ArticleUseCase articleUseCase;
 
+    @GetMapping("/sources")
+    public List<ArticleSourceType> findSourceTypes() {
+        return List.of();
+    }
+
     @RequestId
     @GetMapping("/{articleId}")
     public ArticleDto findById(@PathVariable UUID articleId) {
