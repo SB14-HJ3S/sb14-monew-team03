@@ -171,10 +171,22 @@ async function changedClassNames({ github, context }) {
   )];
 }
 
+function involvedClasses(detail) {
+  const lines = detail.isCycle ? detail.raw.filter((l) => /^- /.test(l)) : detail.raw;
+  return lines.flatMap((line) => {
+    const types = [...line.matchAll(/<([^<>]*(?:<init>[^<>]*)?)>/g)].map((x) => x[1]);
+    const file = (line.match(/in \(([^).]+)\.java:/) || [])[1];
+    return [types[0], types[types.length - 1]]
+      .filter(Boolean)
+      .map((t) => shortName(t).split('.')[0].split('$')[0])
+      .concat(file ? [file] : []);
+  });
+}
+
 function relatedRules(rules, classNames) {
-  const patterns = classNames.map((name) => new RegExp(`\\b${name}\\b`));
+  const changed = new Set(classNames);
   return rules
-    .map((r) => ({ ...r, details: r.details.filter((d) => patterns.some((re) => re.test(d.raw.join('\n')))) }))
+    .map((r) => ({ ...r, details: r.details.filter((d) => involvedClasses(d).some((c) => changed.has(c))) }))
     .filter((r) => r.details.length > 0);
 }
 
