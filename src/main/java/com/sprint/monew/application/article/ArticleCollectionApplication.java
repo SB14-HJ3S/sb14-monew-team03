@@ -1,225 +1,113 @@
 package com.sprint.monew.application.article;
 
-import com.sprint.monew.application.article.event.ArticlesSavedEvent;
 import com.sprint.monew.application.article.provided.ArticleCollectionUseCase;
-import com.sprint.monew.application.article.provided.dto.ArticleCollectionReport;
 import com.sprint.monew.application.article.provided.dto.CollectedArticle;
-import com.sprint.monew.application.article.provided.dto.SourceResult;
-import com.sprint.monew.application.article.required.ArticleEventPublisherPort;
 import com.sprint.monew.application.article.required.NaverNewsPort;
 import com.sprint.monew.application.article.required.RssNewsPort;
 import com.sprint.monew.application.interest.InterestService;
+import com.sprint.monew.application.interest.provided.dto.InterestKeywordResult;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.interest.entity.Interest;
 import com.sprint.monew.global.annotation.ApplicationService;
-import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.type.ArticleSourceType;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.transaction.support.TransactionTemplate;
+import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 
-@Slf4j
 @ApplicationService
+@RequiredArgsConstructor
 public class ArticleCollectionApplication implements ArticleCollectionUseCase {
-
-    private static final List<ArticleSourceType> RSS_SOURCES =
-            List.of(
-                    ArticleSourceType.HANKYUNG,
-                    ArticleSourceType.CHOSUN,
-                    ArticleSourceType.YEONHAP);
 
     private final InterestService interestService;
     private final ArticleService articleService;
     private final ArticleInterestService articleInterestService;
-
     private final NaverNewsPort naverNewsPort;
     private final RssNewsPort rssNewsPort;
-    private final ArticleEventPublisherPort eventPublisherPort;
 
-    private final TransactionTemplate transactionTemplate;
-
-    public ArticleCollectionApplication(
-            InterestService interestService,
-            ArticleService articleService,
-            ArticleInterestService articleInterestService,
-            NaverNewsPort naverNewsPort,
-            RssNewsPort rssNewsPort,
-            ArticleEventPublisherPort eventPublisherPort,
-            @Qualifier("articleSaveTransactionTemplate") TransactionTemplate transactionTemplate) {
-        this.interestService = interestService;
-        this.articleService = articleService;
-        this.articleInterestService = articleInterestService;
-        this.naverNewsPort = naverNewsPort;
-        this.rssNewsPort = rssNewsPort;
-        this.eventPublisherPort = eventPublisherPort;
-        this.transactionTemplate = transactionTemplate;
-    }
-
+    // Reader - 구독자가 1명 이상이고, 키워드를 1개 이상 가지고 있는 키워드 조회
     @Override
-    public ArticleCollectionReport collectArticles() {
-        List<Interest> validInterests = interestService.findSubscribedWithKeywords();
-
-        CollectionOutcome rssResult = collectRssArticles();
-        List<CollectedArticle> rssArticles = rssResult.articles();
-
-        int naverCollectedCount = 0;
-        int naverFailureCount = 0;
-        int totalNewArticleCount = 0;
-        int saveFailureCount = 0;
-
-        for (Interest interest : validInterests) {
-            // RSS - 관심사 키워드 매칭된 기사만 연결
-            List<CollectedArticle> matchedRssArticles =
-                    rssArticles.stream()
-                            .filter(article -> matchesInterest(article, interest))
-                            .toList();
-
-            log.info(
-                    "RSS 매칭: interest={}, keywords={}, matched={}/{}",
-                    interest.getName(),
-                    interest.getKeywordNames(),
-                    matchedRssArticles.size(),
-                    rssArticles.size());
-
-            SaveOutcome rssSave = saveArticleInterestInTransaction(matchedRssArticles, interest);
-
-            // Naver - 관심사 키워드로 검색해서 연결
-            CollectionOutcome naverResult = collectNaverArticles(interest);
-            List<CollectedArticle> naverArticles = naverResult.articles();
-            SaveOutcome naverSave = saveArticleInterestInTransaction(naverArticles, interest);
-
-            // 관심사에 대한 기사 수집 작업에 대한 데이터 집계
-            int newCount = rssSave.newArticleCount() + naverSave.newArticleCount();
-            naverCollectedCount += naverResult.articles().size();
-            naverFailureCount += naverResult.failureCount();
-            totalNewArticleCount += newCount;
-            saveFailureCount += rssSave.failureCount() + naverSave.failureCount();
-
-            // 1 관심사 1 알림 생성 (1 사용자에 대해)
-            if (newCount > 0) {
-                publishArticlesSaved(interest, newCount);
-            }
-        }
-        return new ArticleCollectionReport(
-                new SourceResult(naverCollectedCount, naverFailureCount),
-                new SourceResult(rssResult.articles().size(), rssResult.failureCount()),
-                totalNewArticleCount,
-                saveFailureCount);
+    @Transactional(readOnly = true)
+    public List<InterestKeywordResult> findValidInterestKeywords() {
+        return interestService.findSubscribedWithKeywords().stream()
+                .flatMap(
+                        interest ->
+                                interest.getKeywordNames().stream()
+                                        .map(
+                                                keyword ->
+                                                        new InterestKeywordResult(
+                                                                interest, keyword)))
+                .toList();
     }
 
-    // ---------- 수집 ----------
-    private record CollectionOutcome(List<CollectedArticle> articles, int failureCount) {}
-
-    // ArticleService로 뺄 수 있지만 CollectedArticle이 /provided의 dto여서 일단 여기로 뺌
-    private CollectionOutcome collectRssArticles() {
-        Map<String, CollectedArticle> byUrl = new LinkedHashMap<>(); // url 중복 제거
-        int failureCount = 0;
-        for (ArticleSourceType source : RSS_SOURCES) {
-            try {
-                for (CollectedArticle article : rssNewsPort.collect(source)) {
-                    byUrl.putIfAbsent(article.sourceUrl(), article);
-                }
-            } catch (MonewException e) {
-                failureCount++;
-                log.error("RSS 수집 실패: source={}", source, e);
-            }
-        }
-        return new CollectionOutcome(new ArrayList<>(byUrl.values()), failureCount);
+    // Processor 1 - 키워드 하나에 대한 모든 네이버 기사 수집
+    @Override
+    public List<CollectedArticle> collectNaverArticles(String keyword) {
+        return removeDuplicateArticles(naverNewsPort.search(keyword));
     }
 
-    private CollectionOutcome collectNaverArticles(Interest interest) {
-        Map<String, CollectedArticle> byUrl = new LinkedHashMap<>(); // url 중복 제거
-        int failureCount = 0;
-
-        for (String keyword : interest.getKeywordNames()) {
-            try {
-                for (CollectedArticle article : naverNewsPort.search(keyword)) {
-                    byUrl.putIfAbsent(article.sourceUrl(), article);
-                }
-            } catch (MonewException e) {
-                failureCount++;
-                log.error("NAVER 수집 실패: interest={}, keyword={}", interest.getName(), keyword, e);
-            }
-        }
-        return new CollectionOutcome(new ArrayList<>(byUrl.values()), failureCount);
+    // Processor 2 - 출처 하나에 대해 RSS 기사 수집
+    @Override
+    public List<CollectedArticle> collectRssArticles(ArticleSourceType source) {
+        return removeDuplicateArticles(rssNewsPort.collect(source));
     }
 
-    private boolean matchesInterest(CollectedArticle article, Interest interest) {
-        String text = (article.title() + " " + article.summary()).toLowerCase();
-        return interest.getKeywordNames().stream()
-                .anyMatch(keyword -> text.contains(keyword.trim().toLowerCase()));
-    }
-
-    // ---------- 저장 ----------
-    private record SaveOutcome(int newArticleCount, int failureCount) {}
-
-    // 저장한 기사 수 + 저장 실패한 기사 수 (=SaveOutcome) 반환
-    private SaveOutcome saveArticleInterestInTransaction(
-            List<CollectedArticle> articles, Interest interest) {
+    // Writer - Transaction안에. 기사 저장, 관심사와연결
+    // 저장된 기사 수 반환
+    @Override
+    @Transactional
+    public int saveArticles(Interest interest, List<CollectedArticle> articles) {
 
         int newArticleCount = 0;
-        int failureCount = 0;
 
         for (CollectedArticle collected : articles) {
-            try {
-                Integer count =
-                        transactionTemplate.execute(
-                                status -> saveOneArticleInterest(collected, interest));
+            Optional<Article> existing = articleService.findBySourceUrl(collected.sourceUrl());
 
-                newArticleCount += count != null ? count : 0;
-            } catch (RuntimeException e) {
-                failureCount++;
-                log.error(
-                        "기사 저장 실패: interest={}, sourceUrl={}",
-                        interest.getName(),
-                        collected.sourceUrl(),
-                        e);
+            Article article;
+
+            if (existing.isPresent()) {
+                article = existing.get();
+
+                if (article.isDeleted()) {
+                    continue;
+                }
+            } else {
+                article = articleService.save(collected.toArticle());
+                newArticleCount++;
             }
+
+            articleInterestService.getOrCreateArticleInterest(article, interest);
         }
 
-        return new SaveOutcome(newArticleCount, failureCount);
+        return newArticleCount;
     }
 
-    // 저장한 기사 수 반환
-    private int saveOneArticleInterest(CollectedArticle collected, Interest interest) {
+    // 한번의 수집 안에 같은 URL로 수집한 기사 있는지 체크
+    private List<CollectedArticle> removeDuplicateArticles(List<CollectedArticle> articles) {
 
-        Optional<Article> existing = articleService.findBySourceUrl(collected.sourceUrl());
+        Map<String, CollectedArticle> byUrl = new LinkedHashMap<>();
 
-        Article article;
-        int newCount = 0;
-
-        if (existing.isPresent()) {
-            article = existing.get();
-
-            if (article.isDeleted()) {
-                return 0;
-            }
-        } else {
-            article = articleService.save(collected.toArticle());
-            newCount = 1;
+        for (CollectedArticle article : articles) {
+            byUrl.putIfAbsent(article.sourceUrl(), article);
         }
 
-        articleInterestService.getOrCreateArticleInterest(article, interest);
-
-        return newCount;
+        return new ArrayList<>(byUrl.values());
     }
 
-    // ---------- 이벤트 ----------
-
-    private void publishArticlesSaved(Interest interest, int articleCount) {
-        // 트랜잭션으로 감싸지 않으면 publishArticlesSaved가 트랜잭션 밖에서 실행되고,
-        //      AFTER_COMMIT 리스너는 이벤트를 무시
-        transactionTemplate.execute(
-                status -> {
-                    eventPublisherPort.publish(
-                            new ArticlesSavedEvent(
-                                    interest.getId(), interest.getName(), articleCount));
-                    return null;
-                });
-    }
+    // 참고용: 나중에 batch에서 알림 발행하기
+    //    private void publishArticlesSaved(Interest interest, int articleCount) {
+    //        // 트랜잭션으로 감싸지 않으면 publishArticlesSaved가 트랜잭션 밖에서 실행되고,
+    //        //      AFTER_COMMIT 리스너는 이벤트를 무시
+    //        transactionTemplate.execute(
+    //            status -> {
+    // 알림 호출 여기서!!
+    //                eventPublisherPort.publish(
+    //                    new ArticlesSavedEvent(
+    //                        interest.getId(), interest.getName(), articleCount));
+    //                return null;
+    //            });
+    //    }
 }
