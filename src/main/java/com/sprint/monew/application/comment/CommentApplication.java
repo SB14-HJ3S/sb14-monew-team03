@@ -135,4 +135,8 @@ public class CommentApplication implements CommentUseCase {
         // 물리 삭제할 때는 이 댓글의 좋아요 알림도 같이 지운다
         notificationService.deleteByResource(ResourceType.COMMENT, commentId);
     }
+
+    @Override
+    @Transactional
+    public void deleteLikeNotificationsByArticle(UUID articleId) {}
 }

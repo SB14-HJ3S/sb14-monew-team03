@@ -23,4 +23,6 @@ public interface CommentUseCase {
     void softDeleteComment(UUID commentId);
 
     void hardDeleteComment(UUID commentId);
+
+    void deleteLikeNotificationsByArticle(UUID articleId);
 }

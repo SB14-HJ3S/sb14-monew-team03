@@ -8,6 +8,7 @@ import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.CommentErrorType;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -105,5 +106,10 @@ public class CommentServiceImpl implements CommentService {
             throw new MonewException(CommentErrorType.COMMENT_NOT_FOUND);
         }
         return wasActive;
+    }
+
+    @Override
+    public List<UUID> findIdsByArticleId(UUID articleId) {
+        return List.of();
     }
 }
