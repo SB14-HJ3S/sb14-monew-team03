@@ -81,6 +81,7 @@ class UserApplicationTest {
         int purged = userApplication.purgeDeletedUsers();
 
         verify(userService).hardDeleteUser(first);
+        verify(userService).hardDeleteUser(failing);
         verify(userService).hardDeleteUser(third);
         assertThat(purged).isEqualTo(2);
     }
