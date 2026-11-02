@@ -20,12 +20,14 @@ public class ArticleCollectionJobConfig {
             PlatformTransactionManager transactionManager,
             ArticleCollectReader reader,
             ArticleCollectProcessor processor,
-            ArticleCollectWriter writer) {
+            ArticleCollectWriter writer,
+            ArticleCollectionChunkListener listener) {
         return new StepBuilder("articleCollectionStep", jobRepository)
                 .<InterestKeywordResult, InterestCollectedArticles>chunk(1, transactionManager)
                 .reader(reader)
                 .processor(processor)
                 .writer(writer)
+                .listener(listener)
                 .build();
     }
 

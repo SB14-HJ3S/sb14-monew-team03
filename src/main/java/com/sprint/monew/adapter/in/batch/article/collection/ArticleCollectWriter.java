@@ -2,7 +2,6 @@ package com.sprint.monew.adapter.in.batch.article.collection;
 
 import com.sprint.monew.adapter.in.batch.article.collection.dto.InterestCollectedArticles;
 import com.sprint.monew.application.article.provided.ArticleCollectionUseCase;
-import com.sprint.monew.application.article.required.ArticleEventPublisherPort;
 import com.sprint.monew.domain.interest.entity.Interest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.item.Chunk;
@@ -15,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ArticleCollectWriter implements ItemWriter<InterestCollectedArticles> {
 
     private final ArticleCollectionUseCase useCase;
-    private final ArticleEventPublisherPort eventPublisher;
+    private final ArticleCollectionChunkListener listener;
 
     @Override
     @Transactional
@@ -23,10 +22,7 @@ public class ArticleCollectWriter implements ItemWriter<InterestCollectedArticle
         for (InterestCollectedArticles collected : chunk) {
             Interest interest = collected.interest();
             int newArticleCount = useCase.saveArticles(interest, collected.articles());
-
-            //            eventPublisher.publish(
-            //                new ArticlesSavedEvent(interest.getId(), interest.getName(),
-            // newArticleCount));
+            listener.addSavedCount(newArticleCount);
         }
     }
 }
