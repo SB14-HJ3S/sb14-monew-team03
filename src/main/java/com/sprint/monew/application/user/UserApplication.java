@@ -5,6 +5,7 @@ import com.sprint.monew.application.user.provided.dto.UserResult;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.annotation.ApplicationService;
 import com.sprint.monew.global.exception.MonewException;
+import com.sprint.monew.global.exception.errortype.UserErrorType;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
@@ -71,7 +72,15 @@ public class UserApplication implements UserUseCase {
             userService.hardDeleteUser(userId);
             return true;
         } catch (MonewException e) {
-            log.warn("이미 완전 삭제된 사용자라 건너뜀: userId={}", userId);
+            if (e.getErrorType() == UserErrorType.USER_NOT_FOUND) {
+                log.warn("이미 완전 삭제된 사용자라 건너뜀: userId={}", userId);
+            } else {
+                log.error(
+                        "사용자 완전 삭제 실패, 다음 실행 때 다시 시도: userId={}, errorType={}",
+                        userId,
+                        e.getErrorType(),
+                        e);
+            }
             return false;
         } catch (RuntimeException e) {
             log.error("사용자 완전 삭제 실패, 다음 실행 때 다시 시도: userId={}", userId, e);
