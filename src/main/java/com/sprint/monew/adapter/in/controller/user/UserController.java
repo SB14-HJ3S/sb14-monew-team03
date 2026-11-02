@@ -60,4 +60,12 @@ public class UserController {
         userUseCase.softDeleteUser(userId);
         log.info("사용자 논리 삭제 완료: userId={}", userId);
     }
+
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/{userId}/hard")
+    public void hardDeleteUser(@PathVariable UUID userId) {
+        log.info("사용자 물리 삭제 요청: userId={}", userId);
+        userUseCase.hardDeleteUser(userId);
+        log.info("사용자 물리 삭제 완료: userId={}", userId);
+    }
 }

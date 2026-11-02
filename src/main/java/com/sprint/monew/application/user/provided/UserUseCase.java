@@ -15,4 +15,6 @@ public interface UserUseCase {
     UserResult updateNickname(UUID userId, String nickname);
 
     void softDeleteUser(UUID userId);
+
+    void hardDeleteUser(UUID userId);
 }
