@@ -11,6 +11,7 @@ import com.sprint.monew.global.exception.errortype.CommentErrorType;
 import com.sprint.monew.global.pagination.PageResult;
 import java.time.Instant;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -119,5 +120,10 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public Set<UUID> findLikedCommentIds(UUID userId, Collection<UUID> commentIds) {
         return Set.of();
+    }
+
+    @Override
+    public List<UUID> findIdsByArticleId(UUID articleId) {
+        return commentRepository.findIdsByArticleId(articleId);
     }
 }

@@ -32,4 +32,7 @@ public interface CommentRepositoryPort {
     List<Comment> findByQuery(CommentQuery query);
 
     long countByQuery(CommentQuery query);
+
+    // 기사 물리 삭제 때 같이 지워질 댓글 찾기용. 논리 삭제된 댓글도 포함한다
+    List<UUID> findIdsByArticleId(UUID articleId);
 }

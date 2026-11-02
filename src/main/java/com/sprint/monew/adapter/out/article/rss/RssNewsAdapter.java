@@ -51,7 +51,7 @@ public class RssNewsAdapter implements RssNewsPort {
                 Map.of(
                         ArticleSourceType.HANKYUNG, hankyungUrl,
                         ArticleSourceType.CHOSUN, chosunUrl,
-                        ArticleSourceType.YONHAP, yonhapUrl);
+                        ArticleSourceType.YEONHAP, yonhapUrl);
     }
 
     @Override

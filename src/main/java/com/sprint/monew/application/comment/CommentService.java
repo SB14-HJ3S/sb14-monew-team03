@@ -6,6 +6,7 @@ import com.sprint.monew.domain.comment.entity.CommentLike;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.pagination.PageResult;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -34,4 +35,7 @@ public interface CommentService {
     PageResult<Comment> findPageByQuery(CommentQuery query);
 
     Set<UUID> findLikedCommentIds(UUID userId, Collection<UUID> commentIds);
+
+    // 논리 삭제된 댓글도 포함한다
+    List<UUID> findIdsByArticleId(UUID articleId);
 }

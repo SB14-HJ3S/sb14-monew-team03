@@ -63,7 +63,7 @@ class RssNewsMapperTest {
         MonewException thrown =
                 catchThrowableOfType(
                         MonewException.class,
-                        () -> mapper.toCollectedArticle(ArticleSourceType.YONHAP, entry));
+                        () -> mapper.toCollectedArticle(ArticleSourceType.YEONHAP, entry));
         // then
         assertThat(thrown.getErrorType()).isEqualTo(ArticleErrorType.ARTICLE_PUBLISHED_AT_INVALID);
     }
@@ -77,7 +77,7 @@ class RssNewsMapperTest {
                 content(
                         "<div class='ynaimage'>캡션<img src='x'></div><p>AI &amp; 뉴스<img src='y'></p>"));
         // when
-        var result = mapper.toCollectedArticle(ArticleSourceType.YONHAP, entry);
+        var result = mapper.toCollectedArticle(ArticleSourceType.YEONHAP, entry);
         // then
         assertThat(result.publishedAt()).isEqualTo(LocalDateTime.of(2026, 10, 30, 12, 0));
         assertThat(result.summary()).isEqualTo("AI & 뉴스");

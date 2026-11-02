@@ -65,4 +65,9 @@ public class CommentRepositoryAdapter implements CommentRepositoryPort {
     public long countByQuery(CommentQuery query) {
         return jpaRepository.countByQuery(query);
     }
+
+    @Override
+    public List<UUID> findIdsByArticleId(UUID articleId) {
+        return jpaRepository.findIdsByArticleId(articleId);
+    }
 }
