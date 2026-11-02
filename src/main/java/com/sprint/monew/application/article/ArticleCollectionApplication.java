@@ -85,6 +85,14 @@ public class ArticleCollectionApplication implements ArticleCollectionUseCase {
         return newArticleCount;
     }
 
+    // 기사 제목이나 요약에 관심사 키워드 중 하나라도 있으면 return true, else false
+    @Override
+    public boolean matchesInterest(CollectedArticle article, Interest interest) {
+        String text = (article.title() + " " + article.summary()).toLowerCase();
+        return interest.getKeywordNames().stream()
+                .anyMatch(keyword -> text.contains(keyword.trim().toLowerCase()));
+    }
+
     // 한번의 수집 안에 같은 URL로 수집한 기사 있는지 체크
     private List<CollectedArticle> removeDuplicateArticles(List<CollectedArticle> articles) {
 

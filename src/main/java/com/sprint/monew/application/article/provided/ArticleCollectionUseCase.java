@@ -15,4 +15,6 @@ public interface ArticleCollectionUseCase {
     List<CollectedArticle> collectRssArticles(ArticleSourceType source);
 
     int saveArticles(Interest interest, List<CollectedArticle> articles);
+
+    boolean matchesInterest(CollectedArticle article, Interest interest);
 }
