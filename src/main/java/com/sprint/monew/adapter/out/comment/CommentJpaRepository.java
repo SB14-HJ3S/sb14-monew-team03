@@ -2,6 +2,7 @@ package com.sprint.monew.adapter.out.comment;
 
 import com.sprint.monew.domain.comment.entity.Comment;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -34,4 +35,8 @@ public interface CommentJpaRepository extends JpaRepository<Comment, UUID> {
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("DELETE FROM Comment c WHERE c.id = :id")
     int hardDeleteById(@Param("id") UUID id);
+
+    // 기사 물리 삭제 때 같이 지워질 댓글을 찾는다. 논리 삭제된 댓글도 지워지니 deletedAt 조건을 넣지 않는다
+    @Query("SELECT c.id FROM Comment c WHERE c.article.id = :articleId")
+    List<UUID> findIdsByArticleId(@Param("articleId") UUID articleId);
 }

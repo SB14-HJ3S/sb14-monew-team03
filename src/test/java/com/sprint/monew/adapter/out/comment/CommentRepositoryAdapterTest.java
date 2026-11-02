@@ -181,4 +181,27 @@ class CommentRepositoryAdapterTest {
                                         commentId))
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
+
+    @Test
+    @DisplayName("기사의 댓글 ID를 찾으면 논리 삭제된 댓글도 포함하고, 다른 기사의 댓글은 빼고 돌려준다")
+    void findIdsByArticleId() {
+        User user = userRepository.save(User.create("ids@monew.com", "작성자", "password1!"));
+        Article article = savedArticle("https://news.example.com/target");
+        Article otherArticle = savedArticle("https://news.example.com/other");
+
+        UUID activeId = commentRepository.save(Comment.create(user, article, "살아 있는 댓글")).getId();
+        UUID deletedId = commentRepository.save(Comment.create(user, article, "지운 댓글")).getId();
+        commentRepository.save(Comment.create(user, otherArticle, "다른 기사 댓글"));
+        commentRepository.softDeleteIfActive(deletedId, Instant.now());
+
+        // 기사를 물리 삭제하면 논리 삭제된 댓글도 같이 지워지니, 그 댓글의 알림도 지워야 한다
+        assertThat(commentRepository.findIdsByArticleId(article.getId()))
+                .containsExactlyInAnyOrder(activeId, deletedId);
+    }
+
+    private Article savedArticle(String sourceUrl) {
+        return articleRepository.save(
+                Article.create(
+                        ArticleSourceType.NAVER, sourceUrl, "기사 제목", LocalDateTime.now(), "기사 요약"));
+    }
 }

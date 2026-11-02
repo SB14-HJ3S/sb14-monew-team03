@@ -31,6 +31,7 @@ import com.sprint.monew.global.exception.errortype.CommentErrorType;
 import com.sprint.monew.global.exception.errortype.UserErrorType;
 import com.sprint.monew.global.type.ResourceType;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
@@ -603,6 +604,35 @@ class CommentApplicationTest {
             verify(commentRepository, never()).softDeleteIfActive(any(), any());
             verify(commentRepository, never()).hardDeleteById(any());
             verifyNoInteractions(commentLikeRepository, articleService, notificationService);
+        }
+    }
+
+    @Nested
+    @DisplayName("기사 물리 삭제 시 좋아요 알림 삭제")
+    class DeleteLikeNotificationsByArticle {
+
+        @Test
+        @DisplayName("기사의 댓글마다 그 댓글을 가리키는 좋아요 알림을 지운다")
+        void deleteEachCommentNotifications() {
+            UUID firstCommentId = UUID.randomUUID();
+            UUID secondCommentId = UUID.randomUUID();
+            given(commentRepository.findIdsByArticleId(articleId))
+                    .willReturn(List.of(firstCommentId, secondCommentId));
+
+            commentApplication.deleteLikeNotificationsByArticle(articleId);
+
+            verify(notificationService).deleteByResource(ResourceType.COMMENT, firstCommentId);
+            verify(notificationService).deleteByResource(ResourceType.COMMENT, secondCommentId);
+        }
+
+        @Test
+        @DisplayName("기사에 댓글이 없으면 알림을 지우지 않는다")
+        void noComments() {
+            given(commentRepository.findIdsByArticleId(articleId)).willReturn(List.of());
+
+            commentApplication.deleteLikeNotificationsByArticle(articleId);
+
+            verifyNoInteractions(notificationService);
         }
     }
 }

@@ -54,4 +54,9 @@ public class CommentRepositoryAdapter implements CommentRepositoryPort {
     public int hardDeleteById(UUID commentId) {
         return jpaRepository.hardDeleteById(commentId);
     }
+
+    @Override
+    public List<UUID> findIdsByArticleId(UUID articleId) {
+        return jpaRepository.findIdsByArticleId(articleId);
+    }
 }
