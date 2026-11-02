@@ -5,8 +5,10 @@ import com.sprint.monew.domain.comment.entity.CommentLike;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.CommentErrorType;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -77,5 +79,10 @@ public class CommentLikeRepositoryAdapter implements CommentLikeRepositoryPort {
     @Override
     public int deleteAllByCommentId(UUID commentId) {
         return jpaRepository.deleteAllByCommentId(commentId);
+    }
+
+    @Override
+    public Set<UUID> findLikedCommentIds(UUID userId, Collection<UUID> commentIds) {
+        return Set.of();
     }
 }

@@ -1,5 +1,6 @@
 package com.sprint.monew.application.comment.required;
 
+import com.sprint.monew.application.comment.provided.dto.CommentQuery;
 import com.sprint.monew.domain.comment.entity.Comment;
 import java.time.Instant;
 import java.util.List;
@@ -26,4 +27,9 @@ public interface CommentRepositoryPort {
 
     // 물리 삭제용. 동시에 지워서 이미 없으면 예외 없이 0을 받는다
     int hardDeleteById(UUID commentId);
+
+    // 목록 조회용. 다음 페이지 여부를 알려고 limit + 1개까지 가져온다
+    List<Comment> findByQuery(CommentQuery query);
+
+    long countByQuery(CommentQuery query);
 }

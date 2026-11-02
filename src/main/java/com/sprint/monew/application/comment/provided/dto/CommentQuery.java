@@ -3,6 +3,7 @@ package com.sprint.monew.application.comment.provided.dto;
 import com.sprint.monew.domain.comment.entity.Comment;
 import com.sprint.monew.global.pagination.SortDirection;
 import com.sprint.monew.global.pagination.SortedPageQuery;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -21,8 +22,7 @@ public record CommentQuery(
         @NotNull SortDirection direction,
         String cursor,
         Instant after,
-        @NotNull int limit,
-        @NotNull UUID requestId)
+        @Min(1) int limit)
         implements SortedPageQuery<Comment, CommentQuery.SortOrder> {
     public static CommentQuery of(
             UUID articleId,
@@ -30,16 +30,14 @@ public record CommentQuery(
             SortDirection direction,
             String cursor,
             LocalDateTime after,
-            int limit,
-            UUID requestId) {
+            int limit) {
         return new CommentQuery(
                 articleId,
                 orderBy,
                 direction,
                 cursor,
                 Objects.nonNull(after) ? after.atZone(ZoneId.systemDefault()).toInstant() : null,
-                limit,
-                requestId);
+                limit);
     }
 
     @Getter

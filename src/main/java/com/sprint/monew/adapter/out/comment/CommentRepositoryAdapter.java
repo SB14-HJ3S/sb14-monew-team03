@@ -1,5 +1,6 @@
 package com.sprint.monew.adapter.out.comment;
 
+import com.sprint.monew.application.comment.provided.dto.CommentQuery;
 import com.sprint.monew.application.comment.required.CommentRepositoryPort;
 import com.sprint.monew.domain.comment.entity.Comment;
 import java.time.Instant;
@@ -53,5 +54,15 @@ public class CommentRepositoryAdapter implements CommentRepositoryPort {
     @Override
     public int hardDeleteById(UUID commentId) {
         return jpaRepository.hardDeleteById(commentId);
+    }
+
+    @Override
+    public List<Comment> findByQuery(CommentQuery query) {
+        return jpaRepository.findByQuery(query);
+    }
+
+    @Override
+    public long countByQuery(CommentQuery query) {
+        return jpaRepository.countByQuery(query);
     }
 }

@@ -1,5 +1,6 @@
 package com.sprint.monew.application.comment;
 
+import com.sprint.monew.application.comment.provided.dto.CommentQuery;
 import com.sprint.monew.application.comment.required.CommentLikeRepositoryPort;
 import com.sprint.monew.application.comment.required.CommentRepositoryPort;
 import com.sprint.monew.domain.comment.entity.Comment;
@@ -7,7 +8,10 @@ import com.sprint.monew.domain.comment.entity.CommentLike;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.CommentErrorType;
+import com.sprint.monew.global.pagination.PageResult;
 import java.time.Instant;
+import java.util.Collection;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -105,5 +109,15 @@ public class CommentServiceImpl implements CommentService {
             throw new MonewException(CommentErrorType.COMMENT_NOT_FOUND);
         }
         return wasActive;
+    }
+
+    @Override
+    public PageResult<Comment> findPageByQuery(CommentQuery query) {
+        return null;
+    }
+
+    @Override
+    public Set<UUID> findLikedCommentIds(UUID userId, Collection<UUID> commentIds) {
+        return Set.of();
     }
 }

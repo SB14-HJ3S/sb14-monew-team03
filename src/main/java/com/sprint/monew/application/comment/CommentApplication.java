@@ -49,7 +49,8 @@ public class CommentApplication implements CommentUseCase {
     }
 
     @Override
-    public PageResult<Comment> findByQuery(CommentQuery query) {
+    @Transactional(readOnly = true)
+    public PageResult<CommentResult> findByQuery(CommentQuery query) {
         return null;
     }
 
