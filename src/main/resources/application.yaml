@@ -24,6 +24,7 @@ spring:
   data:
     mongodb:
       auto-index-creation: true
+      uuid-representation: standard # UUID를 표준 방식으로 저장
 
   batch:
     job:
