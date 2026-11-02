@@ -2,8 +2,18 @@ package com.sprint.monew.adapter.out.user;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.sprint.monew.domain.article.entity.Article;
+import com.sprint.monew.domain.article.entity.ArticleViewStatus;
+import com.sprint.monew.domain.comment.entity.Comment;
+import com.sprint.monew.domain.comment.entity.CommentLike;
+import com.sprint.monew.domain.notification.entity.Notification;
 import com.sprint.monew.domain.user.entity.User;
+import com.sprint.monew.global.type.ArticleSourceType;
+import com.sprint.monew.global.type.ResourceType;
 import com.sprint.monew.support.IntegrationTest;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -16,6 +26,8 @@ import org.springframework.transaction.annotation.Transactional;
 class UserRepositoryAdapterTest {
 
     @Autowired private UserRepositoryAdapter userRepository;
+
+    @Autowired private EntityManager entityManager;
 
     @Test
     @DisplayName("탈퇴하지 않은 사용자는 조회된다")
@@ -73,5 +85,129 @@ class UserRepositoryAdapterTest {
                         List.of(first.getId(), second.getId(), deleted.getId(), UUID.randomUUID()));
 
         assertThat(result).containsExactlyInAnyOrder(first, second);
+    }
+
+    @Test
+    @DisplayName("탈퇴한 사용자도 findUserIncludingDeleted로 찾는다")
+    void givenDeletedUser_whenFindUserIncludingDeleted_thenFound() {
+        User saved = userRepository.save(User.create("withdrawn@monew.com", "탈퇴자", "password1!"));
+        saved.softDelete();
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThat(userRepository.findUserIncludingDeleted(saved.getId())).isPresent();
+        assertThat(userRepository.findUser(saved.getId())).isEmpty();
+    }
+
+    @Test
+    @DisplayName("탈퇴한 사용자도 findUserIncludingDeletedForUpdate로 잠그고 찾는다")
+    void givenDeletedUser_whenFindUserIncludingDeletedForUpdate_thenFound() {
+        User saved = userRepository.save(User.create("locked@monew.com", "잠금", "password1!"));
+        saved.softDelete();
+        entityManager.flush();
+        entityManager.clear();
+
+        User locked = userRepository.findUserIncludingDeletedForUpdate(saved.getId()).orElseThrow();
+
+        assertThat(entityManager.getLockMode(locked)).isEqualTo(LockModeType.PESSIMISTIC_WRITE);
+    }
+
+    @Test
+    @DisplayName("사용자를 물리 삭제하면 그 사용자의 알림도 DB에서 같이 지워진다(ON DELETE CASCADE)")
+    void givenUserWithNotification_whenDeleteById_thenNotificationDeleted() {
+        User saved = userRepository.save(User.create("hard@monew.com", "완전삭제", "password1!"));
+        Notification notification =
+                Notification.create(saved, ResourceType.COMMENT, UUID.randomUUID(), "알림");
+        entityManager.persist(notification);
+        entityManager.flush();
+        entityManager.clear();
+
+        userRepository.deleteById(saved.getId());
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThat(userRepository.findById(saved.getId())).isEmpty();
+        assertThat(entityManager.find(Notification.class, notification.getId())).isNull();
+    }
+
+    @Test
+    @DisplayName("다른 사람 댓글에 좋아요를 누른 사용자도 물리 삭제할 수 있다 — 좋아요 때문에 삭제가 막히지 않는다")
+    void givenUserWhoLikedComment_whenDeleteById_thenDeleted() {
+        User writer = userRepository.save(User.create("writer@monew.com", "작성자", "password1!"));
+        User liker = userRepository.save(User.create("liker@monew.com", "좋아요", "password1!"));
+        Article article =
+                Article.create(
+                        ArticleSourceType.NAVER,
+                        "https://news.example.com/1",
+                        "기사 제목",
+                        LocalDateTime.of(2026, 10, 22, 9, 0),
+                        "기사 요약");
+        entityManager.persist(article);
+        Comment comment = Comment.create(writer, article, "댓글");
+        entityManager.persist(comment);
+        entityManager.persist(CommentLike.create(liker, comment));
+        entityManager.flush();
+        entityManager.clear();
+
+        userRepository.deleteById(liker.getId());
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThat(userRepository.findById(liker.getId())).isEmpty();
+        assertThat(entityManager.find(Comment.class, comment.getId())).isNotNull();
+    }
+
+    @Test
+    @DisplayName("사용자를 물리 삭제하면 그 사용자가 쓴 댓글과 그 댓글에 달린 좋아요도 DB에서 같이 지워진다")
+    void givenUserWithWrittenComment_whenDeleteById_thenCommentAndLikesDeleted() {
+        User writer = userRepository.save(User.create("author@monew.com", "작성자", "password1!"));
+        User liker = userRepository.save(User.create("fan@monew.com", "좋아요", "password1!"));
+        Article article = saveArticle("https://news.example.com/2");
+        Comment comment = Comment.create(writer, article, "댓글");
+        entityManager.persist(comment);
+        CommentLike like = CommentLike.create(liker, comment);
+        entityManager.persist(like);
+        entityManager.flush();
+        entityManager.clear();
+
+        userRepository.deleteById(writer.getId());
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThat(entityManager.find(Comment.class, comment.getId())).isNull();
+        assertThat(entityManager.find(CommentLike.class, like.getId())).isNull();
+        assertThat(entityManager.find(Article.class, article.getId())).isNotNull();
+        assertThat(userRepository.findById(liker.getId())).isPresent();
+    }
+
+    @Test
+    @DisplayName("사용자를 물리 삭제하면 그 사용자의 기사 조회 기록도 DB에서 같이 지워진다")
+    void givenUserWithArticleView_whenDeleteById_thenArticleViewStatusDeleted() {
+        User viewer = userRepository.save(User.create("viewer@monew.com", "조회자", "password1!"));
+        Article article = saveArticle("https://news.example.com/3");
+        ArticleViewStatus viewStatus =
+                ArticleViewStatus.create(viewer, article, LocalDateTime.of(2026, 10, 22, 10, 0));
+        entityManager.persist(viewStatus);
+        entityManager.flush();
+        entityManager.clear();
+
+        userRepository.deleteById(viewer.getId());
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThat(entityManager.find(ArticleViewStatus.class, viewStatus.getId())).isNull();
+        assertThat(entityManager.find(Article.class, article.getId())).isNotNull();
+    }
+
+    private Article saveArticle(String sourceUrl) {
+        Article article =
+                Article.create(
+                        ArticleSourceType.NAVER,
+                        sourceUrl,
+                        "기사 제목",
+                        LocalDateTime.of(2026, 10, 22, 9, 0),
+                        "기사 요약");
+        entityManager.persist(article);
+        return article;
     }
 }

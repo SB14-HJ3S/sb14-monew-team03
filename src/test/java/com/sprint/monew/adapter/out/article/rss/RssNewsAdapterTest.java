@@ -47,7 +47,7 @@ class RssNewsAdapterTest {
     @CsvSource({
         "HANKYUNG,hankyung,Fri 30 Oct 2026 12:00:00 +0900",
         "CHOSUN,chosun,Fri 30 Oct 2026 03:00:00 GMT",
-        "YONHAP,yonhap,Fri 30 Oct 2026 12:00:00 +0900"
+        "YEONHAP,yonhap,Fri 30 Oct 2026 12:00:00 +0900"
     })
     @DisplayName("언론사별 설정 URL로 요청하고 RSS 날짜·HTML 요약을 변환한다.")
     void givenSourceFeed_whenCollect_thenParseArticles(

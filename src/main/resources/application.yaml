@@ -58,6 +58,10 @@ management:
 
 # 뉴스기사 RSS 수집용 피드 URL
 monew:
+  log:
+    backup:
+      cron: "0 0 3 * * *"
+
   news:
     collection:
       cron: "0 0 * * * *" # 매시간 정각, Asia/Seoul
@@ -87,3 +91,7 @@ monew:
       access-key-id: ${AWS_ACCESS_KEY_ID:}
       secret-access-key: ${AWS_SECRET_ACCESS_KEY:}
       session-token: ${AWS_SESSION_TOKEN:}
+
+logging:
+  file:
+    name: logs/monew.log

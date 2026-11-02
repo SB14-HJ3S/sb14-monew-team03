@@ -83,6 +83,17 @@ class NotificationServiceImplTest {
         assertThat(updated).isEqualTo(3);
     }
 
+    @Test
+    void 리소스별_삭제는_리포지토리에_종류와_ID를_넘기고_지운_개수를_돌려준다() {
+        UUID commentId = UUID.randomUUID();
+        given(notificationRepository.deleteByResource(ResourceType.COMMENT, commentId))
+                .willReturn(2);
+
+        int deleted = notificationService.deleteByResource(ResourceType.COMMENT, commentId);
+
+        assertThat(deleted).isEqualTo(2);
+    }
+
     private Notification notificationOf(UUID userId) {
         User user = mock(User.class);
         lenient().when(user.getId()).thenReturn(userId);

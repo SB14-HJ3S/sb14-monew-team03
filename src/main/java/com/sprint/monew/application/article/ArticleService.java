@@ -17,4 +17,6 @@ public interface ArticleService {
     Article save(Article article);
 
     void increaseCommentCount(UUID articleId);
+
+    void decreaseCommentCount(UUID articleId);
 }

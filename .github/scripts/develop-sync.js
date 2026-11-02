@@ -2,8 +2,8 @@ const fs = require('fs');
 const path = require('path');
 
 const MARKER = '<!-- develop-sync -->';
-const LABEL = '🚨 develop 반영 필수';
-const CONFLICT_LABEL = '⚠️ 충돌';
+const LABEL = '⚠️ develop 반영 필수';
+const CONFLICT_LABEL = '🚨 충돌';
 const CHECK_LINE = '여기를 체크하면 최신 develop을 이 PR에 반영해요';
 const BOT_LOGIN = 'github-actions[bot]';
 const PUSH_BOT_NAME = 'monew-team03[bot]';

@@ -6,6 +6,7 @@ import com.sprint.monew.application.comment.provided.dto.CommentLikeResult;
 import com.sprint.monew.application.comment.provided.dto.CommentQuery;
 import com.sprint.monew.application.comment.provided.dto.CommentResult;
 import com.sprint.monew.application.comment.required.CommentEventPublisherPort;
+import com.sprint.monew.application.notification.NotificationService;
 import com.sprint.monew.application.user.IUserService;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.comment.entity.Comment;
@@ -15,6 +16,7 @@ import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.annotation.ApplicationService;
 import com.sprint.monew.global.context.RequestIdContext;
 import com.sprint.monew.global.pagination.PageResult;
+import com.sprint.monew.global.type.ResourceType;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,10 +25,11 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class CommentApplication implements CommentUseCase {
 
-    private final ICommentService commentService;
+    private final CommentService commentService;
     private final IUserService userService;
     private final ArticleService articleService;
     private final CommentEventPublisherPort commentEventPublisher;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional
@@ -102,8 +105,44 @@ public class CommentApplication implements CommentUseCase {
     }
 
     @Override
-    public void softDeleteComment(UUID commentId) {}
+    @Transactional
+    public void softDeleteComment(UUID commentId) {
+        Comment comment = commentService.getActiveComment(commentId);
+
+        // 삭제 쿼리 뒤에는 댓글 정보를 못 읽을 수 있어서 먼저 꺼내 둔다
+        UUID articleId = comment.getArticle().getId();
+
+        // 읽은 뒤에 다른 요청이 먼저 지웠으면 여기서 404로 끝나고 댓글 수는 안 줄인다
+        commentService.softDelete(commentId);
+
+        articleService.decreaseCommentCount(articleId);
+    }
 
     @Override
-    public void hardDeleteComment(UUID commentId) {}
+    @Transactional
+    public void hardDeleteComment(UUID commentId) {
+        Comment comment = commentService.getComment(commentId);
+
+        // 삭제 쿼리 뒤에는 댓글 정보를 못 읽을 수 있어서 먼저 꺼내 둔다
+        UUID articleId = comment.getArticle().getId();
+
+        // 다른 물리 삭제 요청이 먼저 지웠으면 여기서 404로 끝난다
+        // 이미 논리 삭제된 댓글은 그때 1 줄였으므로 다시 줄이지 않는다
+        if (commentService.hardDelete(commentId)) {
+            articleService.decreaseCommentCount(articleId);
+        }
+
+        // 물리 삭제할 때는 이 댓글의 좋아요 알림도 같이 지운다
+        notificationService.deleteByResource(ResourceType.COMMENT, commentId);
+    }
+
+    @Override
+    @Transactional
+    public void deleteLikeNotificationsByArticle(UUID articleId) {
+        // 기사가 물리 삭제되면 댓글은 DB가 같이 지워서 댓글 물리 삭제 코드를 거치지 않는다
+        // 알림은 댓글을 resource_id 값으로만 가리켜서 여기서 직접 지운다
+        for (UUID commentId : commentService.findIdsByArticleId(articleId)) {
+            notificationService.deleteByResource(ResourceType.COMMENT, commentId);
+        }
+    }
 }

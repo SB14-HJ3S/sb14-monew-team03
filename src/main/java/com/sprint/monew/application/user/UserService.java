@@ -1,5 +1,6 @@
 package com.sprint.monew.application.user;
 
+import com.sprint.monew.application.user.event.UserHardDeletingEvent;
 import com.sprint.monew.application.user.event.UserNicknameUpdatedEvent;
 import com.sprint.monew.application.user.event.UserRegisteredEvent;
 import com.sprint.monew.application.user.required.UserEventPublisherPort;
@@ -76,6 +77,38 @@ public class UserService implements IUserService {
     public void softDeleteUser(UUID userId) {
         User user = getActiveUser(userId);
         user.softDelete();
+    }
+
+    @Override
+    public void validateDeactivatedUser(UUID userId) {
+        getDeactivatedUser(userId);
+    }
+
+    @Override
+    @Transactional
+    public void hardDeleteUser(UUID userId) {
+        User user =
+                repository
+                        .findUserIncludingDeletedForUpdate(userId)
+                        .filter(User::isDeleted)
+                        .orElseThrow(() -> userNotFound(userId));
+        removeCompletely(user);
+    }
+
+    private User getDeactivatedUser(UUID userId) {
+        return repository
+                .findUserIncludingDeleted(userId)
+                .filter(User::isDeleted)
+                .orElseThrow(() -> userNotFound(userId));
+    }
+
+    private void removeCompletely(User user) {
+        userEventPublisher.publish(new UserHardDeletingEvent(user.getId()));
+        repository.deleteById(user.getId());
+    }
+
+    private MonewException userNotFound(UUID userId) {
+        return new MonewException(UserErrorType.USER_NOT_FOUND, Map.of("userId", userId));
     }
 
     private MonewException loginFailed() {

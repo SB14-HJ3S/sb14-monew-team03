@@ -40,4 +40,9 @@ public class UserApplication implements UserUseCase {
     public void softDeleteUser(UUID userId) {
         userService.softDeleteUser(userId);
     }
+
+    @Override
+    public void hardDeleteUser(UUID userId) {
+        userService.hardDeleteUser(userId);
+    }
 }
