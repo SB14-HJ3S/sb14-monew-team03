@@ -320,12 +320,12 @@ class UserServiceTest {
 
     @Test
     @DisplayName("기준 시각 이전에 탈퇴한 사용자 id 목록을 돌려준다")
-    void givenThreshold_whenFindPurgeTargetIds_thenReturnIds() {
+    void givenThreshold_whenFindCleanupTargetIds_thenReturnIds() {
         Instant threshold = Instant.parse("2026-11-01T00:00:00Z");
         List<UUID> ids = List.of(UUID.randomUUID(), UUID.randomUUID());
         given(repository.findDeletedUserIdsBefore(threshold)).willReturn(ids);
 
-        List<UUID> result = userService.findPurgeTargetIds(threshold);
+        List<UUID> result = userService.findCleanupTargetIds(threshold);
 
         assertThat(result).isEqualTo(ids);
     }

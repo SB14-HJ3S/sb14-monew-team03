@@ -1,6 +1,6 @@
 package com.sprint.monew.adapter.in.scheduler;
 
-import com.sprint.monew.adapter.in.batch.UserPurgeRunner;
+import com.sprint.monew.adapter.in.batch.UserCleanupRunner;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -12,12 +12,12 @@ import org.springframework.stereotype.Component;
         name = "monew.scheduling.enabled",
         havingValue = "true",
         matchIfMissing = true)
-public class UserPurgeScheduler {
+public class UserCleanupScheduler {
 
-    private final UserPurgeRunner runner;
+    private final UserCleanupRunner runner;
 
-    @Scheduled(cron = "${monew.user.purge.cron}", zone = "Asia/Seoul")
-    public void purge() {
-        runner.runPurge();
+    @Scheduled(cron = "${monew.user.cleanup.cron}", zone = "Asia/Seoul")
+    public void cleanup() {
+        runner.runCleanup();
     }
 }

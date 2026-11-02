@@ -14,35 +14,35 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataAccessResourceFailureException;
 
 @ExtendWith(MockitoExtension.class)
-class UserPurgeRunnerTest {
+class UserCleanupRunnerTest {
 
     @Mock private UserUseCase userUseCase;
 
-    @InjectMocks private UserPurgeRunner runner;
+    @InjectMocks private UserCleanupRunner runner;
 
     @Test
     @DisplayName("사용자 완전 삭제 배치를 실행하면 유스케이스를 호출한다")
-    void whenRunPurge_thenCallsUseCase() {
-        runner.runPurge();
+    void whenRunCleanup_thenCallsUseCase() {
+        runner.runCleanup();
 
-        verify(userUseCase).purgeDeletedUsers();
+        verify(userUseCase).cleanupDeletedUsers();
     }
 
     @Test
     @DisplayName("삭제 중 DB 오류가 나도 예외를 밖으로 던지지 않는다")
-    void givenDbError_whenRunPurge_thenDoesNotThrow() {
+    void givenDbError_whenRunCleanup_thenDoesNotThrow() {
         doThrow(new DataAccessResourceFailureException("DB 오류"))
                 .when(userUseCase)
-                .purgeDeletedUsers();
+                .cleanupDeletedUsers();
 
-        assertThatCode(() -> runner.runPurge()).doesNotThrowAnyException();
+        assertThatCode(() -> runner.runCleanup()).doesNotThrowAnyException();
     }
 
     @Test
     @DisplayName("예상하지 못한 오류가 나도 예외를 밖으로 던지지 않는다")
-    void givenUnexpectedError_whenRunPurge_thenDoesNotThrow() {
-        doThrow(new IllegalStateException("예상 못한 오류")).when(userUseCase).purgeDeletedUsers();
+    void givenUnexpectedError_whenRunCleanup_thenDoesNotThrow() {
+        doThrow(new IllegalStateException("예상 못한 오류")).when(userUseCase).cleanupDeletedUsers();
 
-        assertThatCode(() -> runner.runPurge()).doesNotThrowAnyException();
+        assertThatCode(() -> runner.runCleanup()).doesNotThrowAnyException();
     }
 }

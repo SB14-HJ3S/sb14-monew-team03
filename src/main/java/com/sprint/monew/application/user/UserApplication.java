@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class UserApplication implements UserUseCase {
 
-    private static final Duration PURGE_AFTER = Duration.ofDays(1);
+    private static final Duration CLEANUP_AFTER = Duration.ofDays(1);
 
     private final IUserService userService;
 
@@ -55,19 +55,19 @@ public class UserApplication implements UserUseCase {
     }
 
     @Override
-    public int purgeDeletedUsers() {
-        Instant threshold = Instant.now().minus(PURGE_AFTER);
-        int purged = 0;
-        for (UUID userId : userService.findPurgeTargetIds(threshold)) {
-            if (purge(userId)) {
-                purged++;
+    public int cleanupDeletedUsers() {
+        Instant threshold = Instant.now().minus(CLEANUP_AFTER);
+        int cleaned = 0;
+        for (UUID userId : userService.findCleanupTargetIds(threshold)) {
+            if (cleanup(userId)) {
+                cleaned++;
             }
         }
-        log.info("탈퇴 후 1일 지난 사용자 완전 삭제: {}명 (기준 시각={})", purged, threshold);
-        return purged;
+        log.info("탈퇴 후 1일 지난 사용자 완전 삭제: {}명 (기준 시각={})", cleaned, threshold);
+        return cleaned;
     }
 
-    private boolean purge(UUID userId) {
+    private boolean cleanup(UUID userId) {
         try {
             userService.hardDeleteUser(userId);
             return true;

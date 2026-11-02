@@ -10,13 +10,13 @@ import org.springframework.transaction.TransactionException;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class UserPurgeRunner {
+public class UserCleanupRunner {
 
     private final UserUseCase userUseCase;
 
-    public void runPurge() {
+    public void runCleanup() {
         try {
-            userUseCase.purgeDeletedUsers();
+            userUseCase.cleanupDeletedUsers();
         } catch (DataAccessException | TransactionException e) {
             log.error("사용자 완전 삭제 배치 실패: DB 오류", e);
         } catch (RuntimeException e) {

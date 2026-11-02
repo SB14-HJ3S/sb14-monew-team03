@@ -22,5 +22,5 @@ public interface IUserService {
 
     void validateDeactivatedUser(UUID userId);
 
-    List<UUID> findPurgeTargetIds(Instant threshold);
+    List<UUID> findCleanupTargetIds(Instant threshold);
 }

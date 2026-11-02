@@ -19,7 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 @IntegrationTest
-class UserPurgeIntegrationTest {
+class UserCleanupIntegrationTest {
 
     @Autowired private UserUseCase userUseCase;
     @Autowired private UserRepositoryAdapter userRepository;
@@ -34,14 +34,14 @@ class UserPurgeIntegrationTest {
 
     @Test
     @DisplayName("탈퇴한 지 1일 지난 사용자만 완전 삭제되고, 1일 안 된 탈퇴자와 정상 사용자는 남는다")
-    void givenMixedUsers_whenPurgeDeletedUsers_thenOnlyOldDeletedUserRemoved() {
+    void givenMixedUsers_whenCleanupDeletedUsers_thenOnlyOldDeletedUserRemoved() {
         User oldDeleted = saveUserDeletedAgo("old", Duration.ofDays(2));
         User recentDeleted = saveUserDeletedAgo("recent", Duration.ofHours(1));
         User active = saveUser("active");
 
-        int purged = userUseCase.purgeDeletedUsers();
+        int cleaned = userUseCase.cleanupDeletedUsers();
 
-        assertThat(purged).isEqualTo(1);
+        assertThat(cleaned).isEqualTo(1);
         assertThat(userRepository.findUserIncludingDeleted(oldDeleted.getId())).isEmpty();
         assertThat(userRepository.findUserIncludingDeleted(recentDeleted.getId())).isPresent();
         assertThat(userRepository.findUserIncludingDeleted(active.getId())).isPresent();

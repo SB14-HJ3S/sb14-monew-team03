@@ -98,7 +98,7 @@ public class UserService implements IUserService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<UUID> findPurgeTargetIds(Instant threshold) {
+    public List<UUID> findCleanupTargetIds(Instant threshold) {
         return repository.findDeletedUserIdsBefore(threshold);
     }
 
