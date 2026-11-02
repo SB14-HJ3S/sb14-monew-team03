@@ -82,9 +82,12 @@ public class UserController {
         log.info("사용자 논리 삭제 완료: userId={}", userId);
     }
 
+    @Operation(summary = "사용자 물리 삭제")
+    @ApiResponse(responseCode = "204", description = "사용자 삭제 성공")
+    @ApiResponse(responseCode = "404", description = "사용자 정보 없음")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{userId}/hard")
-    public void hardDeleteUser(@PathVariable UUID userId) {
+    public void hardDeleteUser(@Parameter(description = "사용자 ID") @PathVariable UUID userId) {
         log.info("사용자 물리 삭제 요청: userId={}", userId);
         userUseCase.hardDeleteUser(userId);
         log.info("사용자 물리 삭제 완료: userId={}", userId);
