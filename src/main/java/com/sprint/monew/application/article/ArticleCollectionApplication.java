@@ -1,7 +1,9 @@
 package com.sprint.monew.application.article;
 
+import com.sprint.monew.application.article.event.ArticlesSavedEvent;
 import com.sprint.monew.application.article.provided.ArticleCollectionUseCase;
 import com.sprint.monew.application.article.provided.dto.CollectedArticle;
+import com.sprint.monew.application.article.required.ArticleEventPublisherPort;
 import com.sprint.monew.application.article.required.NaverNewsPort;
 import com.sprint.monew.application.article.required.RssNewsPort;
 import com.sprint.monew.application.interest.InterestService;
@@ -27,19 +29,14 @@ public class ArticleCollectionApplication implements ArticleCollectionUseCase {
     private final ArticleInterestService articleInterestService;
     private final NaverNewsPort naverNewsPort;
     private final RssNewsPort rssNewsPort;
+    private final ArticleEventPublisherPort eventPublisher;
 
     // Reader - 구독자가 1명 이상이고, 키워드를 1개 이상 가지고 있는 키워드 조회
     @Override
     @Transactional(readOnly = true)
     public List<InterestKeywordResult> findValidInterestKeywords() {
         return interestService.findSubscribedWithKeywords().stream()
-                .flatMap(
-                        interest ->
-                                interest.getKeywordNames().stream()
-                                        .map(
-                                                keyword ->
-                                                        new InterestKeywordResult(
-                                                                interest, keyword)))
+                .map(InterestKeywordResult::from)
                 .toList();
     }
 
@@ -81,6 +78,9 @@ public class ArticleCollectionApplication implements ArticleCollectionUseCase {
 
             articleInterestService.getOrCreateArticleInterest(article, interest);
         }
+
+        eventPublisher.publish(
+                new ArticlesSavedEvent(interest.getId(), interest.getName(), newArticleCount));
 
         return newArticleCount;
     }
