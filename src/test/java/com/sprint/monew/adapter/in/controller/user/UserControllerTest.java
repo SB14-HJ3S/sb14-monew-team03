@@ -241,4 +241,34 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.details.userId").exists());
         verifyNoInteractions(userUseCase);
     }
+
+    @Test
+    @DisplayName("물리 삭제에 성공하면 204를 응답한다")
+    void givenUser_whenHardDelete_thenNoContent() throws Exception {
+        mockMvc.perform(delete("/api/users/{userId}/hard", userId))
+                .andExpect(status().isNoContent());
+        verify(userUseCase).hardDeleteUser(userId);
+    }
+
+    @Test
+    @DisplayName("없거나 탈퇴하지 않은 사용자를 물리 삭제하면 404와 USER_NOT_FOUND를 응답한다")
+    void givenNoDeactivatedUser_whenHardDelete_thenNotFound() throws Exception {
+        willThrow(new MonewException(UserErrorType.USER_NOT_FOUND))
+                .given(userUseCase)
+                .hardDeleteUser(userId);
+
+        mockMvc.perform(delete("/api/users/{userId}/hard", userId))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("USER_NOT_FOUND"));
+    }
+
+    @Test
+    @DisplayName("물리 삭제할 사용자 ID가 UUID 형식이 아니면 400을 응답하고 유스케이스를 부르지 않는다")
+    void givenInvalidUserId_whenHardDelete_thenBadRequest() throws Exception {
+        mockMvc.perform(delete("/api/users/{userId}/hard", "invalid-id"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
+                .andExpect(jsonPath("$.details.userId").exists());
+        verifyNoInteractions(userUseCase);
+    }
 }

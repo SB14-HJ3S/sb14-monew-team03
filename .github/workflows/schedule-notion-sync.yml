@@ -1,7 +1,5 @@
 name: Issue → Notion Schedule Sync
 # 노션 "요구사항 구현 일정관리" DB의 시작일·종료일·진행상태를 자동으로 채운다
-# - 이슈 브랜치에 첫 push → 시작일(첫 커밋 날짜), "진행 중"
-# - 이슈가 완료로 닫힘(PR 머지 포함) → 종료일(닫힌 날짜), "완료" ("계획 안 함"으로 닫히면 그대로 둠)
 on:
   push:
     branches-ignore: [main, develop]
@@ -15,7 +13,6 @@ permissions:
   issues: read
   pull-requests: read
 
-# 같은 이슈·브랜치끼리만 순서대로 돌린다 (저장소 전체로 묶으면 실행이 몰릴 때 일부가 취소됨)
 concurrency:
   group: schedule-notion-sync-${{ github.event_name }}-${{ github.event.issue.number || github.event.pull_request.number || github.ref }}
   cancel-in-progress: false

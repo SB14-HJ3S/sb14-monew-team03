@@ -1,24 +1,11 @@
 #!/bin/bash
-# 디스커션 본문(표준입력)을 노션 블록 배열(JSON)로 바꾼다
-# - 맨 위: 작성자·디스커션 원문 링크 콜아웃 (EXTRA_NOTE가 있으면 그 아래 한 줄 추가 — 연동 기록 "🔄 최초 연동 … (재연동 N회)")
-# - 폼 항목("### 📝 김민재" 등) → 노션 제목3 블록, 내용 → notion-markdown.js로 제목·목록·표·서식 그대로, 붙인 이미지 → 이미지 블록
-# - 멤버별·기타 칸(📝·📑) 위에는 노션 구분선을 넣는다(GitHub 본문의 칸 사이 "---"와 같은 모양, #133). 내용 중간의 "---" 문단도 구분선으로
-# - 비워 둔 항목("_No response_")과 노션 속성으로 이미 들어가는 항목(노션 카테고리·회의 종류·날짜·참여자)은 뺀다
-# - 회의 날짜(요일)·시간은 콜아웃 아래 "📆 26.10.20(화)" 한 줄로 보여 준다
-# 입력(환경변수): AUTHOR, DISCUSSION_URL, DATE_LABEL, EXTRA_NOTE(선택), NOTION_FIELDS·NOTION_SKIP(선택),
-#   NOTION_TOKEN(선택 — 없으면 이미지를 업로드하지 않고 "이미지 원본 보기" 링크로 넣음)
 set -euo pipefail
 
-# 기본값은 회의록 항목. 멘토링처럼 다른 폼은 NOTION_FIELDS·NOTION_SKIP(JSON 배열)으로 바꿔서 쓴다
-# extract-meeting-fields.sh의 FIELD_HEADINGS와 같은 목록. 이 제목에서만 항목을 나눈다
 DEFAULT_FIELDS='["🗂️ 노션 카테고리","📌 회의 종류","📆 회의 날짜(요일) · 회의 시간","📆 날짜(요일)·시간","🕘 오전/오후","⏰ 회의 시간","😄 참여자 목록","⚠️ 특이사항","📝 김민재","📝 이승현","📝 박수민","📝 정수환","📝 이수찬","📑 기타","📝 댓글 양식 (복사해서 쓰세요)"]'
 FIELDS="${NOTION_FIELDS:-$DEFAULT_FIELDS}"
 DEFAULT_SKIP='["🗂️ 노션 카테고리","📌 회의 종류","📆 회의 날짜(요일) · 회의 시간","📆 날짜(요일)·시간","🕘 오전/오후","⏰ 회의 시간","😄 참여자 목록","📝 댓글 양식 (복사해서 쓰세요)"]'
 SKIP="${NOTION_SKIP:-$DEFAULT_SKIP}"
 
-# 본문의 이미지(스크린샷)는 노션에 업로드해서 이미지 블록으로 넣는다 (#119, notion-images.js)
-# 이미지 자리에는 표시 줄([[NOTION_IMAGE:번호]])이 들어가고, 아래 jq에서 그 문단을 이미지 블록으로 바꾼다
-# 스크립트가 실패하면 이미지 없이 원래 본문 그대로 변환한다
 BODY_INPUT=$(cat)
 if PREPARED=$(printf '%s' "$BODY_INPUT" | node "$(dirname "$0")/notion-images.js"); then
   BODY_INPUT=$(jq -r '.body' <<<"$PREPARED")
@@ -28,9 +15,6 @@ else
   IMAGES='[]'
 fi
 
-# 칸 내용은 notion-markdown.js가 노션 블록(제목·표·목록·서식 등)으로 바꾼다
-# 그래서 jq는 칸 내용을 {"__markdown": 내용, "__fallback": 예전 방식 블록}으로 남겨 두고,
-# 변환 스크립트를 못 쓰면(의존성 설치 실패 등) 예전 방식(문단·글머리 목록)으로 넣는다
 DRAFT=$(printf '%s' "$BODY_INPUT" | jq -Rs \
   --argjson images "$IMAGES" \
   --argjson fields "$FIELDS" \

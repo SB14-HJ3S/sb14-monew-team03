@@ -1,26 +1,25 @@
 name: Issue Auto Setup
 
 # 이슈가 열리거나 고쳐지거나 닫히면
-# 1) 담당자를 작성자로 지정 (열릴 때)
-# 2) 제목의 타입([Feat] 또는 변환 전 feat:·f:)에 맞는 라벨을 붙임 — 템플릿 없이 만든 이슈용
+# 1) 담당자를 작성자로 지정
+# 2) 제목의 타입([Feat] 또는 변환 전 feat:·f:)에 맞는 라벨을 붙임
 #    제목 타입을 바꾸면 타입 라벨만 교체하고, 다른 라벨(common·urgent 등)은 건드리지 않음
 # 3) Projects 보드에 추가하고 시작일을 생성일로 (열릴 때)
 # 4) 닫히면 마감일을 닫힌 날짜로 (PR 머지·수동 닫기 상관없이)
-# Projects 보드는 기본 토큰으로 못 건드려서 PROJECTS_PAT을 씀
 on:
   issues:
     types: [opened, edited, closed]
 
-permissions: {}   # 필요한 권한은 job 단위로만 부여
+permissions: {}
 
 jobs:
   auto-setup:
     runs-on: ubuntu-latest
     concurrency:
       group: issue-auto-setup-${{ github.event.issue.number }}
-      cancel-in-progress: false   # opened/edited가 거의 동시에 와도 순서대로 실행 (오래된 실행이 나중에 끝나 라벨을 덮어쓰는 것 방지)
+      cancel-in-progress: false
     permissions:
-      issues: write   # 담당자 지정 + 라벨 추가/삭제에만 필요
+      issues: write
     steps:
       - name: 담당자를 작성자로 지정
         if: github.event.action == 'opened'
@@ -35,7 +34,7 @@ jobs:
             });
 
       - name: 제목의 [타입] 태그로 라벨 자동 설정(교체)
-        if: ${{ !cancelled() && github.event.action != 'closed' }}   # 담당자 지정이 실패해도(외부 사용자 등) 라벨은 계속 시도. closed 이벤트엔 제목 변경이 없어 불필요
+        if: ${{ !cancelled() && github.event.action != 'closed' }}
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           script: |

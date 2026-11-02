@@ -69,4 +69,20 @@ public class CommentController {
         log.info("댓글 좋아요 취소 완료: commentId={}", commentId);
         return ResponseEntity.ok().build();
     }
+
+    @DeleteMapping("/{commentId}")
+    public ResponseEntity<Void> softDelete(@PathVariable UUID commentId) {
+        log.info("댓글 논리 삭제 요청: commentId={}", commentId);
+        commentUseCase.softDeleteComment(commentId);
+        log.info("댓글 논리 삭제 완료: commentId={}", commentId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{commentId}/hard")
+    public ResponseEntity<Void> hardDelete(@PathVariable UUID commentId) {
+        log.info("댓글 물리 삭제 요청: commentId={}", commentId);
+        commentUseCase.hardDeleteComment(commentId);
+        log.info("댓글 물리 삭제 완료: commentId={}", commentId);
+        return ResponseEntity.noContent().build();
+    }
 }
