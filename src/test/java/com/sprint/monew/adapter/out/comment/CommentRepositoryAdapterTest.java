@@ -5,16 +5,24 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.sprint.monew.adapter.out.article.ArticleRepositoryAdapter;
 import com.sprint.monew.adapter.out.user.UserRepositoryAdapter;
+import com.sprint.monew.application.comment.provided.dto.CommentQuery;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.comment.entity.Comment;
 import com.sprint.monew.domain.user.entity.User;
+import com.sprint.monew.global.exception.MonewException;
+import com.sprint.monew.global.exception.errortype.CommonErrorType;
+import com.sprint.monew.global.pagination.SortDirection;
 import com.sprint.monew.global.type.ArticleSourceType;
 import com.sprint.monew.support.IntegrationTest;
 import jakarta.persistence.EntityManager;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -203,5 +211,209 @@ class CommentRepositoryAdapterTest {
         return articleRepository.save(
                 Article.create(
                         ArticleSourceType.NAVER, sourceUrl, "기사 제목", LocalDateTime.now(), "기사 요약"));
+    }
+
+    @Nested
+    @DisplayName("댓글 목록 조회")
+    class FindByQuery {
+
+        private static final Instant T1 = Instant.parse("2026-10-01T00:00:00Z");
+        private static final Instant T2 = Instant.parse("2026-10-02T00:00:00Z");
+        private static final Instant T3 = Instant.parse("2026-10-03T00:00:00Z");
+        private static final Instant T4 = Instant.parse("2026-10-04T00:00:00Z");
+        private static final Instant T5 = Instant.parse("2026-10-05T00:00:00Z");
+
+        private UUID articleId;
+        private UUID first;
+        private UUID second;
+        private UUID third;
+        private UUID otherArticleComment;
+
+        @BeforeEach
+        void setUp() {
+            User user = userRepository.save(User.create("list@monew.com", "작성자", "password1!"));
+            Article article = savedArticle("https://news.example.com/list");
+            Article otherArticle = savedArticle("https://news.example.com/list-other");
+            articleId = article.getId();
+
+            // 좋아요 수: first 3, second 1, third 3 (first와 third는 좋아요 수가 같다)
+            first = savedComment(user, article, T1, 3L);
+            second = savedComment(user, article, T2, 1L);
+            third = savedComment(user, article, T3, 3L);
+            UUID deleted = savedComment(user, article, T4, 0L);
+            otherArticleComment = savedComment(user, otherArticle, T5, 0L);
+            commentRepository.softDeleteIfActive(deleted, Instant.now());
+            em.clear();
+        }
+
+        // createdAt은 JPA Auditing이 저장 시각으로 채우므로, 저장 후 DB 값을 직접 바꿔 원하는 시각으로 맞춘다
+        private UUID savedComment(User user, Article article, Instant createdAt, long likeCount) {
+            UUID commentId = commentRepository.save(Comment.create(user, article, "댓글 내용")).getId();
+            em.flush();
+            jdbcTemplate.update(
+                    "UPDATE comments SET created_at = ?, like_count = ? WHERE id = ?",
+                    Timestamp.from(createdAt),
+                    likeCount,
+                    commentId);
+            return commentId;
+        }
+
+        private List<UUID> idsOf(CommentQuery query) {
+            return commentRepository.findByQuery(query).stream().map(Comment::getId).toList();
+        }
+
+        @Test
+        @DisplayName("기사 ID를 주면 그 기사의 댓글만, 논리 삭제된 댓글은 빼고 돌려준다")
+        void filterByArticle() {
+            CommentQuery query =
+                    new CommentQuery(
+                            articleId,
+                            CommentQuery.SortOrder.CREATED_AT,
+                            SortDirection.DESC,
+                            null,
+                            null,
+                            10);
+
+            assertThat(idsOf(query)).containsExactly(third, second, first);
+        }
+
+        @Test
+        @DisplayName("기사 ID가 없으면 모든 기사의 댓글을 돌려준다")
+        void withoutArticle() {
+            CommentQuery query =
+                    new CommentQuery(
+                            null,
+                            CommentQuery.SortOrder.CREATED_AT,
+                            SortDirection.DESC,
+                            null,
+                            null,
+                            10);
+
+            assertThat(idsOf(query)).containsExactly(otherArticleComment, third, second, first);
+        }
+
+        @Test
+        @DisplayName("작성 시각 오름차순이면 오래된 댓글부터 돌려준다")
+        void createdAtAsc() {
+            CommentQuery query =
+                    new CommentQuery(
+                            articleId,
+                            CommentQuery.SortOrder.CREATED_AT,
+                            SortDirection.ASC,
+                            null,
+                            null,
+                            10);
+
+            assertThat(idsOf(query)).containsExactly(first, second, third);
+        }
+
+        @Test
+        @DisplayName("좋아요 수 내림차순이면 좋아요가 많은 댓글부터, 같으면 최근 댓글부터 돌려준다")
+        void likeCountDesc() {
+            CommentQuery query =
+                    new CommentQuery(
+                            articleId,
+                            CommentQuery.SortOrder.LIKE_COUNT,
+                            SortDirection.DESC,
+                            null,
+                            null,
+                            10);
+
+            assertThat(idsOf(query)).containsExactly(third, first, second);
+        }
+
+        @Test
+        @DisplayName("좋아요 수 오름차순이면 좋아요가 적은 댓글부터, 같으면 오래된 댓글부터 돌려준다")
+        void likeCountAsc() {
+            CommentQuery query =
+                    new CommentQuery(
+                            articleId,
+                            CommentQuery.SortOrder.LIKE_COUNT,
+                            SortDirection.ASC,
+                            null,
+                            null,
+                            10);
+
+            assertThat(idsOf(query)).containsExactly(second, first, third);
+        }
+
+        @Test
+        @DisplayName("다음 페이지가 있는지 알 수 있게 limit보다 1개 더 가져온다")
+        void fetchLimitPlusOne() {
+            CommentQuery query =
+                    new CommentQuery(
+                            articleId,
+                            CommentQuery.SortOrder.CREATED_AT,
+                            SortDirection.DESC,
+                            null,
+                            null,
+                            2);
+
+            assertThat(idsOf(query)).hasSize(3);
+        }
+
+        @Test
+        @DisplayName("작성 시각순에서 커서를 주면 커서 다음 댓글부터 돌려준다")
+        void createdAtCursor() {
+            CommentQuery query =
+                    new CommentQuery(
+                            articleId,
+                            CommentQuery.SortOrder.CREATED_AT,
+                            SortDirection.DESC,
+                            T2.toString(),
+                            T2,
+                            10);
+
+            assertThat(idsOf(query)).containsExactly(first);
+        }
+
+        @Test
+        @DisplayName("좋아요 수순에서 커서를 주면 좋아요 수가 같은 댓글도 빠짐없이 이어서 돌려준다")
+        void likeCountCursor() {
+            // third(좋아요 3, T3)까지 받았다. 같은 좋아요 3인 first가 다음 페이지에 나와야 한다
+            CommentQuery query =
+                    new CommentQuery(
+                            articleId,
+                            CommentQuery.SortOrder.LIKE_COUNT,
+                            SortDirection.DESC,
+                            "3",
+                            T3,
+                            10);
+
+            assertThat(idsOf(query)).containsExactly(first, second);
+        }
+
+        @Test
+        @DisplayName("커서와 after 중 하나만 주면 예외가 난다")
+        void cursorWithoutAfter() {
+            CommentQuery query =
+                    new CommentQuery(
+                            articleId,
+                            CommentQuery.SortOrder.CREATED_AT,
+                            SortDirection.DESC,
+                            T2.toString(),
+                            null,
+                            10);
+
+            assertThatThrownBy(() -> commentRepository.findByQuery(query))
+                    .isInstanceOf(MonewException.class)
+                    .extracting("errorType")
+                    .isEqualTo(CommonErrorType.PAGINATION_NOT_BOTH_CURSOR_AND_AFTER);
+        }
+
+        @Test
+        @DisplayName("전체 개수는 논리 삭제된 댓글과 다른 기사의 댓글을 빼고 센다")
+        void countByQuery() {
+            CommentQuery query =
+                    new CommentQuery(
+                            articleId,
+                            CommentQuery.SortOrder.CREATED_AT,
+                            SortDirection.DESC,
+                            null,
+                            null,
+                            10);
+
+            assertThat(commentRepository.countByQuery(query)).isEqualTo(3L);
+        }
     }
 }
