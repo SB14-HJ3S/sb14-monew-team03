@@ -12,6 +12,7 @@ import com.sprint.monew.global.type.ArticleSourceType;
 import com.sprint.monew.global.type.ResourceType;
 import com.sprint.monew.support.IntegrationTest;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -106,7 +107,9 @@ class UserRepositoryAdapterTest {
         entityManager.flush();
         entityManager.clear();
 
-        assertThat(userRepository.findUserIncludingDeletedForUpdate(saved.getId())).isPresent();
+        User locked = userRepository.findUserIncludingDeletedForUpdate(saved.getId()).orElseThrow();
+
+        assertThat(entityManager.getLockMode(locked)).isEqualTo(LockModeType.PESSIMISTIC_WRITE);
     }
 
     @Test
