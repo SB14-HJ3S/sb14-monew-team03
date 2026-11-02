@@ -6,6 +6,10 @@ import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.ArticleErrorType;
 import com.sprint.monew.global.pagination.PageResult;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -19,7 +23,18 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ArticleServiceImpl implements ArticleService {
 
+    public static final ZoneId BACKUP_ZONE = ZoneId.of("Asia/Seoul");
+
     private final ArticleRepositoryPort repository;
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Article> getArticlesByDate(LocalDate date) {
+        Instant from = date.atStartOfDay(BACKUP_ZONE).toInstant();
+        Instant to = date.plusDays(1).atStartOfDay(BACKUP_ZONE).toInstant();
+
+        return repository.getArticlesInDateRange(from, to);
+    }
 
     @Override
     public Article findById(UUID articleId) {
