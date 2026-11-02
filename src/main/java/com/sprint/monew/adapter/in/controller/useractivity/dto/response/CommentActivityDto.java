@@ -1,5 +1,6 @@
 package com.sprint.monew.adapter.in.controller.useractivity.dto.response;
 
+import com.sprint.monew.application.useractivity.provided.dto.CommentActivityResult;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -11,4 +12,17 @@ public record CommentActivityDto(
         String userNickname, // 작성자 닉네임
         String content, // 내용
         Long likeCount, // 좋아요 수
-        Instant createdAt) {} // 작성된 날짜
+        Instant createdAt) {
+
+    public static CommentActivityDto from(CommentActivityResult r) {
+        return new CommentActivityDto(
+                r.id(),
+                r.articleId(),
+                r.articleTitle(),
+                r.userId(),
+                r.userNickname(),
+                r.content(),
+                r.likeCount(),
+                r.createdAt());
+    }
+}

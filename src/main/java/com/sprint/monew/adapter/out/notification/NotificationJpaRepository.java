@@ -18,4 +18,12 @@ public interface NotificationJpaRepository
         where n.user.id = :userId and n.isRead = false
         """)
     int markAllAsRead(@Param("userId") UUID userId, @Param("readAt") LocalDateTime readAt);
+
+    @Modifying(clearAutomatically = true)
+    @Query(
+            """
+            delete from Notification n
+            where n.isRead = true and n.readAt < :threshold
+            """)
+    int deleteReadBefore(@Param("threshold") LocalDateTime threshold);
 }

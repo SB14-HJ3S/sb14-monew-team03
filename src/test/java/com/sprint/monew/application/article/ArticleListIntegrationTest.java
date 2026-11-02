@@ -75,7 +75,7 @@ class ArticleListIntegrationTest {
         a = save("A 경제", "금리", ArticleSourceType.NAVER, DATE.minusDays(2), 10, 1, 1);
         b = save("B 산업", "경제 성장", ArticleSourceType.HANKYUNG, DATE.minusDays(1), 20, 3, 2);
         c = save("C 스포츠", "축구", ArticleSourceType.CHOSUN, DATE, 30, 2, 3);
-        d = save("D 기술", "AI 소식", ArticleSourceType.YEONHAP, DATE.plusDays(1), 40, 5, 4);
+        d = save("D 기술", "AI 소식", ArticleSourceType.YONHAP, DATE.plusDays(1), 40, 5, 4);
         e = save("E 경제", "주식", ArticleSourceType.NAVER, DATE.plusDays(1), 40, 5, 5);
         Article deleted =
                 save("F 경제 삭제", "경제", ArticleSourceType.NAVER, DATE.plusDays(2), 100, 10, 6);

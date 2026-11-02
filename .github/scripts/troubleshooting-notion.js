@@ -1,11 +1,3 @@
-// fix:수정 이슈·PR이 해결되면(이슈 닫힘 / PR 머지) 노션 "트래블 슈팅" DB에 카드를 만든다
-// - 이슈와 그 이슈를 고친 PR은 카드 하나로 묶는다. 카드 키는 이슈 URL(이슈 없이 머지된 PR이면 PR URL)
-// - 노션 "GitHub 링크"(URL) 속성으로 이미 있는 카드인지 확인한다
-//   - 해결 이벤트: 없으면 새로 만들고, 있으면 날짜·작성자만 갱신
-//   - resync:재연동 라벨: GitHub 내용 기준으로 카드 본문을 통째로 다시 쓴다
-// - 양식의 글 부분(환경·관련 기술·증상·재현 방법·원인 분석·해결 방법·배운 점·전체 요약)은 GitHub 연동이 이슈·PR·코드 변경을 읽고 쓴다(ts-written.json)
-//   발생일·해결 소요 시간·에러 로그 원문·참고 링크 같은 사실 정보는 코드가 채운다. 작성에 실패하면 이슈·PR 원문으로 채운다
-// 실행 순서: prepare(데이터 모으기, 작성용 자료 만들기) → 글 작성 → write(노션에 쓰기)
 
 const fs = require('fs');
 const { extractImages, stripImages, imageBlocks } = require('./notion-images.js');
@@ -17,11 +9,8 @@ const CARDS_FILE = 'ts-cards.json';
 const CONTEXT_FILE = 'ts-context.md';
 const WRITTEN_FILE = 'ts-written.json';
 const DIFF_LIMIT = 12000;
-// 스크린샷이 없는 카드 맨 위에 넣는 기본 이미지 (갤러리 썸네일용, #123). 저장소가 공개라 develop의 파일 주소에서 내려받는다
-// 노션 갤러리 썸네일은 주소만 연결한 이미지를 보여 주지 않아서 스크린샷처럼 노션에 업로드한다 (#129)
 const DEFAULT_THUMBNAIL = `https://raw.githubusercontent.com/${process.env.GITHUB_REPOSITORY || 'SB14-HJ3S/sb14-monew-team03'}/develop/.github/assets/troubleshooting-cover.png`;
 
-// 이슈 템플릿(🛠️-fix.md)에 미리 적힌 안내 문구. 작성자가 안 지우고 둔 경우 내용에서 뺀다
 const PLACEHOLDERS = [
   '어떤 문제가 발생했는지 한 문장으로 작성해주세요.',
   '정상적으로 동작한다면 어떤 결과가 나와야 하는지 작성해주세요.',
@@ -42,7 +31,6 @@ function duration(fromIso, toIso) {
   return `약 ${minutes}분`;
 }
 
-// 마크다운 본문을 "## 제목" 단위로 나눈다. 제목의 이모지·괄호 설명은 빼고 비교한다 (예: "📝 작업내용 (설명)" → "작업내용")
 function sections(body) {
   const result = {};
   let current = null;
@@ -65,17 +53,13 @@ function sections(body) {
   return result;
 }
 
-// 제목 앞의 "[Fix] :", "🛠️ [Fix] :", "[Chore] :" 같은 타입 표시는 노션 카드 이름·요약에서 뺀다
 const cleanTitle = (title) => title.replace(/^[^\[\p{L}\p{N}]*\[[^\]]+\]\s*:\s*/u, '');
 
-// 한 줄 요약에 넣을 때는 글머리 기호("- ")를 떼고 줄을 이어 붙인다
 const inline = (text) => (text || '').replace(/^\s*[-*]\s+/gm, '').replace(/\n+/g, ' ').trim();
 
 const richText = (content, extra = {}) =>
   [{ type: 'text', text: { content: String(content).slice(0, TEXT_LIMIT), ...(extra.link ? { link: { url: extra.link } } : {}) }, ...(extra.bold ? { annotations: { bold: true } } : {}) }];
 
-// 글 속 마크다운 표시를 노션 서식으로 바꾼다: `코드` → 코드 서식, **굵게** → 굵은 글씨 (그 외 글자는 그대로)
-// 링크가 있는 글(참고 자료)은 통째로 링크 하나로 둔다
 const INLINE_MD = /(`[^`\n]+`|\*\*[^*\n]+\*\*)/g;
 function richMarkdown(content, extra = {}) {
   if (extra.link) return richText(content, extra);
@@ -96,7 +80,6 @@ function richMarkdown(content, extra = {}) {
     last = INLINE_MD.lastIndex;
   }
   push(text.slice(last));
-  // 노션은 블록 하나에 rich_text 100개까지만 받는다. 넘치면 서식 없이 원문으로 넣는다
   if (parts.length === 0) return richText(content, extra);
   return parts.length <= 100 ? parts : richText(content, extra);
 }
@@ -112,8 +95,6 @@ function chunks(text) {
   return out.length ? out : [''];
 }
 
-// 마크다운 → 노션 블록 (문단, 글머리 기호, 번호 목록, 코드 블록 정도만)
-// 이미지 태그는 글자로 보이지 않게 지우고, 이미지는 buildBlocks가 "스크린샷" 칸에 따로 넣는다
 function markdownBlocks(rawText) {
   const text = stripImages(rawText).trim();
   if (!text) return [block('paragraph', '-')];
@@ -144,7 +125,6 @@ function markdownBlocks(rawText) {
 }
 
 function overviewTable(rows) {
-  // 값이 배열이면 이미 만든 rich_text(예: 사람 멘션)라 그대로 쓴다
   const cell = (t, bold) => (Array.isArray(t) ? t : richMarkdown(t, { bold }));
   return {
     object: 'block',
@@ -162,7 +142,6 @@ function overviewTable(rows) {
   };
 }
 
-// 해결한 사람 = 머지된 PR을 올린 사람(여러 명이면 쉼표로). 노션 대응표에 있으면 사람 멘션(@이름), 없으면 GitHub 아이디
 function solvers(prs, userMap) {
   const logins = [...new Set(prs.map((pr) => pr.author?.login).filter(Boolean))];
   if (logins.length === 0) return '-';
@@ -172,14 +151,8 @@ function solvers(prs, userMap) {
   ]);
 }
 
-// written: 연동이 쓴 내용(없으면 null → 이슈·PR 원문으로 채움)
-//   { environment, tech, symptom, reproduce, attempts: [..], root_cause, solution, lessons: [..], summary }
-// images: 이슈·PR 본문에 붙인 이미지를 노션 블록으로 바꾼 것 { issue: [..], prs: [..] } (#119)
-// userMap: GitHub 아이디 → 노션 사용자 ID. "해결한 사람"을 노션 사람 멘션으로 보여 줄 때 쓴다
 function buildBlocks({ issue, prs, closedAt }, written, historyLine = '', images = {}, userMap = {}) {
   const screenshots = (title, list) => (list?.length ? [heading(3, title), ...list] : []);
-  // 갤러리 썸네일은 페이지 맨 위 블록을 보여 준다 → 첫 스크린샷(이슈 먼저, 없으면 PR)을 맨 위로 올리고, 없으면 기본 이미지 (#123)
-  // 맨 위로 올린 스크린샷은 아래 "스크린샷" 칸에서 빼서 두 번 나오지 않게 한다. 업로드 실패로 링크가 된 것은 썸네일로 쓰지 않는다
   const isImage = (b) => b.type === 'image';
   const issueImages = [...(images.issue || [])];
   const prImages = [...(images.prs || [])];
@@ -201,7 +174,6 @@ function buildBlocks({ issue, prs, closedAt }, written, historyLine = '', images
     s['기대 결과'] && `기대 결과: ${inline(s['기대 결과'])}`,
     s['실제 결과'] && `실제 결과:\n${s['실제 결과']}`,
   ].filter(Boolean).join('\n\n');
-  // 작성에 실패한 칸은 "-"로 둔다(실패 내용은 Actions 로그 경고로 남음). 이슈에 resync:재연동 라벨을 붙이면 다시 시도
   const missing = '-';
   const list = (items, type) => (Array.isArray(items) && items.length ? items.map((t) => block(type, t)) : [block('paragraph', missing)]);
 
@@ -235,7 +207,6 @@ function buildBlocks({ issue, prs, closedAt }, written, historyLine = '', images
     heading(3, '재현 방법'),
     ...markdownBlocks(written?.reproduce || s['재현 방법']),
     heading(3, '에러 메시지 / 로그'),
-    // 에러 로그는 검색할 때 원문이 필요해서 다시 쓰지 않고 이슈에 적힌 그대로 넣는다
     ...(s['에러 로그'] ? markdownBlocks(s['에러 로그'].includes('```') ? s['에러 로그'] : '```\n' + s['에러 로그'] + '\n```') : [code('-')]),
     divider(),
     heading(2, '원인 분석'),
@@ -278,7 +249,6 @@ function notionClient(token) {
 
 const PR_FIELDS = 'number title body url createdAt mergedAt merged author { login }';
 
-// 이슈 하나와 그 이슈를 고친(머지된) PR들을 카드 하나로 읽어 온다
 async function loadIssueCard(github, owner, repo, number) {
   const q = await github.graphql(
     `query($o: String!, $r: String!, $n: Int!) { repository(owner: $o, name: $r) { issue(number: $n) {
@@ -291,7 +261,6 @@ async function loadIssueCard(github, owner, repo, number) {
   return { issue, prs: issue.closedByPullRequestsReferences.nodes.filter((pr) => pr.merged) };
 }
 
-// PR 하나를 카드로 바꾼다: 연결된 이슈(close #번호)가 있으면 이슈마다 카드, 없으면 PR 단독 카드
 async function loadPrCards(github, owner, repo, number) {
   const q = await github.graphql(
     `query($o: String!, $r: String!, $n: Int!) { repository(owner: $o, name: $r) { pullRequest(number: $n) {
@@ -343,7 +312,6 @@ function contextHeader() {
   ];
 }
 
-// 글 작성에 쓸 카드 자료: 이슈·PR 본문, 커밋 제목, 코드 변경(카드당 최대 DIFF_LIMIT자)
 async function appendCardContext(contextMd, { issue, prs }, github, owner, repo) {
   contextMd.push(`## 카드 키: ${cardKey({ issue, prs })}`, '');
   if (issue) contextMd.push(`### 이슈 #${issue.number} ${issue.title}`, '', issue.body || '(본문 없음)', '');
@@ -361,7 +329,6 @@ async function appendCardContext(contextMd, { issue, prs }, github, owner, repo)
   }
 }
 
-// 1단계: 이벤트에서 카드를 모으고, 노션에 이미 있는지 보고, 글 작성에 쓸 자료(ts-context.md)를 만든다
 async function prepare({ github, context, core }) {
   const notion = notionClient(process.env.NOTION_TOKEN);
   const { owner, repo } = context.repo;
@@ -381,7 +348,6 @@ async function prepare({ github, context, core }) {
   const out = [];
   for (const card of cards) {
     const key = cardKey(card);
-    // resync 라벨은 열린 이슈·PR에도 붙일 수 있다. 아직 해결 안 된 건은 해결 기록이 아니라서 건너뛴다
     if (resync && !card.issue?.closedAt && !card.prs.some((p) => p.merged)) {
       core.warning(`아직 해결되지 않아(이슈 열림, 머지된 PR 없음) 카드를 만들지 않습니다: ${key}`);
       continue;
@@ -405,10 +371,6 @@ async function prepare({ github, context, core }) {
   core.info(`카드 ${out.length}개: ${out.map((c) => `${c.action} ${c.key}`).join(', ')}`);
 }
 
-// 점검(수동 실행): 닫힌 fix 이슈·머지된 fix PR을 전부 카드로 묶어 노션과 비교한다
-// - 빠진 것: 이슈·PR을 한 장으로 묶은 뒤에도 노션에 카드가 아예 없는 것
-// - 중복: 같은 "GitHub 링크"를 가진 노션 카드가 두 장 이상인 것 (보고만 하고 지우지 않음)
-// mode가 'create'면 빠진 것을 최대 AUDIT_CREATE_LIMIT건까지 만들 준비를 한다(이후 글 작성 → write 단계)
 const AUDIT_CREATE_LIMIT = 10;
 
 async function audit({ github, context, core }) {
@@ -416,7 +378,6 @@ async function audit({ github, context, core }) {
   const { owner, repo } = context.repo;
   const mode = process.env.AUDIT_MODE === 'create' ? 'create' : 'report';
 
-  // GitHub: 닫힌 fix:수정 이슈·PR (issues API는 PR도 같이 돌려준다)
   const closed = await github.paginate(github.rest.issues.listForRepo, { owner, repo, state: 'closed', labels: 'fix:수정', per_page: 100 });
   const cards = new Map();
   for (const item of closed) {
@@ -431,7 +392,6 @@ async function audit({ github, context, core }) {
     for (const card of found) if (!cards.has(cardKey(card))) cards.set(cardKey(card), card);
   }
 
-  // 노션: 트래블 슈팅 DB 전체의 GitHub 링크
   const links = new Map();
   let cursor;
   do {
@@ -472,9 +432,6 @@ async function audit({ github, context, core }) {
   core.info(`빠진 것 ${missing.length}개, 중복 ${duplicates.length}개, 이번에 만들 것 ${out.length}개`);
 }
 
-// 연동 기록(최초 연동·마지막 반영·재연동 횟수): 이슈·PR 연동 댓글과 노션 카드 본문 맨 위 한 줄에 같은 값을 쓴다
-// (디스커션 연동과 같은 형식, build-sync-comment.sh 참고. 시각은 한국 시간)
-// 처음 연동하면 새 댓글, 재연동하면 그 이슈·PR의 연동 댓글을 찾아 고친다
 function kstStamp(iso) {
   const t = iso ? new Date(iso).getTime() : Date.now();
   return new Date(t + 9 * 3600 * 1000).toISOString().replace('T', ' ').slice(0, 16);
@@ -513,7 +470,6 @@ async function commentSynced(github, context, core, number, isPr, pageUrl, meta,
   }
 }
 
-// 2단계: 작성 결과(ts-written.json)를 읽어 노션에 쓰고, resync 라벨을 뗀다 (작성에 실패했으면 이슈·PR 원문으로 채운다)
 async function write({ github, context, core }) {
   const notion = notionClient(process.env.NOTION_TOKEN);
   const userMap = JSON.parse(process.env.NOTION_USER_MAP || '{}');
@@ -542,24 +498,20 @@ async function write({ github, context, core }) {
       continue;
     }
 
-    // rewrite: 글 작성에 실패했으면 잘 써진 기존 본문을 원문 대체본으로 덮지 않고 건너뛴다(라벨을 남겨 다시 시도할 수 있게)
     if (card.action === 'rewrite' && !written[card.key]) {
       core.warning(`글 작성에 실패해 기존 카드 본문을 그대로 둡니다. resync:재연동 라벨을 뗐다가 다시 붙여 재시도하세요: ${card.key}`);
       rewriteSkipped = true;
       continue;
     }
 
-    // 재연동이면 라벨을 붙인 이슈·PR의 연동 댓글에서 최초 연동 시각·횟수를 이어받는다
     const target = context.payload.issue || context.payload.pull_request;
     const oldComment = card.action === 'rewrite' && target ? await findSyncComment(github, context, core, target.number) : null;
     const meta = syncMeta(card.action === 'rewrite' ? oldComment || { body: '', created_at: null } : null);
-    // 본문에 붙인 이미지를 노션에 올려 이미지 블록으로 만든다. 실패한 이미지는 "이미지 원본 보기" 링크로 들어간다
     const warn = (m) => core.warning(m);
     const images = {
       issue: await imageBlocks(extractImages(card.issue?.body), process.env.NOTION_TOKEN, warn),
       prs: await imageBlocks(card.prs.flatMap((pr) => extractImages(pr.body)), process.env.NOTION_TOKEN, warn),
     };
-    // 스크린샷이 없으면 기본 이미지를 업로드한다. 실패하면 buildBlocks가 주소 연결 방식으로 넣는다
     if (![...images.issue, ...images.prs].some((b) => b.type === 'image')) {
       [images.cover] = await imageBlocks([{ url: DEFAULT_THUMBNAIL, alt: '' }], process.env.NOTION_TOKEN, warn);
     }
@@ -570,7 +522,6 @@ async function write({ github, context, core }) {
         await notion('PATCH', `/blocks/${page.id}/children`, { children: blocks.slice(i, i + 100) });
       }
       core.info(`노션 트러블슈팅 카드 생성: ${page.url}`);
-      // 점검 워크플로(수동 실행)로 옛 카드를 한꺼번에 채울 때는 이슈·PR마다 알림이 가지 않게 댓글을 남기지 않는다
       if (context.eventName !== 'workflow_dispatch') {
         if (card.issue) await commentSynced(github, context, core, card.issue.number, false, page.url, meta);
         for (const pr of card.prs) await commentSynced(github, context, core, pr.number, true, page.url, meta);
@@ -578,7 +529,6 @@ async function write({ github, context, core }) {
       continue;
     }
 
-    // 새 내용을 먼저 덧붙이고, 성공하면 예전 블록을 지운다(중간에 실패해도 내용이 비지 않게)
     await notion('PATCH', `/pages/${card.pageId}`, { properties });
     const old = [];
     let cursor;
@@ -592,7 +542,6 @@ async function write({ github, context, core }) {
     }
     for (const id of old) await notion('DELETE', `/blocks/${id}`);
     core.info(`resync로 카드 본문을 다시 씀: ${card.key}`);
-    // 재연동 라벨을 붙인 이슈·PR의 연동 댓글에 반영 시각을 고쳐 넣는다(없으면 새로 단다). 댓글이 실패해도 이미 끝난 노션 반영·라벨 제거에는 영향을 주지 않는다
     try {
       const pageUrl = (await notion('GET', `/pages/${card.pageId}`)).url;
       await commentSynced(github, context, core, target.number, Boolean(context.payload.pull_request), pageUrl, meta, oldComment);

@@ -16,4 +16,6 @@ public interface NotificationUseCase {
 
     void createCommentLikeNotification(
             UUID commentId, UUID commentUserId, UUID likedById, String likedByNickname);
+
+    int deleteOldReadNotifications();
 }

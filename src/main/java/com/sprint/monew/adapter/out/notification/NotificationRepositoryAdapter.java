@@ -55,4 +55,9 @@ public class NotificationRepositoryAdapter implements NotificationRepositoryPort
     public int markAllAsRead(UUID userId, LocalDateTime readAt) {
         return jpaRepository.markAllAsRead(userId, readAt);
     }
+
+    @Override
+    public int deleteReadBefore(LocalDateTime threshold) {
+        return jpaRepository.deleteReadBefore(threshold);
+    }
 }

@@ -6,20 +6,23 @@ import com.sprint.monew.application.notification.provided.dto.NotificationQuery;
 import com.sprint.monew.application.notification.provided.dto.NotificationResult;
 import com.sprint.monew.application.user.IUserService;
 import com.sprint.monew.domain.user.entity.User;
+import com.sprint.monew.global.annotation.ApplicationService;
 import com.sprint.monew.global.context.RequestIdContext;
 import com.sprint.monew.global.pagination.PageResult;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
-@Service
+@ApplicationService
 @RequiredArgsConstructor
 public class NotificationApplication implements NotificationUseCase {
+
+    private static final int READ_NOTIFICATION_RETENTION_DAYS = 7;
 
     private final NotificationService notificationService;
     private final ISubscriptionService subscriptionService;
@@ -73,5 +76,18 @@ public class NotificationApplication implements NotificationUseCase {
         User commentUser = userService.getActiveUser(commentUserId);
         notificationService.createCommentLikeNotification(commentUser, commentId, likedByNickname);
         log.info("좋아요 알림 생성: commentId={}, commentUserId={}", commentId, commentUserId);
+    }
+
+    @Override
+    @Transactional
+    public int deleteOldReadNotifications() {
+        LocalDateTime threshold = LocalDateTime.now().minusDays(READ_NOTIFICATION_RETENTION_DAYS);
+        int deleted = notificationService.deleteReadBefore(threshold);
+        log.info(
+                "확인 후 {}일 지난 알림 삭제: {}건 (기준 시각={})",
+                READ_NOTIFICATION_RETENTION_DAYS,
+                deleted,
+                threshold);
+        return deleted;
     }
 }
