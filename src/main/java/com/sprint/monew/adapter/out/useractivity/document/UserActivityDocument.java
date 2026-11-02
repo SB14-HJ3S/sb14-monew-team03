@@ -28,6 +28,8 @@ public record UserActivityDocument(
         List<CommentItem> comments,
         List<CommentLikeItem> commentLikes,
         List<ArticleViewItem> articleViews) {
+    public static final int RECENT_LIMIT = 10;
+
     public static UserActivityDocument create(
             UUID userId, String email, String nickname, Instant createdAt) {
         return new UserActivityDocument(
