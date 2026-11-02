@@ -12,11 +12,13 @@ import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Check;
 
 @Entity
 @Table(
         name = "articles",
         uniqueConstraints = {@UniqueConstraint(columnNames = {"source_url"})})
+@Check(name = "ck_articles_comment_count", constraints = "comment_count >= 0")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Article extends BaseSoftDeletableEntity {
