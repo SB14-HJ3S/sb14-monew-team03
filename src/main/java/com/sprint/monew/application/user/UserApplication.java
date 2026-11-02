@@ -4,6 +4,7 @@ import com.sprint.monew.application.user.provided.UserUseCase;
 import com.sprint.monew.application.user.provided.dto.UserResult;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.annotation.ApplicationService;
+import com.sprint.monew.global.exception.MonewException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
@@ -14,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 @ApplicationService
 @RequiredArgsConstructor
 public class UserApplication implements UserUseCase {
+
+    private static final Duration PURGE_AFTER = Duration.ofDays(1);
 
     private final IUserService userService;
 
@@ -52,16 +55,27 @@ public class UserApplication implements UserUseCase {
 
     @Override
     public int purgeDeletedUsers() {
-        Instant threshold = Instant.now().minus(Duration.ofDays(1));
+        Instant threshold = Instant.now().minus(PURGE_AFTER);
         int purged = 0;
         for (UUID userId : userService.findPurgeTargetIds(threshold)) {
-            try {
-                userService.hardDeleteUser(userId);
+            if (purge(userId)) {
                 purged++;
-            } catch (RuntimeException e) {
-                log.error("사용자 완전 삭제 실패: userId={}", userId, e);
             }
         }
+        log.info("탈퇴 후 1일 지난 사용자 완전 삭제: {}명 (기준 시각={})", purged, threshold);
         return purged;
+    }
+
+    private boolean purge(UUID userId) {
+        try {
+            userService.hardDeleteUser(userId);
+            return true;
+        } catch (MonewException e) {
+            log.warn("이미 완전 삭제된 사용자라 건너뜀: userId={}", userId);
+            return false;
+        } catch (RuntimeException e) {
+            log.error("사용자 완전 삭제 실패, 다음 실행 때 다시 시도: userId={}", userId, e);
+            return false;
+        }
     }
 }
