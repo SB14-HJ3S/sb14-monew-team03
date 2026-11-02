@@ -2,6 +2,7 @@ package com.sprint.monew.application.article.required;
 
 import com.sprint.monew.application.article.provided.dto.ArticleQuery;
 import com.sprint.monew.domain.article.entity.Article;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -22,6 +23,8 @@ public interface ArticleRepositoryPort {
     long countByQuery(ArticleQuery query);
 
     Optional<Article> findBySourceUrl(String sourceUrl);
+
+    List<Article> findAllBySourceUrlIn(Collection<String> sourceUrls);
 
     // 동시에 댓글이 달려도 숫자가 사라지지 않게 DB에서 +1
     int increaseCommentCount(UUID articleId);

@@ -18,7 +18,7 @@ function nowKst() {
   return `${p.month}월 ${p.day}일 ${p.hour}시 ${p.minute}분 ${p.second}초`;
 }
 
-async function upsertNotice({ github, context }, { marker, legacyMarkers = [], problem, problemBody, okBody, skipSame = false }) {
+async function upsertNotice({ github, context }, { marker, legacyMarkers = [], problem, problemBody, okBody, skipSame = false, deleteWhenOk = false }) {
   const issue_number = context.payload.pull_request.number;
   const comments = await github.paginate(github.rest.issues.listComments, {
     ...context.repo,
@@ -29,6 +29,10 @@ async function upsertNotice({ github, context }, { marker, legacyMarkers = [], p
   const existing = comments.find((c) => c.body && markers.some((m) => c.body.includes(m)));
 
   if (!existing && !problem) return;
+  if (existing && !problem && deleteWhenOk) {
+    await github.rest.issues.deleteComment({ ...context.repo, comment_id: existing.id });
+    return;
+  }
   if (existing && !problem && existing.body.includes(okBody)) return;
 
   const prev = existing ? Number((existing.body.match(/재수정 (\d+)회/) || [0, 0])[1]) : 0;
@@ -153,20 +157,42 @@ function groupViolations(lines) {
   return items;
 }
 
+async function changedClassNames({ github, context }) {
+  const files = await github.paginate(github.rest.pulls.listFiles, {
+    ...context.repo,
+    pull_number: context.payload.pull_request.number,
+    per_page: 100,
+  });
+  return [...new Set(
+    files
+      .flatMap((f) => [f.filename, f.previous_filename])
+      .filter((f) => f && f.endsWith('.java'))
+      .map((f) => path.basename(f, '.java')),
+  )];
+}
+
+function relatedRules(rules, classNames) {
+  const patterns = classNames.map((name) => new RegExp(`\\b${name}\\b`));
+  return rules
+    .map((r) => ({ ...r, details: r.details.filter((d) => patterns.some((re) => re.test(d.raw.join('\n')))) }))
+    .filter((r) => r.details.length > 0);
+}
+
 async function archNotice({ github, context, core }) {
-  const rules = archViolations('build/test-results/archTest');
-  if (rules === null) {
+  const allRules = archViolations('build/test-results/archTest');
+  if (allRules === null) {
     core.warning('패키지 규칙 검사 결과가 없어요. archTest가 돌지 않았을 수 있어요');
     return;
   }
-  for (const r of rules) {
+  for (const r of allRules) {
     for (const d of r.details.slice(0, 20)) {
       core.warning(d.raw.join('\n'), { title: `패키지 규칙 위반: ${d.isCycle ? d.summary : r.because || r.name}` });
     }
   }
+  const rules = relatedRules(allRules, await changedClassNames({ github, context }));
   const total = rules.reduce((n, r) => n + r.details.length, 0);
   const problemBody = [
-    `### ⚠️ 패키지 규칙 위반 ${total}건 (규칙 ${rules.length}개)`,
+    `### ⚠️ 이 PR에서 바꾼 클래스와 관련된 패키지 규칙 위반 ${total}건 (규칙 ${rules.length}개)`,
     '',
     '빌드·머지는 막지 않아요. 아래 의존을 정리해 주세요',
     '',
@@ -186,6 +212,7 @@ async function archNotice({ github, context, core }) {
       problem: rules.length > 0,
       problemBody,
       okBody: '### ✅ 패키지 규칙 위반 없어요',
+      deleteWhenOk: true,
     },
   );
 }
