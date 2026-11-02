@@ -6,8 +6,8 @@ import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.annotation.ApplicationService;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.UserErrorType;
-import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class UserApplication implements UserUseCase {
 
-    private static final Duration CLEANUP_AFTER = Duration.ofDays(1);
+    private static final int DELETED_USER_RETENTION_DAYS = 1;
 
     private final IUserService userService;
 
@@ -56,15 +56,19 @@ public class UserApplication implements UserUseCase {
 
     @Override
     public int cleanupDeletedUsers() {
-        Instant threshold = Instant.now().minus(CLEANUP_AFTER);
-        int cleaned = 0;
+        Instant threshold = Instant.now().minus(DELETED_USER_RETENTION_DAYS, ChronoUnit.DAYS);
+        int deleted = 0;
         for (UUID userId : userService.findCleanupTargetIds(threshold)) {
             if (cleanup(userId)) {
-                cleaned++;
+                deleted++;
             }
         }
-        log.info("탈퇴 후 1일 지난 사용자 완전 삭제: {}명 (기준 시각={})", cleaned, threshold);
-        return cleaned;
+        log.info(
+                "탈퇴 후 {}일 지난 사용자 완전 삭제: {}명 (기준 시각={})",
+                DELETED_USER_RETENTION_DAYS,
+                deleted,
+                threshold);
+        return deleted;
     }
 
     private boolean cleanup(UUID userId) {

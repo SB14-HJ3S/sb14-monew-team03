@@ -56,14 +56,14 @@ class UserApplicationTest {
         given(userService.findCleanupTargetIds(any())).willReturn(List.of(first, second));
         Instant lowerBound = Instant.now().minus(Duration.ofDays(1));
 
-        int cleaned = userApplication.cleanupDeletedUsers();
+        int deleted = userApplication.cleanupDeletedUsers();
 
         Instant upperBound = Instant.now().minus(Duration.ofDays(1));
         verify(userService).findCleanupTargetIds(thresholdCaptor.capture());
         assertThat(thresholdCaptor.getValue()).isBetween(lowerBound, upperBound);
         verify(userService).hardDeleteUser(first);
         verify(userService).hardDeleteUser(second);
-        assertThat(cleaned).isEqualTo(2);
+        assertThat(deleted).isEqualTo(2);
     }
 
     @Test
@@ -78,12 +78,12 @@ class UserApplicationTest {
                 .when(userService)
                 .hardDeleteUser(failing);
 
-        int cleaned = userApplication.cleanupDeletedUsers();
+        int deleted = userApplication.cleanupDeletedUsers();
 
         verify(userService).hardDeleteUser(first);
         verify(userService).hardDeleteUser(failing);
         verify(userService).hardDeleteUser(third);
-        assertThat(cleaned).isEqualTo(2);
+        assertThat(deleted).isEqualTo(2);
     }
 
     @Test
@@ -95,9 +95,9 @@ class UserApplicationTest {
                 .given(userService)
                 .hardDeleteUser(removed);
 
-        int cleaned = userApplication.cleanupDeletedUsers();
+        int deleted = userApplication.cleanupDeletedUsers();
 
-        assertThat(cleaned).isZero();
+        assertThat(deleted).isZero();
     }
 
     @Test
@@ -105,9 +105,9 @@ class UserApplicationTest {
     void givenNoTargets_whenCleanupDeletedUsers_thenZero() {
         given(userService.findCleanupTargetIds(any())).willReturn(List.of());
 
-        int cleaned = userApplication.cleanupDeletedUsers();
+        int deleted = userApplication.cleanupDeletedUsers();
 
-        assertThat(cleaned).isZero();
+        assertThat(deleted).isZero();
         verify(userService, never()).hardDeleteUser(any());
     }
 }

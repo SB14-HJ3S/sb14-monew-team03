@@ -39,9 +39,9 @@ class UserCleanupIntegrationTest {
         User recentDeleted = saveUserDeletedAgo("recent", Duration.ofHours(1));
         User active = saveUser("active");
 
-        int cleaned = userUseCase.cleanupDeletedUsers();
+        int deleted = userUseCase.cleanupDeletedUsers();
 
-        assertThat(cleaned).isEqualTo(1);
+        assertThat(deleted).isEqualTo(1);
         assertThat(userRepository.findUserIncludingDeleted(oldDeleted.getId())).isEmpty();
         assertThat(userRepository.findUserIncludingDeleted(recentDeleted.getId())).isPresent();
         assertThat(userRepository.findUserIncludingDeleted(active.getId())).isPresent();

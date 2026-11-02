@@ -29,5 +29,5 @@ public interface UserRepositoryPort {
 
     Optional<User> findUserIncludingDeletedForUpdate(UUID id);
 
-    List<UUID> findDeletedUserIdsBefore(Instant time);
+    List<UUID> findDeletedUserIdsBefore(Instant threshold);
 }

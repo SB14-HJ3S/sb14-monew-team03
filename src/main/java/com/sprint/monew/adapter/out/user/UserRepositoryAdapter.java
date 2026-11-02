@@ -66,7 +66,7 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
     }
 
     @Override
-    public List<UUID> findDeletedUserIdsBefore(Instant time) {
-        return jpaRepository.findIdsByDeletedAtBefore(time);
+    public List<UUID> findDeletedUserIdsBefore(Instant threshold) {
+        return jpaRepository.findIdsByDeletedAtBefore(threshold);
     }
 }

@@ -26,6 +26,6 @@ public interface UserJpaRepository extends JpaRepository<User, UUID> {
     @Query("SELECT u FROM User u WHERE u.id = :id")
     Optional<User> findByIdForUpdate(@Param("id") UUID id);
 
-    @Query("SELECT u.id FROM User u WHERE u.deletedAt < :time")
-    List<UUID> findIdsByDeletedAtBefore(@Param("time") Instant time);
+    @Query("SELECT u.id FROM User u WHERE u.deletedAt < :threshold")
+    List<UUID> findIdsByDeletedAtBefore(@Param("threshold") Instant threshold);
 }
