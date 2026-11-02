@@ -13,5 +13,7 @@ public class CommentEventListener {
     private final CommentUseCase commentUseCase;
 
     @EventListener
-    public void onArticleHardDeleting(ArticleHardDeletingEvent event) {}
+    public void onArticleHardDeleting(ArticleHardDeletingEvent event) {
+        commentUseCase.deleteLikeNotificationsByArticle(event.articleId());
+    }
 }

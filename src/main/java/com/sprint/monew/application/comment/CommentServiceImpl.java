@@ -110,6 +110,6 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public List<UUID> findIdsByArticleId(UUID articleId) {
-        return List.of();
+        return commentRepository.findIdsByArticleId(articleId);
     }
 }

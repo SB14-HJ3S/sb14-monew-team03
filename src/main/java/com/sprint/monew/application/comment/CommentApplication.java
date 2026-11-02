@@ -138,5 +138,11 @@ public class CommentApplication implements CommentUseCase {
 
     @Override
     @Transactional
-    public void deleteLikeNotificationsByArticle(UUID articleId) {}
+    public void deleteLikeNotificationsByArticle(UUID articleId) {
+        // 기사가 물리 삭제되면 댓글은 DB가 같이 지워서 댓글 물리 삭제 코드를 거치지 않는다
+        // 알림은 댓글을 resource_id 값으로만 가리켜서 여기서 직접 지운다
+        for (UUID commentId : commentService.findIdsByArticleId(articleId)) {
+            notificationService.deleteByResource(ResourceType.COMMENT, commentId);
+        }
+    }
 }
