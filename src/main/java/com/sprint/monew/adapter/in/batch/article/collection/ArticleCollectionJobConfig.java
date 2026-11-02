@@ -21,13 +21,15 @@ public class ArticleCollectionJobConfig {
             ArticleCollectReader reader,
             ArticleCollectProcessor processor,
             ArticleCollectWriter writer,
-            ArticleCollectionChunkListener listener) {
+            ArticleCollectionChunkListener chunkListener,
+            ArticleCollectionStepListener stepListener) {
         return new StepBuilder("articleCollectionStep", jobRepository)
                 .<InterestKeywordResult, InterestCollectedArticles>chunk(1, transactionManager)
                 .reader(reader)
                 .processor(processor)
                 .writer(writer)
-                .listener(listener)
+                .listener(chunkListener)
+                .listener(stepListener)
                 .build();
     }
 
