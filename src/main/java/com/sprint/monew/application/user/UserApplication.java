@@ -4,9 +4,13 @@ import com.sprint.monew.application.user.provided.UserUseCase;
 import com.sprint.monew.application.user.provided.dto.UserResult;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.annotation.ApplicationService;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @ApplicationService
 @RequiredArgsConstructor
 public class UserApplication implements UserUseCase {
@@ -48,6 +52,16 @@ public class UserApplication implements UserUseCase {
 
     @Override
     public int purgeDeletedUsers() {
-        return 0;
+        Instant threshold = Instant.now().minus(Duration.ofDays(1));
+        int purged = 0;
+        for (UUID userId : userService.findPurgeTargetIds(threshold)) {
+            try {
+                userService.hardDeleteUser(userId);
+                purged++;
+            } catch (RuntimeException e) {
+                log.error("사용자 완전 삭제 실패: userId={}", userId, e);
+            }
+        }
+        return purged;
     }
 }

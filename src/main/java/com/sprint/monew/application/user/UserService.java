@@ -97,8 +97,9 @@ public class UserService implements IUserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<UUID> findPurgeTargetIds(Instant threshold) {
-        return List.of();
+        return repository.findDeletedUserIdsBefore(threshold);
     }
 
     private User getDeactivatedUser(UUID userId) {
