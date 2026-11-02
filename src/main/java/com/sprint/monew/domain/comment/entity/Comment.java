@@ -15,6 +15,7 @@ import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Check;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -22,6 +23,7 @@ import org.hibernate.annotations.OnDeleteAction;
 // 수정할 때 바뀐 컬럼만 저장해서 그 사이 바뀐 좋아요 수나 삭제 상태를 덮어쓰지 않게 한다
 @Entity
 @Table(name = "comments")
+@Check(name = "ck_comments_like_count", constraints = "like_count >= 0")
 @DynamicUpdate
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
