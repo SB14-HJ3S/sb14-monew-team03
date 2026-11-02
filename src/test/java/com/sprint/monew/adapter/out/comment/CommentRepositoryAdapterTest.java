@@ -1,6 +1,7 @@
 package com.sprint.monew.adapter.out.comment;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.sprint.monew.adapter.out.article.ArticleRepositoryAdapter;
 import com.sprint.monew.adapter.out.user.UserRepositoryAdapter;
@@ -16,6 +17,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.annotation.Transactional;
@@ -164,5 +166,19 @@ class CommentRepositoryAdapterTest {
         assertThat(saved.getContent()).isEqualTo("수정 후");
         assertThat(saved.getDeletedAt()).isNotNull();
         assertThat(saved.getLikeCount()).isEqualTo(5L);
+    }
+
+    @Test
+    @DisplayName("좋아요 수를 음수로 바꾸려고 하면 DB가 거부한다")
+    void rejectNegativeLikeCount() {
+        UUID commentId = savedCommentId(0L);
+        em.flush();
+
+        assertThatThrownBy(
+                        () ->
+                                jdbcTemplate.update(
+                                        "UPDATE comments SET like_count = -1 WHERE id = ?",
+                                        commentId))
+                .isInstanceOf(DataIntegrityViolationException.class);
     }
 }
