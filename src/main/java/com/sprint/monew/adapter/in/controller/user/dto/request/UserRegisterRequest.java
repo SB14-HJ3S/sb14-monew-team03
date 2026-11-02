@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+@Schema(description = "회원가입 정보")
 public record UserRegisterRequest(
         @Schema(description = "가입 이메일", example = "user@example.com")
                 @NotBlank
