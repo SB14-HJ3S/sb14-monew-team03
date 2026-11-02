@@ -29,11 +29,15 @@ public class ArticleServiceImpl implements ArticleService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Article> getArticlesByDate(LocalDate date) {
+    public List<Article> getArticlesForBackup(LocalDate date, UUID afterId, int limit) {
+        if (limit <= 0) {
+            throw new IllegalArgumentException("조회 개수는 1 이상이어야 합니다.");
+        }
+
         Instant from = date.atStartOfDay(BACKUP_ZONE).toInstant();
         Instant to = date.plusDays(1).atStartOfDay(BACKUP_ZONE).toInstant();
 
-        return repository.getArticlesInDateRange(from, to);
+        return repository.findBackupChunk(from, to, afterId, limit);
     }
 
     @Override

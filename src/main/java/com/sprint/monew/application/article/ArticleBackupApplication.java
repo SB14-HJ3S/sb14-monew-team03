@@ -1,14 +1,12 @@
 package com.sprint.monew.application.article;
 
-import static com.sprint.monew.application.article.ArticleServiceImpl.BACKUP_ZONE;
-
 import com.sprint.monew.application.article.provided.ArticleBackupUseCase;
 import com.sprint.monew.application.article.provided.dto.ArticleBackupFile;
 import com.sprint.monew.application.article.provided.dto.ArticleBackupItem;
+import com.sprint.monew.application.article.provided.dto.ArticleBackupResult;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.global.annotation.ApplicationService;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -20,26 +18,33 @@ public class ArticleBackupApplication implements ArticleBackupUseCase {
 
     private final ArticleService articleService;
     private final ArticleInterestService articleInterestService;
+    private final ArticleBackupStorageService articleBackupStorageService;
 
     @Override
-    public ArticleBackupFile getArticlesToBackup(LocalDate date) { // 나중에 이 파라미터 없애기
-        List<Article> articleList = articleService.getArticlesByDate(date);
+    public List<Article> readArticles(LocalDate date, UUID afterId, int limit) {
+        return articleService.getArticlesForBackup(date, afterId, limit);
+    }
 
-        List<UUID> articleIdList = articleList.stream().map(Article::getId).toList();
+    @Override
+    public ArticleBackupResult backupChunk(
+            LocalDate date, String runId, long partNumber, List<Article> articles) {
+        List<UUID> articleIds = articles.stream().map(Article::getId).toList();
 
-        Map<UUID, List<UUID>> interestsByArticleId =
-                articleInterestService.findInterestIdsByArticleIds(articleIdList);
+        Map<UUID, List<UUID>> interestIdsByArticleId =
+                articleInterestService.findInterestIdsByArticleIds(articleIds);
 
         List<ArticleBackupItem> items =
-                articleList.stream()
+                articles.stream()
                         .map(
                                 article ->
                                         ArticleBackupItem.from(
                                                 article,
-                                                interestsByArticleId.getOrDefault(
+                                                interestIdsByArticleId.getOrDefault(
                                                         article.getId(), List.of())))
                         .toList();
 
-        return new ArticleBackupFile(date, LocalDateTime.now(BACKUP_ZONE), items.size(), items);
+        ArticleBackupFile file = ArticleBackupFile.of(date, items);
+
+        return articleBackupStorageService.save(runId, partNumber, file);
     }
 }

@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -68,7 +69,7 @@ public class ArticleRepositoryAdapter implements ArticleRepositoryPort {
     }
 
     @Override
-    public List<Article> getArticlesInDateRange(Instant from, Instant to) {
-        return jpaRepository.getArticlesInDateRange(from, to);
+    public List<Article> findBackupChunk(Instant from, Instant to, UUID afterId, int limit) {
+        return jpaRepository.findBackupChunk(from, to, afterId, PageRequest.of(0, limit));
     }
 }

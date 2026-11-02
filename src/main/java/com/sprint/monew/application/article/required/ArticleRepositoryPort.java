@@ -33,5 +33,5 @@ public interface ArticleRepositoryPort {
     // 동시에 댓글이 지워져도 숫자가 사라지지 않게 DB에서 -1
     int decreaseCommentCount(UUID articleId);
 
-    List<Article> getArticlesInDateRange(Instant from, Instant to);
+    List<Article> findBackupChunk(Instant from, Instant to, UUID afterId, int limit);
 }

@@ -10,7 +10,7 @@ import java.util.UUID;
 
 public interface ArticleService {
 
-    List<Article> getArticlesByDate(LocalDate date);
+    List<Article> getArticlesForBackup(LocalDate date, UUID afterId, int limit);
 
     Article findById(UUID articleId);
 
