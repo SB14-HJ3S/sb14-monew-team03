@@ -30,6 +30,11 @@ public record UserActivityDocument(
         List<ArticleViewItem> articleViews) {
     public static final int RECENT_LIMIT = 10;
 
+    public static final String FIELD_SUBSCRIPTIONS = "subscriptions";
+    public static final String FIELD_COMMENTS = "comments";
+    public static final String FIELD_COMMENT_LIKES = "commentLikes";
+    public static final String FIELD_ARTICLE_VIEWS = "articleViews";
+
     public static UserActivityDocument create(
             UUID userId, String email, String nickname, Instant createdAt) {
         return new UserActivityDocument(
