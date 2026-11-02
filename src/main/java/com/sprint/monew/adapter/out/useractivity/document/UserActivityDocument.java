@@ -1,10 +1,10 @@
 package com.sprint.monew.adapter.out.useractivity.document;
 
 import com.sprint.monew.application.useractivity.provided.dto.UserActivityResult;
-import jakarta.persistence.Id;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
