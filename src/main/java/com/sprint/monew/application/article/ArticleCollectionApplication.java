@@ -58,7 +58,8 @@ public class ArticleCollectionApplication implements ArticleCollectionUseCase {
     @Transactional
     public int saveArticles(Interest interest, List<CollectedArticle> articles) {
 
-        int newArticleCount = 0;
+        int newCollectedArticleCount = 0; // 새로 수집된 기사 개수
+        int newLinkedArticleCount = 0; // 관심사에 새로 연결된 기사 개수
 
         for (CollectedArticle collected : articles) {
             Optional<Article> existing = articleService.findBySourceUrl(collected.sourceUrl());
@@ -73,18 +74,21 @@ public class ArticleCollectionApplication implements ArticleCollectionUseCase {
                 }
             } else {
                 article = articleService.save(collected.toArticle());
-                newArticleCount++;
+                newCollectedArticleCount++;
             }
 
-            articleInterestService.getOrCreateArticleInterest(article, interest);
+            if (articleInterestService.createIfAbsent(article, interest)) {
+                newLinkedArticleCount++;
+            }
         }
 
-        if (newArticleCount > 0) {
+        if (newLinkedArticleCount > 0) {
             eventPublisher.publish(
-                    new ArticlesSavedEvent(interest.getId(), interest.getName(), newArticleCount));
+                    new ArticlesSavedEvent(
+                            interest.getId(), interest.getName(), newLinkedArticleCount));
         }
 
-        return newArticleCount;
+        return newCollectedArticleCount;
     }
 
     // 기사 제목이나 요약에 관심사 키워드 중 하나라도 있으면 return true, else false

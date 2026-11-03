@@ -8,7 +8,9 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import com.sprint.monew.application.article.event.ArticlesSavedEvent;
 import com.sprint.monew.application.article.provided.dto.CollectedArticle;
+import com.sprint.monew.application.article.required.ArticleEventPublisherPort;
 import com.sprint.monew.application.article.required.NaverNewsPort;
 import com.sprint.monew.application.article.required.RssNewsPort;
 import com.sprint.monew.application.interest.InterestService;
@@ -20,6 +22,7 @@ import com.sprint.monew.global.exception.errortype.ExternalErrorType;
 import com.sprint.monew.global.type.ArticleSourceType;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,6 +40,7 @@ class ArticleCollectionApplicationTest {
     @Mock private InterestService interestService;
     @Mock private RssNewsPort rss;
     @Mock private NaverNewsPort naver;
+    @Mock private ArticleEventPublisherPort eventPublisher;
     @InjectMocks private ArticleCollectionApplication application;
 
     @Test
@@ -119,35 +123,90 @@ class ArticleCollectionApplicationTest {
                 .isEqualTo(expected);
     }
 
-    //    @Test
-    //    @DisplayName("신규 기사만 건수를 세고 기존 기사는 연결하며 삭제 기사는 제외한다.")
-    //    void saveArticles() {
-    //        Interest interest = Interest.create("기술", List.of("AI"));
-    //        var fresh = collected("new", "AI", "");
-    //        var existing = collected("existing", "AI", "");
-    //        var deleted = collected("deleted", "AI", "");
-    //        Article saved = fresh.toArticle();
-    //        Article existingEntity = existing.toArticle();
-    //        Article deletedEntity = deleted.toArticle();
-    //        deletedEntity.softDelete();
-    //        when(articles.findBySourceUrl("new")).thenReturn(Optional.empty());
-    //        when(articles.findBySourceUrl("existing")).thenReturn(Optional.of(existingEntity));
-    //        when(articles.findBySourceUrl("deleted")).thenReturn(Optional.of(deletedEntity));
-    //        when(articles.save(any())).thenReturn(saved);
-    //        assertThat(application.saveArticles(interest, List.of(fresh, existing, deleted)))
-    //                .isEqualTo(1);
-    //        verify(articles).save(any());
-    //        verify(links).getOrCreateArticleInterest(saved, interest);
-    //        verify(links).getOrCreateArticleInterest(existingEntity, interest);
-    //        verifyNoMoreInteractions(links);
-    //    }
-    //
-    //    @Test
-    //    void givenEmptyArticles_thenReturnZero() {
-    //        assertThat(application.saveArticles(Interest.create("기술", List.of("AI")), List.of()))
-    //                .isZero();
-    //        verifyNoInteractions(articles, links);
-    //    }
+    @Test
+    @DisplayName("저장 건수는 신규 기사만 세고 알림 건수는 새 연결만 세며 삭제 기사는 제외한다.")
+    void saveArticles() {
+        Interest interest = Interest.create("기술", List.of("AI"));
+        var fresh = collected("new", "AI", "");
+        var existing = collected("existing", "AI", "");
+        var deleted = collected("deleted", "AI", "");
+        Article saved = fresh.toArticle();
+        Article existingEntity = existing.toArticle();
+        Article deletedEntity = deleted.toArticle();
+        deletedEntity.softDelete();
+        when(articles.findBySourceUrl("new")).thenReturn(Optional.empty());
+        when(articles.findBySourceUrl("existing")).thenReturn(Optional.of(existingEntity));
+        when(articles.findBySourceUrl("deleted")).thenReturn(Optional.of(deletedEntity));
+        when(articles.save(any())).thenReturn(saved);
+        when(links.createIfAbsent(saved, interest)).thenReturn(true);
+        when(links.createIfAbsent(existingEntity, interest)).thenReturn(true);
+
+        assertThat(application.saveArticles(interest, List.of(fresh, existing, deleted)))
+                .isEqualTo(1);
+
+        verify(articles).save(any());
+        verify(links).createIfAbsent(saved, interest);
+        verify(links).createIfAbsent(existingEntity, interest);
+        verifyNoMoreInteractions(links);
+        verify(eventPublisher).publish(new ArticlesSavedEvent(interest.getId(), "기술", 2));
+    }
+
+    @Test
+    @DisplayName("같은 URL이 두 관심사에 매칭되면 각 관심사에 새 연결 1건을 알린다.")
+    void givenSameArticleForTwoInterests_thenNotifyBothInterests() {
+        Interest first = Interest.create("기술", List.of("AI"));
+        Interest second = Interest.create("경제", List.of("AI"));
+        var item = collected("shared", "AI", "");
+        Article saved = item.toArticle();
+        when(articles.findBySourceUrl("shared")).thenReturn(Optional.empty(), Optional.of(saved));
+        when(articles.save(any())).thenReturn(saved);
+        when(links.createIfAbsent(saved, first)).thenReturn(true);
+        when(links.createIfAbsent(saved, second)).thenReturn(true);
+
+        assertThat(application.saveArticles(first, List.of(item))).isEqualTo(1);
+        assertThat(application.saveArticles(second, List.of(item))).isZero();
+
+        verify(articles).save(any());
+        verify(eventPublisher).publish(new ArticlesSavedEvent(first.getId(), "기술", 1));
+        verify(eventPublisher).publish(new ArticlesSavedEvent(second.getId(), "경제", 1));
+        verifyNoMoreInteractions(eventPublisher);
+    }
+
+    @Test
+    @DisplayName("한 관심사에 같은 기사가 중복되면 새 연결만 한 번 센다.")
+    void givenDuplicateArticle_thenCountOnlyNewLink() {
+        Interest interest = Interest.create("기술", List.of("AI"));
+        var item = collected("shared", "AI", "");
+        Article existing = item.toArticle();
+        when(articles.findBySourceUrl("shared")).thenReturn(Optional.of(existing));
+        when(links.createIfAbsent(existing, interest)).thenReturn(true, false);
+
+        assertThat(application.saveArticles(interest, List.of(item, item))).isZero();
+
+        verify(eventPublisher).publish(new ArticlesSavedEvent(interest.getId(), "기술", 1));
+        verifyNoMoreInteractions(eventPublisher);
+    }
+
+    @Test
+    @DisplayName("이미 연결된 기사만 재수집하면 알림을 다시 발행하지 않는다.")
+    void givenExistingLink_thenDoNotNotifyAgain() {
+        Interest interest = Interest.create("기술", List.of("AI"));
+        var item = collected("existing", "AI", "");
+        Article existing = item.toArticle();
+        when(articles.findBySourceUrl("existing")).thenReturn(Optional.of(existing));
+
+        assertThat(application.saveArticles(interest, List.of(item))).isZero();
+
+        verify(links).createIfAbsent(existing, interest);
+        verifyNoInteractions(eventPublisher);
+    }
+
+    @Test
+    void givenEmptyArticles_thenReturnZero() {
+        assertThat(application.saveArticles(Interest.create("기술", List.of("AI")), List.of()))
+                .isZero();
+        verifyNoInteractions(articles, links, eventPublisher);
+    }
 
     @Test
     @DisplayName("관심사 연결 실패를 숨기지 않고 호출자에게 전달한다.")
@@ -157,9 +216,10 @@ class ArticleCollectionApplicationTest {
         Article saved = item.toArticle();
         var failure = new IllegalStateException("link failed");
         when(articles.save(any())).thenReturn(saved);
-        when(links.getOrCreateArticleInterest(saved, interest)).thenThrow(failure);
+        when(links.createIfAbsent(saved, interest)).thenThrow(failure);
         assertThatThrownBy(() -> application.saveArticles(interest, List.of(item)))
                 .isSameAs(failure);
+        verifyNoInteractions(eventPublisher);
     }
 
     private CollectedArticle collected(String url, String title, String summary) {
