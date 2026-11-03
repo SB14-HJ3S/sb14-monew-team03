@@ -17,4 +17,6 @@ public interface UserUseCase {
     void softDeleteUser(UUID userId);
 
     void hardDeleteUser(UUID userId);
+
+    int cleanupDeletedUsers();
 }

@@ -26,4 +26,7 @@ public interface CommentRepositoryPort {
 
     // 물리 삭제용. 동시에 지워서 이미 없으면 예외 없이 0을 받는다
     int hardDeleteById(UUID commentId);
+
+    // 기사 물리 삭제 때 같이 지워질 댓글 찾기용. 논리 삭제된 댓글도 포함한다
+    List<UUID> findIdsByArticleId(UUID articleId);
 }

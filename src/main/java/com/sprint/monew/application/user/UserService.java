@@ -8,6 +8,7 @@ import com.sprint.monew.application.user.required.UserRepositoryPort;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.UserErrorType;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -95,6 +96,24 @@ public class UserService implements IUserService {
         removeCompletely(user);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<UUID> findCleanupTargetIds(Instant threshold) {
+        return repository.findDeletedUserIdsBefore(threshold);
+    }
+
+    @Override
+    @Transactional
+    public int hardDeleteUsers(List<UUID> userIds) {
+        List<UUID> targetIds =
+                repository.findDeletedUsersForUpdate(userIds).stream().map(User::getId).toList();
+        if (targetIds.isEmpty()) {
+            return 0;
+        }
+        userEventPublisher.publish(new UserHardDeletingEvent(targetIds));
+        return repository.deleteUsers(targetIds);
+    }
+
     private User getDeactivatedUser(UUID userId) {
         return repository
                 .findUserIncludingDeleted(userId)
@@ -103,7 +122,7 @@ public class UserService implements IUserService {
     }
 
     private void removeCompletely(User user) {
-        userEventPublisher.publish(new UserHardDeletingEvent(user.getId()));
+        userEventPublisher.publish(new UserHardDeletingEvent(List.of(user.getId())));
         repository.deleteById(user.getId());
     }
 
