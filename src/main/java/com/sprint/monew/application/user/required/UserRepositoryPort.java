@@ -1,6 +1,7 @@
 package com.sprint.monew.application.user.required;
 
 import com.sprint.monew.domain.user.entity.User;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -27,4 +28,10 @@ public interface UserRepositoryPort {
     Optional<User> findUserIncludingDeleted(UUID id);
 
     Optional<User> findUserIncludingDeletedForUpdate(UUID id);
+
+    List<UUID> findDeletedUserIdsBefore(Instant threshold);
+
+    List<User> findDeletedUsersForUpdate(List<UUID> ids);
+
+    int deleteUsers(List<UUID> ids);
 }
