@@ -61,6 +61,11 @@ monew:
     backup:
       cron: "0 0 3 * * *"
 
+  article:
+    backup:
+      cron: "0 0 0 * * *"
+    limit: 1000
+
   news:
     collection:
       cron: "0 0 * * * *" # 매시간 정각, Asia/Seoul
