@@ -6,6 +6,8 @@ import com.sprint.monew.application.article.required.ArticleBackupStoragePort;
 import com.sprint.monew.global.config.S3Properties;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.ArticleErrorType;
+import com.sprint.monew.global.util.backup.ArticleBackupGzipCompressor;
+import com.sprint.monew.global.util.backup.ArticleBackupJsonSerializer;
 import java.time.LocalDate;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
