@@ -4,5 +4,5 @@ import com.sprint.monew.application.article.provided.dto.ArticleBackupFile;
 import com.sprint.monew.application.article.provided.dto.ArticleBackupResult;
 
 public interface ArticleBackupStoragePort {
-    ArticleBackupResult save(String runId, long partNumber, ArticleBackupFile backupFile);
+    ArticleBackupResult save(long partNumber, ArticleBackupFile backupFile);
 }

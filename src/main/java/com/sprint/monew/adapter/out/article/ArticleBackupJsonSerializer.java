@@ -16,7 +16,7 @@ public class ArticleBackupJsonSerializer {
 
     public byte[] serialize(ArticleBackupFile backupFile) {
         try {
-            return objectMapper.writeValueAsBytes(backupFile);
+            return objectMapper.writeValueAsBytes(backupFile.items()); // 기사만
         } catch (JsonProcessingException e) {
             throw new MonewException(ArticleErrorType.JSON_CONVERSION_FAILED, e);
         }

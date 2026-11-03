@@ -23,7 +23,9 @@ public enum ArticleErrorType implements ErrorType {
 
     // 백업 관련 오류
     JSON_CONVERSION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, Level.ERROR, "기사 백업 JSON 변환에 실패했습니다"),
-    ARTICLE_BACKUP_UPLOAD_FAILED(HttpStatus.BAD_GATEWAY, Level.ERROR, "기사 백업 파일의 S3 업로드에 실패했습니다");
+    ARTICLE_BACKUP_UPLOAD_FAILED(HttpStatus.BAD_GATEWAY, Level.ERROR, "기사 백업 파일의 S3 업로드에 실패했습니다"),
+    ARTICLE_BACKUP_ZIP_FAILED(
+            HttpStatus.INTERNAL_SERVER_ERROR, Level.ERROR, "기사 백업 데이터 압축에 실패했습니다");
 
     private final HttpStatus status;
     private final Level level;
