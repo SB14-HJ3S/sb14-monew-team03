@@ -4,6 +4,7 @@ import com.sprint.monew.application.article.provided.ArticleBackupUseCase;
 import com.sprint.monew.application.article.provided.dto.ArticleBackupFile;
 import com.sprint.monew.application.article.provided.dto.ArticleBackupItem;
 import com.sprint.monew.application.article.provided.dto.ArticleBackupResult;
+import com.sprint.monew.application.article.provided.dto.ArticleResult;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.global.annotation.ApplicationService;
 import java.time.LocalDate;
@@ -21,8 +22,10 @@ public class ArticleBackupApplication implements ArticleBackupUseCase {
     private final ArticleBackupStorageService articleBackupStorageService;
 
     @Override
-    public List<Article> readArticles(LocalDate date, UUID afterId, int limit) {
-        return articleService.getArticlesForBackup(date, afterId, limit);
+    public List<ArticleResult> readArticles(LocalDate date, UUID afterId, int limit) {
+        return articleService.getArticlesForBackup(date, afterId, limit).stream()
+                .map(article -> ArticleResult.from(article, false))
+                .toList();
     }
 
     @Override
