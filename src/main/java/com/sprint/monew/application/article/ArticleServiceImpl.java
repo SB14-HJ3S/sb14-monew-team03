@@ -85,5 +85,11 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public void softDelete(UUID articleId) {}
+    @Transactional
+    public void softDelete(UUID articleId) {
+        if (repository.softDeleteIfActive(articleId, Instant.now()) == 0) {
+            throw new MonewException(
+                    ArticleErrorType.ARTICLE_NOT_FOUND, Map.of("articleId", articleId));
+        }
+    }
 }

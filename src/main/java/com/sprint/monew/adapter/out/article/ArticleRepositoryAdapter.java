@@ -70,7 +70,7 @@ public class ArticleRepositoryAdapter implements ArticleRepositoryPort {
 
     @Override
     public int softDeleteIfActive(UUID articleId, Instant deletedAt) {
-        return 0;
+        return jpaRepository.softDeleteIfActive(articleId, deletedAt);
     }
 
     @Override

@@ -30,6 +30,12 @@ public interface ArticleJpaRepository extends JpaRepository<Article, UUID>, Arti
                     + " WHERE a.id = :id AND a.commentCount > 0")
     int decreaseCommentCount(@Param("id") UUID id);
 
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query(
+            "UPDATE Article a SET a.deletedAt = :deletedAt"
+                    + " WHERE a.id = :id AND a.deletedAt IS NULL")
+    int softDeleteIfActive(@Param("id") UUID id, @Param("deletedAt") Instant deletedAt);
+
     @Query(
             """
             SELECT a
