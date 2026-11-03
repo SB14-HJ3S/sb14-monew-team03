@@ -10,6 +10,12 @@ spring:
     hibernate:
       ddl-auto: create-drop # 테스트마다 빈 테이블에서 시작
 
+  data:
+    mongodb:
+      # 앱 시작 때 Mongo 인덱스를 만들지 않는다
+      # @IntegrationTest는 Mongo 컨테이너를 띄우지 않아서, 인덱스를 만들려고 접속하다 앱 시작이 실패한다
+      auto-index-creation: false
+
 monew:
   # 테스트 도중 @Scheduled 작업(매시간 수집 등)이 실행되지 않게 스케줄러를 끔 (SchedulingConfig)
   scheduling:
