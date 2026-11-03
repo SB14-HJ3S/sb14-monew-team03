@@ -1,5 +1,6 @@
 package com.sprint.monew.adapter.out.comment;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.sprint.monew.adapter.out.article.ArticleRepositoryAdapter;
@@ -14,7 +15,12 @@ import com.sprint.monew.global.type.ArticleSourceType;
 import com.sprint.monew.support.IntegrationTest;
 import jakarta.persistence.EntityManager;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -72,5 +78,55 @@ class CommentLikeRepositoryAdapterTest {
 
         assertThatThrownBy(() -> commentLikeRepository.save(CommentLike.create(user, comment)))
                 .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Nested
+    @DisplayName("요청자가 좋아요 누른 댓글 ID 조회")
+    class FindLikedCommentIds {
+
+        private User me;
+        private User other;
+        private Comment liked;
+        private Comment likedByOther;
+        private Comment notInPage;
+
+        @BeforeEach
+        void setUp() {
+            me = userRepository.save(User.create("me@monew.com", "나", "password1!"));
+            other = userRepository.save(User.create("other@monew.com", "남", "password1!"));
+            Article article =
+                    articleRepository.save(
+                            Article.create(
+                                    ArticleSourceType.NAVER,
+                                    "https://news.example.com/liked",
+                                    "기사 제목",
+                                    LocalDateTime.now(),
+                                    "기사 요약"));
+            liked = commentRepository.save(Comment.create(other, article, "내가 좋아요"));
+            likedByOther = commentRepository.save(Comment.create(me, article, "남이 좋아요"));
+            notInPage = commentRepository.save(Comment.create(other, article, "목록 밖"));
+
+            commentLikeRepository.save(CommentLike.create(me, liked));
+            commentLikeRepository.save(CommentLike.create(other, likedByOther));
+            commentLikeRepository.save(CommentLike.create(me, notInPage));
+        }
+
+        @Test
+        @DisplayName("넘긴 댓글 중 요청자가 좋아요 누른 댓글 ID만 돌려준다")
+        void onlyMyLikesInGivenIds() {
+            Set<UUID> result =
+                    commentLikeRepository.findLikedCommentIds(
+                            me.getId(), List.of(liked.getId(), likedByOther.getId()));
+
+            assertThat(result).containsExactly(liked.getId());
+        }
+
+        @Test
+        @DisplayName("넘긴 댓글이 없으면 빈 Set을 돌려준다")
+        void emptyIds() {
+            Set<UUID> result = commentLikeRepository.findLikedCommentIds(me.getId(), List.of());
+
+            assertThat(result).isEmpty();
+        }
     }
 }
