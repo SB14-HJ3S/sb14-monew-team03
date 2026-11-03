@@ -32,13 +32,14 @@ public interface ArticleJpaRepository extends JpaRepository<Article, UUID>, Arti
 
     @Query(
             """
-        SELECT a
-        FROM Article a
-        WHERE a.createdAt >= :from
-          AND a.createdAt < :to
-          AND (:afterId IS NULL OR a.id > :afterId)
-        ORDER BY a.id ASC
-        """)
+            SELECT a
+            FROM Article a
+            WHERE a.deletedAt IS NULL
+              AND a.createdAt >= :from
+              AND a.createdAt < :to
+              AND (:afterId IS NULL OR a.id > :afterId)
+            ORDER BY a.id ASC
+            """)
     List<Article> findBackupChunk(
             @Param("from") Instant from,
             @Param("to") Instant to,
