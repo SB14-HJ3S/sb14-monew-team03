@@ -79,8 +79,10 @@ public class ArticleCollectionApplication implements ArticleCollectionUseCase {
             articleInterestService.getOrCreateArticleInterest(article, interest);
         }
 
-        eventPublisher.publish(
-                new ArticlesSavedEvent(interest.getId(), interest.getName(), newArticleCount));
+        if (newArticleCount > 0) {
+            eventPublisher.publish(
+                    new ArticlesSavedEvent(interest.getId(), interest.getName(), newArticleCount));
+        }
 
         return newArticleCount;
     }
