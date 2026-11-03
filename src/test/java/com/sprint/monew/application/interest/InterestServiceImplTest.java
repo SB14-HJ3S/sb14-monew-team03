@@ -226,36 +226,16 @@ class InterestServiceImplTest {
     }
 
     @Test
-    @DisplayName("모든 관심사가 존재하면 구독자 수를 일괄 감소시킨다.")
-    void givenExistingInterests_whenDecreaseSubscriberCounts_thenBulkUpdateCounts() {
+    @DisplayName("사용자 목록에 대한 관심사별 구독자 수 정리를 저장소에 한 번 요청한다.")
+    void givenUserIds_whenDecreaseSubscriberCounts_thenDelegateToRepositoryOnce() {
         // given
-        List<UUID> interestIds = List.of(UUID.randomUUID(), UUID.randomUUID());
-        when(repository.countByIdIn(interestIds)).thenReturn(interestIds.size());
+        List<UUID> userIds = List.of(UUID.randomUUID(), UUID.randomUUID());
 
         // when
-        service.decreaseSubscriberCount(interestIds);
+        service.decreaseSubscriberCountsByUserIds(userIds);
 
         // then
-        InOrder inOrder = inOrder(repository);
-        inOrder.verify(repository).countByIdIn(interestIds);
-        inOrder.verify(repository).decreaseSubscriberCountIn(interestIds);
-    }
-
-    @Test
-    @DisplayName("존재하지 않는 관심사가 포함되면 구독자 수를 일괄 감소시키지 않는다.")
-    void givenSomeNonExistingInterests_whenDecreaseSubscriberCounts_thenThrowException() {
-        // given
-        List<UUID> interestIds = List.of(UUID.randomUUID(), UUID.randomUUID());
-        when(repository.countByIdIn(interestIds)).thenReturn(interestIds.size() - 1);
-
-        // when
-        MonewException thrown =
-                catchThrowableOfType(
-                        MonewException.class, () -> service.decreaseSubscriberCount(interestIds));
-
-        // then
-        assertThat(thrown.getErrorType()).isEqualTo(InterestErrorType.INTEREST_NOT_FOUND);
-        assertThat(thrown.getDetails()).containsEntry("id", interestIds);
-        verify(repository, never()).decreaseSubscriberCountIn(interestIds);
+        verify(repository).decreaseSubscriberCountsByUserIds(userIds);
+        verifyNoMoreInteractions(repository);
     }
 }

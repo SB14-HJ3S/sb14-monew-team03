@@ -22,10 +22,15 @@ public class ArticleInterestServiceImpl implements ArticleInterestService {
 
     @Override
     @Transactional
-    public ArticleInterest getOrCreateArticleInterest(Article article, Interest interest) {
+    public boolean createIfAbsent(Article article, Interest interest) {
         return repository
                 .findByArticleIdAndInterestId(article.getId(), interest.getId())
-                .orElseGet(() -> repository.save(ArticleInterest.create(article, interest)));
+                .map(existing -> false)
+                .orElseGet(
+                        () -> {
+                            repository.save(ArticleInterest.create(article, interest));
+                            return true;
+                        });
     }
 
     @Override
