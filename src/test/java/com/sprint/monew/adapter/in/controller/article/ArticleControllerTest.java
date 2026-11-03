@@ -57,6 +57,7 @@ class ArticleControllerTest {
                         "https://example.com/news",
                         "경제 뉴스",
                         publishedAt,
+                        after,
                         "요약",
                         3L,
                         10L,
