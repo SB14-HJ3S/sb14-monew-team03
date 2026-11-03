@@ -37,4 +37,4 @@ logging:
 monew:
   notification:
     cleanup:
-      cron: "*/10 * * * * *"
+      cron: "0 0 * * * *"
