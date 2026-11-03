@@ -251,7 +251,7 @@ class UserServiceTest {
         userService.hardDeleteUser(userId);
 
         InOrder inOrder = inOrder(userEventPublisher, repository);
-        inOrder.verify(userEventPublisher).publish(new UserHardDeletingEvent(userId));
+        inOrder.verify(userEventPublisher).publish(new UserHardDeletingEvent(List.of(userId)));
         inOrder.verify(repository).deleteById(userId);
     }
 

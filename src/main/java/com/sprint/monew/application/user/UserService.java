@@ -110,7 +110,7 @@ public class UserService implements IUserService {
     }
 
     private void removeCompletely(User user) {
-        userEventPublisher.publish(new UserHardDeletingEvent(user.getId()));
+        userEventPublisher.publish(new UserHardDeletingEvent(List.of(user.getId())));
         repository.deleteById(user.getId());
     }
 
