@@ -7,6 +7,7 @@ import com.sprint.monew.global.config.S3Properties;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.ArticleErrorType;
 import java.time.LocalDate;
+import java.util.Locale;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -55,6 +56,12 @@ public class S3ArticleBackupStorageAdapter implements ArticleBackupStoragePort {
     }
 
     private String generateKey(LocalDate date, long partNumber) {
-        return "articles/" + date + "/articles-" + date + "-" + partNumber + ".json.gz";
+        return "articles/"
+                + date
+                + "/articles-"
+                + date
+                + "-"
+                + String.format(Locale.ROOT, "%06d", partNumber)
+                + ".json.gz";
     }
 }
