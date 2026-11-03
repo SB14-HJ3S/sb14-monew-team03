@@ -244,25 +244,28 @@
           "legendFormat": "",
           "range": false,
           "instant": true,
-          "refId": "A"
+          "refId": "A",
+          "format": "table"
         },
         {
           "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
           "editorMode": "code",
-          "expr": "round(sum by (spring_batch_job_name) (increase(spring_batch_job_seconds_count{spring_batch_job_status=\"COMPLETED\"}[$__range])))",
+          "expr": "round(sum by (spring_batch_job_name) (increase(spring_batch_job_seconds_count{spring_batch_job_status=\"COMPLETED\"}[$__range]))) or (round(sum by (spring_batch_job_name) (increase(spring_batch_job_seconds_count[$__range]))) * 0)",
           "legendFormat": "",
           "range": false,
           "instant": true,
-          "refId": "B"
+          "refId": "B",
+          "format": "table"
         },
         {
           "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
           "editorMode": "code",
-          "expr": "round(sum by (spring_batch_job_name) (increase(spring_batch_job_seconds_count{spring_batch_job_status!=\"COMPLETED\"}[$__range])))",
+          "expr": "round(sum by (spring_batch_job_name) (increase(spring_batch_job_seconds_count{spring_batch_job_status!=\"COMPLETED\"}[$__range]))) or (round(sum by (spring_batch_job_name) (increase(spring_batch_job_seconds_count[$__range]))) * 0)",
           "legendFormat": "",
           "range": false,
           "instant": true,
-          "refId": "C"
+          "refId": "C",
+          "format": "table"
         },
         {
           "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
@@ -271,7 +274,8 @@
           "legendFormat": "",
           "range": false,
           "instant": true,
-          "refId": "D"
+          "refId": "D",
+          "format": "table"
         }
       ],
       "title": "배치 Job별 실행 결과",
