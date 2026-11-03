@@ -28,7 +28,7 @@ public class ArticleController {
 
     @GetMapping("/sources")
     public List<ArticleSourceType> findSourceTypes() {
-        return List.of();
+        return articleUseCase.findSourceTypes();
     }
 
     @RequestId
