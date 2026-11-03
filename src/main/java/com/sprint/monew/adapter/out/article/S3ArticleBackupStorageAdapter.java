@@ -8,7 +8,6 @@ import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.ArticleErrorType;
 import java.time.LocalDate;
 import java.util.Locale;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.core.exception.SdkException;
@@ -50,8 +49,7 @@ public class S3ArticleBackupStorageAdapter implements ArticleBackupStoragePort {
         try {
             s3Client.putObject(request, RequestBody.fromBytes(content));
         } catch (SdkException e) {
-            throw new MonewException(
-                    ArticleErrorType.ARTICLE_BACKUP_UPLOAD_FAILED, Map.of("key", key), e);
+            throw new MonewException(ArticleErrorType.ARTICLE_BACKUP_UPLOAD_FAILED, e);
         }
     }
 

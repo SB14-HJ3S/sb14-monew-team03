@@ -8,7 +8,6 @@ import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.ArticleErrorType;
 import java.time.format.DateTimeParseException;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -68,13 +67,16 @@ class NaverNewsMapperTest {
         assertThat(thrown).hasCauseInstanceOf(DateTimeParseException.class);
     }
 
-    @Test
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {" ", "\t"})
     @DisplayName("원문 URL과 요약이 없으면 대체 URL과 빈 요약으로 기사를 변환한다.")
-    void givenFallbackUrlAndMissingDescription_whenToCollectedArticle_thenReturnArticle() {
+    void givenFallbackUrlAndMissingDescription_whenToCollectedArticle_thenReturnArticle(
+            String originalLink) {
         // given
         NaverNewsResponse.ArticleItem item =
                 new NaverNewsResponse.ArticleItem(
-                        "<b>기사</b>", null, "https://example.com", null, DATE);
+                        "<b>기사</b>", originalLink, "https://example.com", null, DATE);
 
         // when
         CollectedArticle article = mapper.toCollectedArticle(item);
