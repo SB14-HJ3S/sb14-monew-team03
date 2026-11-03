@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface CommentQueryRepository {
 
-    List<Comment> findByQuery(CommentQuery query);
+    List<Comment> findByQuery(CommentQuery query, Comment cursorComment);
 
     long countByQuery(CommentQuery query);
 }

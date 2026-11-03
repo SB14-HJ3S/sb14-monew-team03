@@ -9,8 +9,6 @@ import com.sprint.monew.application.comment.provided.dto.CommentQuery;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.comment.entity.Comment;
 import com.sprint.monew.domain.user.entity.User;
-import com.sprint.monew.global.exception.MonewException;
-import com.sprint.monew.global.exception.errortype.CommonErrorType;
 import com.sprint.monew.global.pagination.SortDirection;
 import com.sprint.monew.global.type.ArticleSourceType;
 import com.sprint.monew.support.IntegrationTest;
@@ -259,7 +257,18 @@ class CommentRepositoryAdapterTest {
         }
 
         private List<UUID> idsOf(CommentQuery query) {
-            return commentRepository.findByQuery(query).stream().map(Comment::getId).toList();
+            return idsOf(query, null);
+        }
+
+        // cursorComment: 이전 페이지 마지막 댓글 (서비스가 커서 id로 찾아서 넘김)
+        private List<UUID> idsOf(CommentQuery query, Comment cursorComment) {
+            return commentRepository.findByQuery(query, cursorComment).stream()
+                    .map(Comment::getId)
+                    .toList();
+        }
+
+        private Comment commentOf(UUID commentId) {
+            return commentRepository.findById(commentId).orElseThrow();
         }
 
         @Test
@@ -353,22 +362,22 @@ class CommentRepositoryAdapterTest {
         }
 
         @Test
-        @DisplayName("작성 시각순에서 커서를 주면 커서 다음 댓글부터 돌려준다")
+        @DisplayName("작성 시각순에서 커서 댓글을 주면 그 다음 댓글부터 돌려준다")
         void createdAtCursor() {
             CommentQuery query =
                     new CommentQuery(
                             articleId,
                             CommentQuery.SortOrder.CREATED_AT,
                             SortDirection.DESC,
-                            T2.toString(),
+                            second.toString(),
                             T2,
                             10);
 
-            assertThat(idsOf(query)).containsExactly(first);
+            assertThat(idsOf(query, commentOf(second))).containsExactly(first);
         }
 
         @Test
-        @DisplayName("좋아요 수순에서 커서를 주면 좋아요 수가 같은 댓글도 빠짐없이 이어서 돌려준다")
+        @DisplayName("좋아요 수순에서 커서 댓글을 주면 좋아요 수가 같은 댓글도 빠짐없이 이어서 돌려준다")
         void likeCountCursor() {
             // third(좋아요 3, T3)까지 받았다. 같은 좋아요 3인 first가 다음 페이지에 나와야 한다
             CommentQuery query =
@@ -376,29 +385,72 @@ class CommentRepositoryAdapterTest {
                             articleId,
                             CommentQuery.SortOrder.LIKE_COUNT,
                             SortDirection.DESC,
-                            "3",
+                            third.toString(),
                             T3,
                             10);
 
-            assertThat(idsOf(query)).containsExactly(first, second);
+            assertThat(idsOf(query, commentOf(third))).containsExactly(first, second);
         }
 
         @Test
-        @DisplayName("커서와 after 중 하나만 주면 예외가 난다")
-        void cursorWithoutAfter() {
-            CommentQuery query =
+        @DisplayName("좋아요 수와 작성 시각까지 같으면 id로 이어서 빠지는 댓글이 없다")
+        void likeCountCursorSameCreatedAt() {
+            UUID tieArticleId = savedTiedComments();
+            CommentQuery firstPage =
                     new CommentQuery(
-                            articleId,
-                            CommentQuery.SortOrder.CREATED_AT,
+                            tieArticleId,
+                            CommentQuery.SortOrder.LIKE_COUNT,
                             SortDirection.DESC,
-                            T2.toString(),
                             null,
-                            10);
+                            null,
+                            1);
+            List<UUID> fetched = idsOf(firstPage);
+            CommentQuery nextPage =
+                    new CommentQuery(
+                            tieArticleId,
+                            CommentQuery.SortOrder.LIKE_COUNT,
+                            SortDirection.DESC,
+                            fetched.get(0).toString(),
+                            T1,
+                            1);
 
-            assertThatThrownBy(() -> commentRepository.findByQuery(query))
-                    .isInstanceOf(MonewException.class)
-                    .extracting("errorType")
-                    .isEqualTo(CommonErrorType.PAGINATION_NOT_BOTH_CURSOR_AND_AFTER);
+            // 1페이지 마지막(fetched[0])에 이어서, 하나 더 가져왔던 댓글(fetched[1])이 나와야 한다
+            assertThat(idsOf(nextPage, commentOf(fetched.get(0)))).containsExactly(fetched.get(1));
+        }
+
+        @Test
+        @DisplayName("작성 시각까지 같으면 작성 시각순에서도 id로 이어서 빠지는 댓글이 없다")
+        void createdAtCursorSameCreatedAt() {
+            UUID tieArticleId = savedTiedComments();
+            CommentQuery firstPage =
+                    new CommentQuery(
+                            tieArticleId,
+                            CommentQuery.SortOrder.CREATED_AT,
+                            SortDirection.ASC,
+                            null,
+                            null,
+                            1);
+            List<UUID> fetched = idsOf(firstPage);
+            CommentQuery nextPage =
+                    new CommentQuery(
+                            tieArticleId,
+                            CommentQuery.SortOrder.CREATED_AT,
+                            SortDirection.ASC,
+                            fetched.get(0).toString(),
+                            T1,
+                            1);
+
+            assertThat(idsOf(nextPage, commentOf(fetched.get(0)))).containsExactly(fetched.get(1));
+        }
+
+        // 좋아요 수(2)와 작성 시각(T1)이 모두 같은 댓글 2개를 다른 기사에 저장하고 그 기사 ID를 돌려준다
+        private UUID savedTiedComments() {
+            User user = userRepository.save(User.create("tie@monew.com", "작성자", "password1!"));
+            Article tieArticle = savedArticle("https://news.example.com/list-tie");
+            savedComment(user, tieArticle, T1, 2L);
+            savedComment(user, tieArticle, T1, 2L);
+            em.clear();
+            return tieArticle.getId();
         }
 
         @Test

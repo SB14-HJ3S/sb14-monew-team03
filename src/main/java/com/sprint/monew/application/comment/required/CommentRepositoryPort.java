@@ -29,7 +29,8 @@ public interface CommentRepositoryPort {
     int hardDeleteById(UUID commentId);
 
     // 목록 조회용. 다음 페이지 여부를 알려고 limit + 1개까지 가져온다
-    List<Comment> findByQuery(CommentQuery query);
+    // cursorComment: 이전 페이지 마지막 댓글. 첫 페이지면 null
+    List<Comment> findByQuery(CommentQuery query, Comment cursorComment);
 
     long countByQuery(CommentQuery query);
 

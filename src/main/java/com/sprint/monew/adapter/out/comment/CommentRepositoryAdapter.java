@@ -57,8 +57,8 @@ public class CommentRepositoryAdapter implements CommentRepositoryPort {
     }
 
     @Override
-    public List<Comment> findByQuery(CommentQuery query) {
-        return jpaRepository.findByQuery(query);
+    public List<Comment> findByQuery(CommentQuery query, Comment cursorComment) {
+        return jpaRepository.findByQuery(query, cursorComment);
     }
 
     @Override

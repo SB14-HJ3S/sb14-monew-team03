@@ -29,6 +29,7 @@ import com.sprint.monew.global.context.RequestIdContext;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.ArticleErrorType;
 import com.sprint.monew.global.exception.errortype.CommentErrorType;
+import com.sprint.monew.global.exception.errortype.CommonErrorType;
 import com.sprint.monew.global.exception.errortype.UserErrorType;
 import com.sprint.monew.global.pagination.PageResult;
 import com.sprint.monew.global.pagination.SortDirection;
@@ -686,7 +687,8 @@ class CommentApplicationTest {
             Comment first = comment(Instant.parse("2026-11-03T03:00:00Z"));
             Comment second = comment(Instant.parse("2026-11-03T02:00:00Z"));
             Comment extra = comment(Instant.parse("2026-11-03T01:00:00Z"));
-            given(commentRepository.findByQuery(query)).willReturn(List.of(first, second, extra));
+            given(commentRepository.findByQuery(query, null))
+                    .willReturn(List.of(first, second, extra));
             given(commentRepository.countByQuery(query)).willReturn(5L);
 
             PageResult<CommentResult> result = commentApplication.findByQuery(query);
@@ -695,7 +697,8 @@ class CommentApplicationTest {
                     .extracting(CommentResult::id)
                     .containsExactly(first.getId(), second.getId());
             assertThat(result.hasNext()).isTrue();
-            assertThat(result.nextCursor()).isEqualTo("2026-11-03T02:00:00Z");
+            // 다음 커서는 정렬 기준과 상관없이 마지막 댓글의 id
+            assertThat(result.nextCursor()).isEqualTo(second.getId().toString());
             assertThat(result.nextAfter()).isEqualTo(Instant.parse("2026-11-03T02:00:00Z"));
             assertThat(result.size()).isEqualTo(2);
             assertThat(result.totalElements()).isEqualTo(5L);
@@ -706,7 +709,7 @@ class CommentApplicationTest {
         void lastPage() {
             givenConvertible();
             Comment only = comment(Instant.parse("2026-11-03T03:00:00Z"));
-            given(commentRepository.findByQuery(query)).willReturn(List.of(only));
+            given(commentRepository.findByQuery(query, null)).willReturn(List.of(only));
             given(commentRepository.countByQuery(query)).willReturn(1L);
 
             PageResult<CommentResult> result = commentApplication.findByQuery(query);
@@ -726,7 +729,8 @@ class CommentApplicationTest {
             Comment liked = comment(Instant.parse("2026-11-03T03:00:00Z"));
             Comment notLiked = comment(Instant.parse("2026-11-03T02:00:00Z"));
             Comment extra = comment(Instant.parse("2026-11-03T01:00:00Z"));
-            given(commentRepository.findByQuery(query)).willReturn(List.of(liked, notLiked, extra));
+            given(commentRepository.findByQuery(query, null))
+                    .willReturn(List.of(liked, notLiked, extra));
             given(commentRepository.countByQuery(query)).willReturn(3L);
             given(commentLikeRepository.findLikedCommentIds(eq(requesterId), any()))
                     .willReturn(Set.of(liked.getId()));
@@ -747,7 +751,7 @@ class CommentApplicationTest {
         @Test
         @DisplayName("댓글이 없으면 빈 페이지를 돌려준다")
         void empty() {
-            given(commentRepository.findByQuery(query)).willReturn(List.of());
+            given(commentRepository.findByQuery(query, null)).willReturn(List.of());
             given(commentRepository.countByQuery(query)).willReturn(0L);
 
             PageResult<CommentResult> result = commentApplication.findByQuery(query);
@@ -755,6 +759,71 @@ class CommentApplicationTest {
             assertThat(result.content()).isEmpty();
             assertThat(result.hasNext()).isFalse();
             assertThat(result.totalElements()).isZero();
+        }
+
+        private CommentQuery nextPageQuery(String cursor, Instant after) {
+            return new CommentQuery(
+                    articleId,
+                    CommentQuery.SortOrder.CREATED_AT,
+                    SortDirection.DESC,
+                    cursor,
+                    after,
+                    2);
+        }
+
+        @Test
+        @DisplayName("다음 페이지면 커서 id의 댓글을 찾아 저장소에 넘기고, 논리 삭제된 댓글도 커서로 쓴다")
+        void withCursorComment() {
+            Comment cursorComment = comment(Instant.parse("2026-11-03T03:00:00Z"));
+            ReflectionTestUtils.setField(cursorComment, "deletedAt", Instant.now());
+            CommentQuery next =
+                    nextPageQuery(cursorComment.getId().toString(), cursorComment.getCreatedAt());
+            given(commentRepository.findById(cursorComment.getId()))
+                    .willReturn(Optional.of(cursorComment));
+            given(commentRepository.findByQuery(next, cursorComment)).willReturn(List.of());
+            given(commentRepository.countByQuery(next)).willReturn(0L);
+
+            commentApplication.findByQuery(next);
+
+            verify(commentRepository).findByQuery(next, cursorComment);
+        }
+
+        @Test
+        @DisplayName("커서 댓글이 물리 삭제돼 없으면 COMMENT_NOT_FOUND 예외가 나고 목록을 조회하지 않는다")
+        void cursorCommentNotFound() {
+            UUID missingId = UUID.randomUUID();
+            CommentQuery next = nextPageQuery(missingId.toString(), Instant.now());
+            given(commentRepository.findById(missingId)).willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> commentApplication.findByQuery(next))
+                    .isInstanceOf(MonewException.class)
+                    .extracting("errorType")
+                    .isEqualTo(CommentErrorType.COMMENT_NOT_FOUND);
+            verify(commentRepository, never()).findByQuery(any(), any());
+        }
+
+        @Test
+        @DisplayName("커서가 UUID 모양이 아니면 INVALID_REQUEST 예외가 나고 DB를 조회하지 않는다")
+        void invalidCursor() {
+            CommentQuery next = nextPageQuery("abc", Instant.now());
+
+            assertThatThrownBy(() -> commentApplication.findByQuery(next))
+                    .isInstanceOf(MonewException.class)
+                    .extracting("errorType")
+                    .isEqualTo(CommonErrorType.INVALID_REQUEST);
+            verifyNoInteractions(commentRepository);
+        }
+
+        @Test
+        @DisplayName("커서와 after 중 하나만 주면 예외가 나고 DB를 조회하지 않는다")
+        void cursorWithoutAfter() {
+            CommentQuery next = nextPageQuery(UUID.randomUUID().toString(), null);
+
+            assertThatThrownBy(() -> commentApplication.findByQuery(next))
+                    .isInstanceOf(MonewException.class)
+                    .extracting("errorType")
+                    .isEqualTo(CommonErrorType.PAGINATION_NOT_BOTH_CURSOR_AND_AFTER);
+            verifyNoInteractions(commentRepository);
         }
     }
 }
