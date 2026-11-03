@@ -44,7 +44,7 @@ public class S3ArticleBackupStorageAdapter implements ArticleBackupStoragePort {
                         .bucket(properties.getBucket())
                         .key(key)
                         .contentType(CONTENT_TYPE)
-                        .ifNoneMatch("*")
+                        .ifNoneMatch("*") // 같은 이름으로 등록된 파일 있으면 업로드 안되게
                         .build();
 
         try {

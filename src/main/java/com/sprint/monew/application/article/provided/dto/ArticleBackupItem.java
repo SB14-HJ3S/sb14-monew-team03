@@ -1,6 +1,5 @@
 package com.sprint.monew.application.article.provided.dto;
 
-import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.global.type.ArticleSourceType;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -16,15 +15,16 @@ public record ArticleBackupItem(
         LocalDateTime publishedAt,
         Instant createdAt, // TODO: LocalDateTime? Instant?
         List<UUID> interestIds) {
-    public static ArticleBackupItem from(Article article, List<UUID> interestIds) {
+
+    public static ArticleBackupItem from(ArticleResult article, List<UUID> interestIds) {
         return new ArticleBackupItem(
-                article.getId(),
-                article.getSource(),
-                article.getSourceUrl(),
-                article.getTitle(),
-                article.getSummary(),
-                article.getPublishedAt(),
-                article.getCreatedAt(),
+                article.id(),
+                article.source(),
+                article.sourceUrl(),
+                article.title(),
+                article.summary(),
+                article.publishedAt(),
+                article.createdAt(),
                 List.copyOf(interestIds));
     }
 }

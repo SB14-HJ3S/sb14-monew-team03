@@ -13,7 +13,7 @@ public class ArticleBackupStorageServiceImpl implements ArticleBackupStorageServ
     private final ArticleBackupStoragePort articleBackupStoragePort;
 
     @Override
-    public ArticleBackupResult save(String runId, long partNumber, ArticleBackupFile backupFile) {
+    public ArticleBackupResult save(long partNumber, ArticleBackupFile backupFile) {
         return articleBackupStoragePort.save(partNumber, backupFile);
     }
 }

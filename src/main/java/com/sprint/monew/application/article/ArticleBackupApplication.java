@@ -5,7 +5,6 @@ import com.sprint.monew.application.article.provided.dto.ArticleBackupFile;
 import com.sprint.monew.application.article.provided.dto.ArticleBackupItem;
 import com.sprint.monew.application.article.provided.dto.ArticleBackupResult;
 import com.sprint.monew.application.article.provided.dto.ArticleResult;
-import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.global.annotation.ApplicationService;
 import java.time.LocalDate;
 import java.util.List;
@@ -30,9 +29,11 @@ public class ArticleBackupApplication implements ArticleBackupUseCase {
 
     @Override
     public ArticleBackupResult backupChunk(
-            LocalDate date, String runId, long partNumber, List<Article> articles) {
-        List<UUID> articleIds = articles.stream().map(Article::getId).toList();
+            LocalDate date, long partNumber, List<ArticleResult> articles) {
+        List<UUID> articleIds = articles.stream().map(ArticleResult::id).toList();
 
+        // 모든 기사ID에 대해 각 기사에 연결된 관심사ID들을 List로 받아온다
+        // {기사ID : [관심사1ID, 관심사2ID...]}
         Map<UUID, List<UUID>> interestIdsByArticleId =
                 articleInterestService.findInterestIdsByArticleIds(articleIds);
 
@@ -43,11 +44,11 @@ public class ArticleBackupApplication implements ArticleBackupUseCase {
                                         ArticleBackupItem.from(
                                                 article,
                                                 interestIdsByArticleId.getOrDefault(
-                                                        article.getId(), List.of())))
+                                                        article.id(), List.of())))
                         .toList();
 
         ArticleBackupFile file = ArticleBackupFile.of(date, items);
 
-        return articleBackupStorageService.save(runId, partNumber, file);
+        return articleBackupStorageService.save(partNumber, file);
     }
 }

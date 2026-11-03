@@ -2,7 +2,7 @@ package com.sprint.monew.adapter.in.controller.article;
 
 import com.sprint.monew.application.article.provided.ArticleBackupUseCase;
 import com.sprint.monew.application.article.provided.dto.ArticleBackupResult;
-import com.sprint.monew.domain.article.entity.Article;
+import com.sprint.monew.application.article.provided.dto.ArticleResult;
 import com.sprint.monew.global.annotation.RestWebAdapter;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -38,7 +38,7 @@ public class ArticleBackupManualController {
 
         while (true) {
             // 1. 이전에 읽은 기사 다음부터 조회
-            List<Article> articles = articleBackupUseCase.readArticles(date, afterId, limit);
+            List<ArticleResult> articles = articleBackupUseCase.readArticles(date, afterId, limit);
 
             // 2. 더 이상 없으면 종료
             if (articles.isEmpty()) {
@@ -47,12 +47,12 @@ public class ArticleBackupManualController {
 
             // 3. JSON 변환 → GZIP 압축 → S3 저장
             ArticleBackupResult result =
-                    articleBackupUseCase.backupChunk(date, "manual", partNumber, articles);
+                    articleBackupUseCase.backupChunk(date, partNumber, articles);
 
             results.add(result);
 
             // 4. 저장 성공 후 책갈피와 파일 번호 갱신
-            afterId = articles.get(articles.size() - 1).getId();
+            afterId = articles.get(articles.size() - 1).id();
             partNumber++;
         }
 
