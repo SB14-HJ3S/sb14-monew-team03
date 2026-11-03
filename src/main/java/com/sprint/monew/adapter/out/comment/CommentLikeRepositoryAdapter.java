@@ -87,6 +87,6 @@ public class CommentLikeRepositoryAdapter implements CommentLikeRepositoryPort {
         if (commentIds.isEmpty()) {
             return Set.of();
         }
-        return Set.copyOf(jpaRepository.findLikedCommentIds(userId, commentIds));
+        return jpaRepository.findLikedCommentIds(userId, commentIds);
     }
 }

@@ -6,9 +6,6 @@ import com.sprint.monew.global.pagination.SortedPageQuery;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
 import lombok.AccessLevel;
@@ -29,15 +26,9 @@ public record CommentQuery(
             CommentQuery.SortOrder orderBy,
             SortDirection direction,
             String cursor,
-            LocalDateTime after,
+            Instant after,
             int limit) {
-        return new CommentQuery(
-                articleId,
-                orderBy,
-                direction,
-                cursor,
-                Objects.nonNull(after) ? after.atZone(ZoneId.systemDefault()).toInstant() : null,
-                limit);
+        return new CommentQuery(articleId, orderBy, direction, cursor, after, limit);
     }
 
     @Getter

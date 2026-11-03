@@ -26,8 +26,6 @@ import com.sprint.monew.global.exception.errortype.CommentErrorType;
 import com.sprint.monew.global.pagination.PageResult;
 import com.sprint.monew.global.pagination.SortDirection;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -486,7 +484,7 @@ class CommentControllerTest {
                                     .param("orderBy", "createdAt")
                                     .param("direction", "ASC")
                                     .param("cursor", "2026-11-03T02:00:00Z")
-                                    .param("after", "2026-11-03T11:00:00")
+                                    .param("after", "2026-11-03T02:00:00Z")
                                     .param("limit", "10"))
                     .andExpect(status().isOk());
 
@@ -494,11 +492,8 @@ class CommentControllerTest {
             assertThat(query.orderBy()).isEqualTo(CommentQuery.SortOrder.CREATED_AT);
             assertThat(query.direction()).isEqualTo(SortDirection.ASC);
             assertThat(query.cursor()).isEqualTo("2026-11-03T02:00:00Z");
-            assertThat(query.after())
-                    .isEqualTo(
-                            LocalDateTime.parse("2026-11-03T11:00:00")
-                                    .atZone(ZoneId.systemDefault())
-                                    .toInstant());
+            // 응답의 nextAfter(UTC, Z 붙음)를 그대로 돌려받아도 시각이 밀리지 않아야 함
+            assertThat(query.after()).isEqualTo(Instant.parse("2026-11-03T02:00:00Z"));
         }
 
         @Test

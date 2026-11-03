@@ -2,8 +2,8 @@ package com.sprint.monew.adapter.out.comment;
 
 import com.sprint.monew.domain.comment.entity.CommentLike;
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -25,6 +25,6 @@ public interface CommentLikeJpaRepository extends JpaRepository<CommentLike, UUI
     @Query(
             "SELECT cl.comment.id FROM CommentLike cl"
                     + " WHERE cl.user.id = :userId AND cl.comment.id IN :commentIds")
-    List<UUID> findLikedCommentIds(
+    Set<UUID> findLikedCommentIds(
             @Param("userId") UUID userId, @Param("commentIds") Collection<UUID> commentIds);
 }
