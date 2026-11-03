@@ -72,7 +72,7 @@ public class ArticleCollectProcessor
                     throw e;
                 }
                 increaseFetchFailCount(ArticleSourceType.NAVER);
-                log.warn("네이버 수집 실패. keyword={}", keyword);
+                log.warn("네이버 수집 실패. keyword={}", keyword, e);
             }
         }
 
