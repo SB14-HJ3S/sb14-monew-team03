@@ -83,6 +83,10 @@ public class CommentLikeRepositoryAdapter implements CommentLikeRepositoryPort {
 
     @Override
     public Set<UUID> findLikedCommentIds(UUID userId, Collection<UUID> commentIds) {
-        return Set.of();
+        // 빈 페이지면 IN () 쿼리를 안 보냄
+        if (commentIds.isEmpty()) {
+            return Set.of();
+        }
+        return Set.copyOf(jpaRepository.findLikedCommentIds(userId, commentIds));
     }
 }
