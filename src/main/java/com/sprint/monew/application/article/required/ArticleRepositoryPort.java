@@ -2,6 +2,7 @@ package com.sprint.monew.application.article.required;
 
 import com.sprint.monew.application.article.provided.dto.ArticleQuery;
 import com.sprint.monew.domain.article.entity.Article;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -31,4 +32,6 @@ public interface ArticleRepositoryPort {
 
     // 동시에 댓글이 지워져도 숫자가 사라지지 않게 DB에서 -1
     int decreaseCommentCount(UUID articleId);
+
+    List<Article> findBackupChunk(Instant from, Instant to, UUID afterId, int limit);
 }

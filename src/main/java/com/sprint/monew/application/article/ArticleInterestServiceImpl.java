@@ -4,6 +4,11 @@ import com.sprint.monew.application.article.required.ArticleInterestRepositoryPo
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.article.entity.ArticleInterest;
 import com.sprint.monew.domain.interest.entity.Interest;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,5 +31,30 @@ public class ArticleInterestServiceImpl implements ArticleInterestService {
     @Override
     public void deleteAllByInterestId(UUID interestId) {
         repository.deleteAllByInterestId(interestId);
+    }
+
+    @Override
+    public Map<UUID, List<UUID>> findInterestIdsByArticleIds(List<UUID> articleIds) {
+        if (articleIds.isEmpty()) {
+            return Map.of();
+        }
+
+        Map<UUID, List<UUID>> result = new HashMap<>();
+        List<ArticleInterest> connections = repository.findAllByArticleIds(articleIds);
+
+        for (ArticleInterest connection : connections) {
+            UUID articleId = connection.getArticle().getId();
+            UUID interestId = connection.getInterest().getId();
+
+            List<UUID> interestIds = result.get(articleId);
+            if (Objects.isNull(interestIds)) {
+                interestIds = new ArrayList<>();
+                result.put(articleId, interestIds);
+            }
+
+            interestIds.add(interestId);
+        }
+
+        return result;
     }
 }

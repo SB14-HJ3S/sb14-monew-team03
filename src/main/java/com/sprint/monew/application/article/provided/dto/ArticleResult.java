@@ -2,6 +2,7 @@ package com.sprint.monew.application.article.provided.dto;
 
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.global.type.ArticleSourceType;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -11,6 +12,7 @@ public record ArticleResult(
         String sourceUrl,
         String title,
         LocalDateTime publishedAt,
+        Instant createdAt,
         String summary,
         long commentCount,
         long viewCount,
@@ -24,6 +26,7 @@ public record ArticleResult(
                 article.getSourceUrl(),
                 article.getTitle(),
                 article.getPublishedAt(),
+                article.getCreatedAt(),
                 article.getSummary(),
                 article.getCommentCount(),
                 article.getViewCount(),

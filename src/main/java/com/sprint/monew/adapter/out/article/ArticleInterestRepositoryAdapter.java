@@ -2,6 +2,7 @@ package com.sprint.monew.adapter.out.article;
 
 import com.sprint.monew.application.article.required.ArticleInterestRepositoryPort;
 import com.sprint.monew.domain.article.entity.ArticleInterest;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,11 @@ public class ArticleInterestRepositoryAdapter implements ArticleInterestReposito
     @Override
     public void deleteAllByInterestId(UUID interestId) {
         repository.deleteAllByInterestId(interestId);
+    }
+
+    @Override
+    public List<ArticleInterest> findAllByArticleIds(List<UUID> articleIds) {
+        return repository.findAllByArticleIdIn(articleIds);
     }
 
     @Override
