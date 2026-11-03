@@ -1,4 +1,4 @@
-package com.sprint.monew.adapter.out.article;
+package com.sprint.monew.global.util.backup;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

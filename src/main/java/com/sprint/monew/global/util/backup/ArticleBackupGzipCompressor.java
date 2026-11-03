@@ -1,4 +1,4 @@
-package com.sprint.monew.adapter.out.article;
+package com.sprint.monew.global.util.backup;
 
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.ArticleErrorType;
