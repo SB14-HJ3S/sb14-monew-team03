@@ -83,4 +83,8 @@ public class ArticleServiceImpl implements ArticleService {
     public void decreaseCommentCount(UUID articleId) {
         repository.decreaseCommentCount(articleId);
     }
+
+    @Override
+    @Transactional
+    public void decreaseCommentCountsByUserIds(List<UUID> userIds) {}
 }

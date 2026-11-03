@@ -59,4 +59,9 @@ public class CommentRepositoryAdapter implements CommentRepositoryPort {
     public List<UUID> findIdsByArticleId(UUID articleId) {
         return jpaRepository.findIdsByArticleId(articleId);
     }
+
+    @Override
+    public int decreaseLikeCountsByUserIds(List<UUID> userIds) {
+        return 0;
+    }
 }

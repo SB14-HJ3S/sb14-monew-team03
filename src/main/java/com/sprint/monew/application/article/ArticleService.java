@@ -23,4 +23,7 @@ public interface ArticleService {
     void increaseCommentCount(UUID articleId);
 
     void decreaseCommentCount(UUID articleId);
+
+    // 사용자 완전 삭제 전에, 탈퇴자가 쓴 댓글 수만큼 기사마다 댓글 수를 줄임
+    void decreaseCommentCountsByUserIds(List<UUID> userIds);
 }
