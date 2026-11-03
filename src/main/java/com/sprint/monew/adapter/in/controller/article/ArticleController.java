@@ -9,6 +9,9 @@ import com.sprint.monew.global.annotation.RestWebAdapter;
 import com.sprint.monew.global.pagination.PageResult;
 import com.sprint.monew.global.pagination.SortDirection;
 import com.sprint.monew.global.type.ArticleSourceType;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Min;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -20,12 +23,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
+@Tag(name = "뉴스 기사 관리", description = "뉴스 기사 관련 API")
 @RestWebAdapter(path = "/api/articles")
 @RequiredArgsConstructor
 public class ArticleController {
 
     private final ArticleUseCase articleUseCase;
 
+    @Operation(summary = "출처 목록 조회", description = "출처 목록을 조회합니다.")
+    @ApiResponse(responseCode = "200", description = "조회 성공")
     @GetMapping("/sources")
     public List<ArticleSourceType> findSourceTypes() {
         return articleUseCase.findSourceTypes();
