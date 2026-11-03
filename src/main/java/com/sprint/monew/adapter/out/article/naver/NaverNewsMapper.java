@@ -17,7 +17,11 @@ import org.springframework.stereotype.Component;
 public class NaverNewsMapper {
 
     public CollectedArticle toCollectedArticle(NaverNewsResponse.ArticleItem articleItem) {
-        String sourceUrl = articleItem.originallink();
+
+        String sourceUrl =
+                articleItem.originallink().isEmpty()
+                        ? articleItem.link()
+                        : articleItem.originallink();
 
         if (Objects.isNull(sourceUrl) || sourceUrl.isBlank()) {
             sourceUrl = articleItem.link();
