@@ -102,6 +102,18 @@ public class UserService implements IUserService {
         return repository.findDeletedUserIdsBefore(threshold);
     }
 
+    @Override
+    @Transactional
+    public int hardDeleteUsers(List<UUID> userIds) {
+        List<UUID> targetIds =
+                repository.findDeletedUsersForUpdate(userIds).stream().map(User::getId).toList();
+        if (targetIds.isEmpty()) {
+            return 0;
+        }
+        userEventPublisher.publish(new UserHardDeletingEvent(targetIds));
+        return repository.deleteUsers(targetIds);
+    }
+
     private User getDeactivatedUser(UUID userId) {
         return repository
                 .findUserIncludingDeleted(userId)

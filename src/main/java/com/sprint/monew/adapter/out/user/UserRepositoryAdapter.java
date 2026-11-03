@@ -69,4 +69,14 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
     public List<UUID> findDeletedUserIdsBefore(Instant threshold) {
         return jpaRepository.findIdsByDeletedAtBefore(threshold);
     }
+
+    @Override
+    public List<User> findDeletedUsersForUpdate(List<UUID> ids) {
+        return jpaRepository.findDeletedByIdInForUpdate(ids);
+    }
+
+    @Override
+    public int deleteUsers(List<UUID> ids) {
+        return jpaRepository.deleteByIdIn(ids);
+    }
 }
