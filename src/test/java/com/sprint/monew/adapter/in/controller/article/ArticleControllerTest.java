@@ -2,9 +2,11 @@ package com.sprint.monew.adapter.in.controller.article;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -12,6 +14,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.sprint.monew.application.article.provided.ArticleUseCase;
 import com.sprint.monew.application.article.provided.dto.ArticleQuery;
 import com.sprint.monew.application.article.provided.dto.ArticleResult;
+import com.sprint.monew.global.exception.MonewException;
+import com.sprint.monew.global.exception.errortype.ArticleErrorType;
 import com.sprint.monew.global.pagination.PageResult;
 import com.sprint.monew.global.pagination.SortDirection;
 import com.sprint.monew.global.type.ArticleSourceType;
@@ -214,6 +218,42 @@ class ArticleControllerTest {
                     .andExpect(jsonPath("$.length()").value(2))
                     .andExpect(jsonPath("$[0]").value("NAVER"))
                     .andExpect(jsonPath("$[1]").value("CHOSUN"));
+        }
+    }
+
+    @Nested
+    @DisplayName("DELETE /api/articles/{articleId} 뉴스 기사 논리 삭제")
+    class SoftDeleteArticle {
+
+        private final UUID articleId = UUID.randomUUID();
+
+        @Test
+        @DisplayName("뉴스 기사를 논리 삭제하면 204를 응답한다")
+        void givenArticle_whenSoftDelete_thenNoContent() throws Exception {
+            mockMvc.perform(delete("/api/articles/{articleId}", articleId))
+                    .andExpect(status().isNoContent());
+            verify(articleUseCase).softDeleteArticle(articleId);
+        }
+
+        @Test
+        @DisplayName("없거나 이미 삭제된 뉴스 기사를 논리 삭제하면 404와 ARTICLE_NOT_FOUND를 응답한다")
+        void givenNoArticle_whenSoftDelete_thenNotFound() throws Exception {
+            willThrow(new MonewException(ArticleErrorType.ARTICLE_NOT_FOUND))
+                    .given(articleUseCase)
+                    .softDeleteArticle(articleId);
+
+            mockMvc.perform(delete("/api/articles/{articleId}", articleId))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.code").value("ARTICLE_NOT_FOUND"));
+        }
+
+        @Test
+        @DisplayName("뉴스 기사 ID가 UUID 형식이 아니면 400을 응답하고 유스케이스를 부르지 않는다")
+        void givenInvalidArticleId_whenSoftDelete_thenBadRequest() throws Exception {
+            mockMvc.perform(delete("/api/articles/{articleId}", "invalid-id"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+            verifyNoInteractions(articleUseCase);
         }
     }
 }
