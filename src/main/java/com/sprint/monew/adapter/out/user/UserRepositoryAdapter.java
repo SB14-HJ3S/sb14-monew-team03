@@ -2,6 +2,7 @@ package com.sprint.monew.adapter.out.user;
 
 import com.sprint.monew.application.user.required.UserRepositoryPort;
 import com.sprint.monew.domain.user.entity.User;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -62,5 +63,20 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
     @Override
     public Optional<User> findUserIncludingDeletedForUpdate(UUID id) {
         return jpaRepository.findByIdForUpdate(id);
+    }
+
+    @Override
+    public List<UUID> findDeletedUserIdsBefore(Instant threshold) {
+        return jpaRepository.findIdsByDeletedAtBefore(threshold);
+    }
+
+    @Override
+    public List<User> findDeletedUsersForUpdate(List<UUID> ids) {
+        return jpaRepository.findDeletedByIdInForUpdate(ids);
+    }
+
+    @Override
+    public int deleteUsers(List<UUID> ids) {
+        return jpaRepository.deleteByIdIn(ids);
     }
 }
