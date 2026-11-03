@@ -1,6 +1,7 @@
 package com.sprint.monew.application.user;
 
 import com.sprint.monew.domain.user.entity.User;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,4 +21,8 @@ public interface IUserService {
     void hardDeleteUser(UUID userId);
 
     void validateDeactivatedUser(UUID userId);
+
+    List<UUID> findCleanupTargetIds(Instant threshold);
+
+    int hardDeleteUsers(List<UUID> userIds);
 }

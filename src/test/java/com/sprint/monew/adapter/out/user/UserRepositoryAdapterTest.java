@@ -13,12 +13,15 @@ import com.sprint.monew.global.type.ResourceType;
 import com.sprint.monew.support.IntegrationTest;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 @IntegrationTest
@@ -209,5 +212,23 @@ class UserRepositoryAdapterTest {
                         "기사 요약");
         entityManager.persist(article);
         return article;
+    }
+
+    @Test
+    @DisplayName("기준 시각 이전에 탈퇴한 사용자 id만 찾는다 — 최근 탈퇴자·정상 사용자는 빠진다")
+    void givenMixedUsers_whenFindDeletedUserIdsBefore_thenOnlyOldDeletedUserIds() {
+        Instant now = Instant.now();
+        User oldDeleted = userRepository.save(User.create("old@monew.com", "오래전탈퇴", "password1!"));
+        ReflectionTestUtils.setField(oldDeleted, "deletedAt", now.minus(Duration.ofDays(2)));
+        User recentDeleted =
+                userRepository.save(User.create("recent@monew.com", "최근탈퇴", "password1!"));
+        ReflectionTestUtils.setField(recentDeleted, "deletedAt", now.minus(Duration.ofHours(1)));
+        userRepository.save(User.create("stay@monew.com", "정상", "password1!"));
+        entityManager.flush();
+        entityManager.clear();
+
+        List<UUID> result = userRepository.findDeletedUserIdsBefore(now.minus(Duration.ofDays(1)));
+
+        assertThat(result).containsExactly(oldDeleted.getId());
     }
 }
