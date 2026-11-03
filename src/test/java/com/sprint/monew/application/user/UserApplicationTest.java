@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -76,19 +77,25 @@ class UserApplicationTest {
     }
 
     @Test
-    @DisplayName("한 묶음을 지우다 실패해도 다음 묶음은 지우고, 지운 수만 돌려준다")
-    void givenOneChunkFails_whenCleanupDeletedUsers_thenNextChunkStillDeleted() {
-        List<UUID> targets = Stream.generate(UUID::randomUUID).limit(101).toList();
+    @DisplayName("묶음 삭제가 실패하면 그 묶음을 한 명씩 다시 지우고, 실패한 사람만 빼고 센다")
+    void givenChunkFails_whenCleanupDeletedUsers_thenRetryOneByOne() {
+        UUID first = UUID.randomUUID();
+        UUID failing = UUID.randomUUID();
+        UUID third = UUID.randomUUID();
+        List<UUID> targets = List.of(first, failing, third);
         given(userService.findCleanupTargetIds(any())).willReturn(targets);
-        given(userService.hardDeleteUsers(targets.subList(100, 101))).willReturn(1);
-        willThrow(new IllegalStateException("DB 오류"))
-                .given(userService)
-                .hardDeleteUsers(targets.subList(0, 100));
+        willThrow(new IllegalStateException("DB 오류")).given(userService).hardDeleteUsers(targets);
+        lenient()
+                .doThrow(new IllegalStateException("DB 오류"))
+                .when(userService)
+                .hardDeleteUser(failing);
 
         int deleted = userApplication.cleanupDeletedUsers();
 
-        verify(userService).hardDeleteUsers(targets.subList(100, 101));
-        assertThat(deleted).isEqualTo(1);
+        verify(userService).hardDeleteUser(first);
+        verify(userService).hardDeleteUser(failing);
+        verify(userService).hardDeleteUser(third);
+        assertThat(deleted).isEqualTo(2);
     }
 
     @Test

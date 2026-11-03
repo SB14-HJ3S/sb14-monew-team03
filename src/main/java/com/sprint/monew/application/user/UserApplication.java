@@ -4,6 +4,8 @@ import com.sprint.monew.application.user.provided.UserUseCase;
 import com.sprint.monew.application.user.provided.dto.UserResult;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.annotation.ApplicationService;
+import com.sprint.monew.global.exception.MonewException;
+import com.sprint.monew.global.exception.errortype.UserErrorType;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -75,8 +77,35 @@ public class UserApplication implements UserUseCase {
         try {
             return userService.hardDeleteUsers(userIds);
         } catch (RuntimeException e) {
-            log.error("사용자 완전 삭제 실패, 다음 실행 때 다시 시도: {}명, userIds={}", userIds.size(), userIds, e);
-            return 0;
+            log.warn("사용자 묶음 완전 삭제 실패, 한 명씩 다시 시도: {}명", userIds.size(), e);
+            int deleted = 0;
+            for (UUID userId : userIds) {
+                if (cleanupUser(userId)) {
+                    deleted++;
+                }
+            }
+            return deleted;
+        }
+    }
+
+    private boolean cleanupUser(UUID userId) {
+        try {
+            userService.hardDeleteUser(userId);
+            return true;
+        } catch (MonewException e) {
+            if (e.getErrorType() == UserErrorType.USER_NOT_FOUND) {
+                log.warn("이미 완전 삭제된 사용자라 건너뜀: userId={}", userId);
+            } else {
+                log.error(
+                        "사용자 완전 삭제 실패, 다음 실행 때 다시 시도: userId={}, errorType={}",
+                        userId,
+                        e.getErrorType(),
+                        e);
+            }
+            return false;
+        } catch (RuntimeException e) {
+            log.error("사용자 완전 삭제 실패, 다음 실행 때 다시 시도: userId={}", userId, e);
+            return false;
         }
     }
 }
