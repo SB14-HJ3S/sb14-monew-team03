@@ -17,6 +17,8 @@ import com.sprint.monew.global.annotation.ApplicationService;
 import com.sprint.monew.global.context.RequestIdContext;
 import com.sprint.monew.global.pagination.PageResult;
 import com.sprint.monew.global.type.ResourceType;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,7 +53,14 @@ public class CommentApplication implements CommentUseCase {
     @Override
     @Transactional(readOnly = true)
     public PageResult<CommentResult> findByQuery(CommentQuery query) {
-        return null;
+        UUID requestUserId = RequestIdContext.get();
+        PageResult<Comment> page = commentService.findPageByQuery(query);
+
+        // 잘라낸 뒤의 댓글로만 물어봄 (다음 페이지 확인용으로 더 가져온 1개는 뺌)
+        List<UUID> commentIds = page.content().stream().map(Comment::getId).toList();
+        Set<UUID> likedIds = commentService.findLikedCommentIds(requestUserId, commentIds);
+
+        return page.map(comment -> CommentResult.of(comment, likedIds.contains(comment.getId())));
     }
 
     @Override

@@ -114,12 +114,15 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public PageResult<Comment> findPageByQuery(CommentQuery query) {
-        return null;
+        // limit + 1개를 받아서 다음 페이지 여부·커서는 PageResult가 계산함
+        List<Comment> fetched = commentRepository.findByQuery(query);
+        long totalElements = commentRepository.countByQuery(query);
+        return PageResult.of(fetched, totalElements, query.orderBy(), query.limit());
     }
 
     @Override
     public Set<UUID> findLikedCommentIds(UUID userId, Collection<UUID> commentIds) {
-        return Set.of();
+        return commentLikeRepository.findLikedCommentIds(userId, commentIds);
     }
 
     @Override
