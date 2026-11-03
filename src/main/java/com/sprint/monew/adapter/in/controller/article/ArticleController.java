@@ -19,10 +19,12 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 @Tag(name = "뉴스 기사 관리", description = "뉴스 기사 관련 API")
 @RestWebAdapter(path = "/api/articles")
@@ -90,6 +92,9 @@ public class ArticleController {
                 result.hasNext());
     }
 
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{articleId}")
-    public void softDeleteArticle(@PathVariable UUID articleId) {}
+    public void softDeleteArticle(@PathVariable UUID articleId) {
+        articleUseCase.softDeleteArticle(articleId);
+    }
 }
