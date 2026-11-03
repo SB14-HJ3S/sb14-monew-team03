@@ -5,7 +5,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 public record CommentLikeItem(
-        UUID id,
+        UUID likeId,
         Instant createdAt,
         UUID commentId,
         UUID articleId,
@@ -16,9 +16,23 @@ public record CommentLikeItem(
         long commentLikeCount,
         Instant commentCreatedAt) {
 
+    public static CommentLikeItem from(CommentLikeActivityResult r) {
+        return new CommentLikeItem(
+                r.id(),
+                r.createdAt(),
+                r.commentId(),
+                r.articleId(),
+                r.articleTitle(),
+                r.commentUserId(),
+                r.commentUserNickname(),
+                r.commentContent(),
+                r.commentLikeCount(),
+                r.commentCreatedAt());
+    }
+
     public CommentLikeActivityResult toResult() {
         return new CommentLikeActivityResult(
-                id,
+                likeId,
                 createdAt,
                 commentId,
                 articleId,
