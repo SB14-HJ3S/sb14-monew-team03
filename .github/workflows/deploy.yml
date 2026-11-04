@@ -129,6 +129,7 @@ jobs:
           image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ needs.check-latest.outputs.sha }}
 
       - name: 배포 직전 재확인 (이미지 빌드하는 동안 더 최신 커밋이 먼저 배포됐을 수 있음)
+        id: recheck
         if: ${{ github.event_name == 'workflow_run' }} # workflow_dispatch(수동 배포)는 최신 커밋 검사 대상이 아님
         env:
           GH_TOKEN: ${{ github.token }}
@@ -145,12 +146,13 @@ jobs:
           }
           LATEST_SHA=$(gh api "repos/${{ github.repository }}/branches/develop" --jq .commit.sha)
           if [ "$TARGET_SHA" != "$LATEST_SHA" ] && ! only_docs_after "$TARGET_SHA" "$LATEST_SHA"; then
-            echo "::error::배포 대상($TARGET_SHA)이 더 이상 develop 최신 커밋($LATEST_SHA)이 아니라 배포를 중단합니다."
-            exit 1
+            echo "::notice::배포 대상(${TARGET_SHA:0:7})보다 최신 커밋(${LATEST_SHA:0:7})이 있어 그 배포에 양보합니다."
+            echo "superseded=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Deploy to ECS
         id: deploy
+        if: ${{ steps.recheck.outputs.superseded != 'true' }}
         uses: aws-actions/amazon-ecs-deploy-task-definition@a00d4d57ac0de1a99b39fe469f3d898d38717c2b # v2
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
@@ -197,11 +199,14 @@ jobs:
           TARGET_SHA: ${{ needs.check-latest.outputs.sha }}
           TASK_DEF_ARN: ${{ steps.deploy.outputs.task-definition-arn }}
           DEPLOY_OUTCOME: ${{ steps.deploy.outcome }}
+          SUPERSEDED: ${{ steps.recheck.outputs.superseded }}
         run: |
+          [ "$SUPERSEDED" = "true" ] && DEPLOY_OUTCOME=superseded
           case "$DEPLOY_OUTCOME" in
             success) RESULT="✅ 성공" ;;
             failure) RESULT="❌ 실패 (원인은 '배포 실패 원인 출력' 단계 로그)" ;;
             cancelled) RESULT="⏹️ 취소" ;;
+            superseded) RESULT="⏭️ 더 최신 커밋 배포에 양보함" ;;
             *) RESULT="⏭️ 배포 단계까지 가지 않음" ;;
           esac
           {
@@ -217,6 +222,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: 오래된 ECR 이미지 정리 (최신 2개만 보존)
+        if: ${{ steps.recheck.outputs.superseded != 'true' }}
         # 배포 성공(wait-for-service-stability) 이후에만 실행. 배포 전에 지우면, 배포가
         # 연속으로 실패했을 때 아직 운영 중인 이미지가 삭제되어 태스크 재시작 시 pull이 실패할 수 있음
         shell: bash   # pipefail 활성화: describe-images가 실패해도 조용히 넘어가지 않도록 함
