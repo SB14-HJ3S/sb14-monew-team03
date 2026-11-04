@@ -1,7 +1,9 @@
 package com.sprint.monew.adapter.in.controller.article.dto.response;
 
+import com.sprint.monew.application.article.provided.dto.ArticleViewStatusResult;
 import com.sprint.monew.global.type.ArticleSourceType;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.UUID;
 
 public record ArticleViewDto(
@@ -15,4 +17,19 @@ public record ArticleViewDto(
         Instant articlePublishedDate, // 날짜
         String articleSummary, // 요약
         Long articleCommentCount, // 댓글 수
-        Long articleViewCount) {} // 조회 수
+        Long articleViewCount) {
+    public static ArticleViewDto from(ArticleViewStatusResult result) {
+        return new ArticleViewDto(
+                result.id(),
+                result.viewedBy(),
+                result.createdAt(),
+                result.articleId(),
+                result.source(),
+                result.sourceUrl(),
+                result.articleTitle(),
+                result.articlePublishedDate().atZone(ZoneId.of("Asia/Seoul")).toInstant(),
+                result.articleSummary(),
+                result.articleCommentCount(),
+                result.articleViewCount());
+    }
+}

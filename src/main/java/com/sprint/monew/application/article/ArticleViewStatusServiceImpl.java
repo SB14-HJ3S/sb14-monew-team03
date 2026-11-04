@@ -2,9 +2,13 @@ package com.sprint.monew.application.article;
 
 import com.sprint.monew.application.article.required.ArticleViewStatusRepositoryPort;
 import com.sprint.monew.domain.article.entity.Article;
+import com.sprint.monew.domain.article.entity.ArticleViewStatus;
 import com.sprint.monew.domain.user.entity.User;
+import com.sprint.monew.global.exception.MonewException;
+import com.sprint.monew.global.exception.errortype.ArticleErrorType;
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -33,5 +37,17 @@ public class ArticleViewStatusServiceImpl implements ArticleViewStatusService {
             repository.updateLastViewedAt(user.getId(), article.getId(), viewedAt);
         }
         return inserted;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ArticleViewStatus findByUserIdAndArticleId(UUID userId, UUID articleId) {
+        return repository
+                .findByUserIdAndArticleId(userId, articleId)
+                .orElseThrow(
+                        () ->
+                                new MonewException(
+                                        ArticleErrorType.ARTICLE_VIEW_STATUS_NOT_FOUND,
+                                        Map.of("userId", userId, "articleId", articleId)));
     }
 }
