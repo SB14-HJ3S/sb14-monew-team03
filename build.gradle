@@ -93,6 +93,7 @@ dependencies {
   implementation 'org.springframework.boot:spring-boot-starter-actuator'  // /actuator/health 등 서버 상태 확인
   implementation 'io.micrometer:micrometer-registry-prometheus'
   // /actuator/prometheus로 Prometheus가 읽을 수 있는 지표 노출
+  implementation 'io.micrometer:micrometer-registry-cloudwatch2'
 
   // ── Swagger (API 문서 자동 생성) ─────────────────────
   implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.17'
