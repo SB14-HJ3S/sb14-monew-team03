@@ -14,6 +14,6 @@ public class InterestEventListener {
 
     @EventListener
     public void onUserDeleted(UserHardDeletingEvent event) {
-        event.userIds().forEach(cleaner::cleanupSubscriberCountBeforeUserHardDeletion);
+        cleaner.cleanupSubscriberCountBeforeUserHardDeletion(event.userIds());
     }
 }

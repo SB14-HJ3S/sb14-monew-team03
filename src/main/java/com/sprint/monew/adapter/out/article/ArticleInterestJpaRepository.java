@@ -1,6 +1,7 @@
 package com.sprint.monew.adapter.out.article;
 
 import com.sprint.monew.domain.article.entity.ArticleInterest;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,8 +13,10 @@ public interface ArticleInterestJpaRepository extends JpaRepository<ArticleInter
 
     @Query(
             """
-        delete from ArticleInterest a
-        where a.interest.id = :interestId""")
+            delete from ArticleInterest a
+            where a.interest.id = :interestId""")
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     void deleteAllByInterestId(UUID interestId);
+
+    List<ArticleInterest> findAllByArticleIdIn(List<UUID> articleIds);
 }

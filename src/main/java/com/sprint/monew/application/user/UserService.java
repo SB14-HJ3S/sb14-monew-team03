@@ -81,11 +81,6 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public void validateDeactivatedUser(UUID userId) {
-        getDeactivatedUser(userId);
-    }
-
-    @Override
     @Transactional
     public void hardDeleteUser(UUID userId) {
         User user =
@@ -112,13 +107,6 @@ public class UserService implements IUserService {
         }
         userEventPublisher.publish(new UserHardDeletingEvent(targetIds));
         return repository.deleteUsers(targetIds);
-    }
-
-    private User getDeactivatedUser(UUID userId) {
-        return repository
-                .findUserIncludingDeleted(userId)
-                .filter(User::isDeleted)
-                .orElseThrow(() -> userNotFound(userId));
     }
 
     private void removeCompletely(User user) {

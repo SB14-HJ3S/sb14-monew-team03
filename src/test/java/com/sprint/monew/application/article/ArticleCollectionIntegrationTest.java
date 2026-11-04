@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import com.sprint.monew.adapter.out.article.ArticleJpaRepository;
 import com.sprint.monew.adapter.out.interest.InterestJpaRepository;
+import com.sprint.monew.application.article.event.ArticlesSavedEvent;
 import com.sprint.monew.application.article.provided.ArticleCollectionUseCase;
 import com.sprint.monew.application.article.provided.dto.CollectedArticle;
 import com.sprint.monew.domain.interest.entity.Interest;
@@ -14,16 +15,20 @@ import java.util.*;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.event.ApplicationEvents;
+import org.springframework.test.context.event.RecordApplicationEvents;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @IntegrationTest
+@RecordApplicationEvents
 class ArticleCollectionIntegrationTest {
     @Autowired private ArticleCollectionUseCase collectionUseCase;
     @Autowired private ArticleJpaRepository articles;
     @Autowired private InterestJpaRepository interests;
     @Autowired private JdbcTemplate jdbc;
     @Autowired private PlatformTransactionManager transactionManager;
+    @Autowired private ApplicationEvents events;
     private final List<UUID> interestIds = new ArrayList<>();
     private final String url = "https://example.com/collection/" + UUID.randomUUID();
 
@@ -47,6 +52,10 @@ class ArticleCollectionIntegrationTest {
         assertThat(articles.findBySourceUrl(url)).isPresent();
         assertThat(linkCount(first)).isEqualTo(1);
         assertThat(linkCount(second)).isEqualTo(1);
+        assertThat(events.stream(ArticlesSavedEvent.class))
+                .containsExactly(
+                        new ArticlesSavedEvent(first.getId(), first.getName(), 1),
+                        new ArticlesSavedEvent(second.getId(), second.getName(), 1));
     }
 
     @Test

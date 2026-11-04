@@ -17,7 +17,7 @@ public record InterestQuery(
         String cursor,
         Instant after,
         @NotNull int limit)
-        implements SortedPageQuery<Interest, InterestQuery.SortOrder> {
+        implements SortedPageQuery<Interest> {
     public static InterestQuery of(
             String keyword,
             InterestQuery.SortOrder orderBy,
@@ -38,8 +38,8 @@ public record InterestQuery(
         String value;
 
         @Override
-        public String cursorToString(Interest cursor) {
-            return cursor.getId().toString();
+        public String extractNextCursorFromLastEntity(Interest lastEntity) {
+            return lastEntity.getId().toString();
         }
     }
 }

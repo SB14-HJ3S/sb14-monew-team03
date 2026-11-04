@@ -29,4 +29,7 @@ public interface CommentRepositoryPort {
 
     // 기사 물리 삭제 때 같이 지워질 댓글 찾기용. 논리 삭제된 댓글도 포함한다
     List<UUID> findIdsByArticleId(UUID articleId);
+
+    // 사용자 완전 삭제 전에, 탈퇴자가 누른 좋아요 수만큼 댓글마다 한 번에 줄임. 바뀐 댓글 수를 돌려줌
+    int decreaseLikeCountsByUserIds(List<UUID> userIds);
 }
