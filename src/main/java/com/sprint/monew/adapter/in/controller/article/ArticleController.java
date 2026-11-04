@@ -115,6 +115,9 @@ public class ArticleController {
         return ArticleViewDto.from(articleUseCase.register(articleId));
     }
 
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{articleId}/hard")
-    public void hardDeleteArticle(@PathVariable UUID articleId) {}
+    public void hardDeleteArticle(@PathVariable UUID articleId) {
+        articleUseCase.hardDeleteArticle(articleId);
+    }
 }
