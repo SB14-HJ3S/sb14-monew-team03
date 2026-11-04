@@ -1,10 +1,12 @@
 package com.sprint.monew.adapter.out.article;
 
 import com.sprint.monew.domain.article.entity.Article;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -27,6 +29,22 @@ public interface ArticleJpaRepository extends JpaRepository<Article, UUID>, Arti
             "UPDATE Article a SET a.commentCount = a.commentCount - 1"
                     + " WHERE a.id = :id AND a.commentCount > 0")
     int decreaseCommentCount(@Param("id") UUID id);
+
+    @Query(
+            """
+            SELECT a
+            FROM Article a
+            WHERE a.deletedAt IS NULL
+              AND a.createdAt >= :from
+              AND a.createdAt < :to
+              AND (:afterId IS NULL OR a.id > :afterId)
+            ORDER BY a.id ASC
+            """)
+    List<Article> findBackupChunk(
+            @Param("from") Instant from,
+            @Param("to") Instant to,
+            @Param("afterId") UUID afterId,
+            Pageable pageable);
 
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("UPDATE Article a SET a.viewCount = a.viewCount + 1 WHERE a.id = :id")

@@ -20,8 +20,6 @@ public interface IUserService {
 
     void hardDeleteUser(UUID userId);
 
-    void validateDeactivatedUser(UUID userId);
-
     List<UUID> findCleanupTargetIds(Instant threshold);
 
     int hardDeleteUsers(List<UUID> userIds);

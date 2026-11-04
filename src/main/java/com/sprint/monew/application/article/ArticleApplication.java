@@ -68,7 +68,7 @@ public class ArticleApplication implements ArticleUseCase {
 
     @Override
     public List<ArticleSourceType> findSourceTypes() {
-        return List.of();
+        return List.of(ArticleSourceType.values());
     }
 
     @Override

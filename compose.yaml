@@ -34,6 +34,26 @@ services:
       timeout: 5s
       retries: 10
 
+  prometheus:
+    image: 'prom/prometheus:v3.15.0'
+    ports:
+      - '9090:9090'
+    volumes:
+      - './prometheus-local.yml:/etc/prometheus/prometheus.yml'
+
+  grafana:
+    image: 'grafana/grafana:13.2.3'
+    ports:
+      - '3000:3000'
+    environment:
+      PROMETHEUS_URL: 'http://prometheus:9090'
+    volumes:
+      - './monitoring/grafana/provisioning/datasources/prometheus.yml:/etc/grafana/provisioning/datasources/prometheus.yml:ro'
+      - './monitoring/grafana/provisioning/dashboards/monew.yml:/etc/grafana/provisioning/dashboards/monew.yml:ro'
+      - './monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro'
+    depends_on:
+      - prometheus
+
 # 이름 있는 볼륨: docker compose down 후 up 해도 로컬 데이터가 남는다
 # DB를 완전히 새로 시작하려면 docker compose down -v
 volumes:

@@ -76,13 +76,8 @@ public class InterestRepositoryAdapter implements InterestRepository {
     }
 
     @Override
-    public int countByIdIn(List<UUID> interestId) {
-        return jpaRepository.countByIdIn((interestId));
-    }
-
-    @Override
-    public void decreaseSubscriberCountIn(List<UUID> interestIds) {
-        jpaRepository.decreaseSubscriberCountIn(interestIds);
+    public void decreaseSubscriberCountsByUserIds(List<UUID> userIds) {
+        jpaRepository.decreaseSubscriberCountsByUserIds(userIds);
     }
 
     @Override

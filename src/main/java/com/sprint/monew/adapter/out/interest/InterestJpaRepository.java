@@ -1,7 +1,6 @@
 package com.sprint.monew.adapter.out.interest;
 
 import com.sprint.monew.domain.interest.entity.Interest;
-import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -24,13 +23,28 @@ public interface InterestJpaRepository
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     void decreaseSubscriberCount(@Param("interestId") UUID interestId);
 
-    int countByIdIn(Collection<UUID> ids);
-
+    // 1. 삭제할 userId로 구독 count 감소할 interest를 찾는다.
+    // 2. interest를 구독한 user 수만큼 count를 감소시킨다.
     @Query(
-            "UPDATE Interest i SET i.subscriberCount = i.subscriberCount - 1"
-                    + " WHERE i.id in :interestIds AND i.subscriberCount > 0")
+            """
+            UPDATE Interest i
+            SET i.subscriberCount = greatest(
+                0L,
+                i.subscriberCount - (
+                    SELECT COUNT(s)
+                    FROM Subscription s
+                    WHERE s.interest.id = i.id
+                      AND s.user.id IN :userIds
+                )
+            )
+            WHERE i.id IN (
+                    SELECT s.interest.id
+                    FROM Subscription s
+                    WHERE s.user.id IN :userIds
+            )
+            """)
     @Modifying(flushAutomatically = true, clearAutomatically = true)
-    void decreaseSubscriberCountIn(List<UUID> interestIds);
+    void decreaseSubscriberCountsByUserIds(@Param("userIds") List<UUID> userIds);
 
     @Query(
             """

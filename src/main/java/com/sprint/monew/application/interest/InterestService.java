@@ -23,5 +23,5 @@ public interface InterestService {
 
     void decreaseSubscriberCount(UUID interestId);
 
-    void decreaseSubscriberCount(List<UUID> interestIds);
+    void decreaseSubscriberCountsByUserIds(List<UUID> userIds);
 }

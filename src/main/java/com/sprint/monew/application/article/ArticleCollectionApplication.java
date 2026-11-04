@@ -1,7 +1,9 @@
 package com.sprint.monew.application.article;
 
+import com.sprint.monew.application.article.event.ArticlesSavedEvent;
 import com.sprint.monew.application.article.provided.ArticleCollectionUseCase;
 import com.sprint.monew.application.article.provided.dto.CollectedArticle;
+import com.sprint.monew.application.article.required.ArticleEventPublisherPort;
 import com.sprint.monew.application.article.required.NaverNewsPort;
 import com.sprint.monew.application.article.required.RssNewsPort;
 import com.sprint.monew.application.interest.InterestService;
@@ -27,19 +29,14 @@ public class ArticleCollectionApplication implements ArticleCollectionUseCase {
     private final ArticleInterestService articleInterestService;
     private final NaverNewsPort naverNewsPort;
     private final RssNewsPort rssNewsPort;
+    private final ArticleEventPublisherPort eventPublisher;
 
     // Reader - 구독자가 1명 이상이고, 키워드를 1개 이상 가지고 있는 키워드 조회
     @Override
     @Transactional(readOnly = true)
     public List<InterestKeywordResult> findValidInterestKeywords() {
         return interestService.findSubscribedWithKeywords().stream()
-                .flatMap(
-                        interest ->
-                                interest.getKeywordNames().stream()
-                                        .map(
-                                                keyword ->
-                                                        new InterestKeywordResult(
-                                                                interest, keyword)))
+                .map(InterestKeywordResult::from)
                 .toList();
     }
 
@@ -61,7 +58,8 @@ public class ArticleCollectionApplication implements ArticleCollectionUseCase {
     @Transactional
     public int saveArticles(Interest interest, List<CollectedArticle> articles) {
 
-        int newArticleCount = 0;
+        int newCollectedArticleCount = 0; // 새로 수집된 기사 개수
+        int newLinkedArticleCount = 0; // 관심사에 새로 연결된 기사 개수
 
         for (CollectedArticle collected : articles) {
             Optional<Article> existing = articleService.findBySourceUrl(collected.sourceUrl());
@@ -76,13 +74,21 @@ public class ArticleCollectionApplication implements ArticleCollectionUseCase {
                 }
             } else {
                 article = articleService.save(collected.toArticle());
-                newArticleCount++;
+                newCollectedArticleCount++;
             }
 
-            articleInterestService.getOrCreateArticleInterest(article, interest);
+            if (articleInterestService.createIfAbsent(article, interest)) {
+                newLinkedArticleCount++;
+            }
         }
 
-        return newArticleCount;
+        if (newLinkedArticleCount > 0) {
+            eventPublisher.publish(
+                    new ArticlesSavedEvent(
+                            interest.getId(), interest.getName(), newLinkedArticleCount));
+        }
+
+        return newCollectedArticleCount;
     }
 
     // 기사 제목이나 요약에 관심사 키워드 중 하나라도 있으면 return true, else false

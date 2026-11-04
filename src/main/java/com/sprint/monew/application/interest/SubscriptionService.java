@@ -70,9 +70,4 @@ public class SubscriptionService implements ISubscriptionService {
                                                         interestId)));
         repository.delete(deleting);
     }
-
-    @Override
-    public List<UUID> findInterestIdsByUserId(UUID userId) {
-        return repository.findInterestIdsByUserId(userId);
-    }
 }

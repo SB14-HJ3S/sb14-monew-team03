@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -57,6 +58,7 @@ class ArticleControllerTest {
                         "https://example.com/news",
                         "경제 뉴스",
                         publishedAt,
+                        after,
                         "요약",
                         3L,
                         10L,
@@ -195,5 +197,23 @@ class ArticleControllerTest {
                 .param("orderBy", "commentCount")
                 .param("direction", "DESC")
                 .param("limit", "2");
+    }
+
+    @Nested
+    @DisplayName("GET /api/articles/sources 출처 목록 조회")
+    class FindSourceTypes {
+
+        @Test
+        @DisplayName("출처 목록을 조회하면 200과 출처 이름 목록을 응답한다")
+        void whenFindSourceTypes_thenOkWithSources() throws Exception {
+            when(articleUseCase.findSourceTypes())
+                    .thenReturn(List.of(ArticleSourceType.NAVER, ArticleSourceType.CHOSUN));
+
+            mockMvc.perform(get("/api/articles/sources"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.length()").value(2))
+                    .andExpect(jsonPath("$[0]").value("NAVER"))
+                    .andExpect(jsonPath("$[1]").value("CHOSUN"));
+        }
     }
 }

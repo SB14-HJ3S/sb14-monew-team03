@@ -112,9 +112,8 @@ public class InterestServiceImpl implements InterestService {
     }
 
     @Override
-    public void decreaseSubscriberCount(List<UUID> interestIds) {
-        validateExistsByIds(interestIds);
-        repository.decreaseSubscriberCountIn(interestIds);
+    public void decreaseSubscriberCountsByUserIds(List<UUID> userIds) {
+        repository.decreaseSubscriberCountsByUserIds(userIds);
     }
 
     private boolean existsById(UUID interestId) {
@@ -123,13 +122,6 @@ public class InterestServiceImpl implements InterestService {
 
     private void validateAlreadyExistsById(UUID interestId) {
         if (!existsById(interestId)) {
-            throw new MonewException(
-                    InterestErrorType.INTEREST_NOT_FOUND, Map.of("id", interestId));
-        }
-    }
-
-    private void validateExistsByIds(List<UUID> interestId) {
-        if (repository.countByIdIn(interestId) != interestId.size()) {
             throw new MonewException(
                     InterestErrorType.INTEREST_NOT_FOUND, Map.of("id", interestId));
         }

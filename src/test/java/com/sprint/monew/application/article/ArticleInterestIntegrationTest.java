@@ -42,31 +42,39 @@ class ArticleInterestIntegrationTest {
         em.flush();
 
         // when
-        ArticleInterest created = service.getOrCreateArticleInterest(article, ai);
-        UUID createdId = created.getId();
+        boolean created = service.createIfAbsent(article, ai);
         em.flush();
+        UUID createdId =
+                em.createQuery(
+                                "select ai.id from ArticleInterest ai where ai.article.id = :id",
+                                UUID.class)
+                        .setParameter("id", article.getId())
+                        .getSingleResult();
         em.clear();
 
         Article managedArticle = em.find(Article.class, article.getId());
-        ArticleInterest existing =
-                service.getOrCreateArticleInterest(
-                        managedArticle, em.find(Interest.class, ai.getId()));
-        ArticleInterest other =
-                service.getOrCreateArticleInterest(
-                        managedArticle, em.find(Interest.class, chip.getId()));
+        boolean existing =
+                service.createIfAbsent(managedArticle, em.find(Interest.class, ai.getId()));
+        boolean other =
+                service.createIfAbsent(managedArticle, em.find(Interest.class, chip.getId()));
         em.flush();
 
         // then
-        assertThat(createdId).isNotNull();
-        assertThat(existing.getId()).isEqualTo(createdId);
-        assertThat(other.getId()).isNotEqualTo(createdId);
-        assertThat(other.getInterest().getId()).isEqualTo(chip.getId());
-        assertThat(
-                        em.createQuery(
-                                        "select count(ai) from ArticleInterest ai where ai.article.id = :id",
-                                        Long.class)
-                                .setParameter("id", article.getId())
-                                .getSingleResult())
-                .isEqualTo(2L);
+        assertThat(created).isTrue();
+        assertThat(existing).isFalse();
+        assertThat(other).isTrue();
+        List<ArticleInterest> persistedLinks =
+                em.createQuery(
+                                "select ai from ArticleInterest ai where ai.article.id = :id",
+                                ArticleInterest.class)
+                        .setParameter("id", article.getId())
+                        .getResultList();
+        assertThat(persistedLinks)
+                .extracting(link -> link.getInterest().getId())
+                .containsExactlyInAnyOrder(ai.getId(), chip.getId());
+        assertThat(persistedLinks)
+                .filteredOn(link -> link.getInterest().getId().equals(ai.getId()))
+                .extracting(ArticleInterest::getId)
+                .containsExactly(createdId);
     }
 }
