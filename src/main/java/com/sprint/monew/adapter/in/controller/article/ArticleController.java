@@ -118,6 +118,8 @@ public class ArticleController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{articleId}/hard")
     public void hardDeleteArticle(@PathVariable UUID articleId) {
+        log.info("뉴스 기사 물리 삭제 요청: articleId={}", articleId);
         articleUseCase.hardDeleteArticle(articleId);
+        log.info("뉴스 기사 물리 삭제 완료: articleId={}", articleId);
     }
 }
