@@ -635,4 +635,20 @@ class CommentApplicationTest {
             verifyNoInteractions(notificationService);
         }
     }
+
+    @Nested
+    @DisplayName("사용자 완전 삭제 전 숫자 정리")
+    class CleanupCountsBeforeUserHardDeletion {
+
+        @Test
+        @DisplayName("탈퇴자들이 누른 좋아요만큼 좋아요 수를, 탈퇴자들이 쓴 댓글만큼 기사 댓글 수를 줄인다")
+        void decreaseLikeCountsAndCommentCounts() {
+            List<UUID> userIds = List.of(UUID.randomUUID(), UUID.randomUUID());
+
+            commentApplication.cleanupCountsBeforeUserHardDeletion(userIds);
+
+            verify(commentRepository).decreaseLikeCountsByUserIds(userIds);
+            verify(articleService).decreaseCommentCountsByUserIds(userIds);
+        }
+    }
 }

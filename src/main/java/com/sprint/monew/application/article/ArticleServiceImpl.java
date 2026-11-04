@@ -82,6 +82,12 @@ public class ArticleServiceImpl implements ArticleService {
 
     @Override
     @Transactional
+    public void decreaseCommentCountsByUserIds(List<UUID> userIds) {
+        repository.decreaseCommentCountsByUserIds(userIds);
+    }
+
+    @Override
+    @Transactional
     public void softDelete(UUID articleId) {
         if (repository.softDeleteIfActive(articleId, Instant.now()) == 0) {
             throw articleNotFound(articleId);

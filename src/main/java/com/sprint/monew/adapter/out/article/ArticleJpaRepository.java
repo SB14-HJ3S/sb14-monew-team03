@@ -30,6 +30,30 @@ public interface ArticleJpaRepository extends JpaRepository<Article, UUID>, Arti
                     + " WHERE a.id = :id AND a.commentCount > 0")
     int decreaseCommentCount(@Param("id") UUID id);
 
+    // 탈퇴자가 쓴 댓글 수만큼 기사마다 한 번에 뺌. 논리 삭제된 댓글은 그때 이미 빠져서 안 셈
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query(
+            """
+            UPDATE Article a
+            SET a.commentCount = greatest(
+                0,
+                a.commentCount - (
+                    SELECT COUNT(c)
+                    FROM Comment c
+                    WHERE c.article.id = a.id
+                      AND c.user.id IN :userIds
+                      AND c.deletedAt IS NULL
+                )
+            )
+            WHERE a.id IN (
+                SELECT c.article.id
+                FROM Comment c
+                WHERE c.user.id IN :userIds
+                  AND c.deletedAt IS NULL
+            )
+            """)
+    int decreaseCommentCountsByUserIds(@Param("userIds") List<UUID> userIds);
+
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query(
             "UPDATE Article a SET a.deletedAt = :deletedAt"

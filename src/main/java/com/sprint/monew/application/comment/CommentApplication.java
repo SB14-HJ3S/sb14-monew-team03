@@ -17,6 +17,7 @@ import com.sprint.monew.global.annotation.ApplicationService;
 import com.sprint.monew.global.context.RequestIdContext;
 import com.sprint.monew.global.pagination.PageResult;
 import com.sprint.monew.global.type.ResourceType;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
@@ -144,5 +145,12 @@ public class CommentApplication implements CommentUseCase {
         for (UUID commentId : commentService.findIdsByArticleId(articleId)) {
             notificationService.deleteByResource(ResourceType.COMMENT, commentId);
         }
+    }
+
+    @Override
+    @Transactional
+    public void cleanupCountsBeforeUserHardDeletion(List<UUID> userIds) {
+        commentService.decreaseLikeCountsByUserIds(userIds);
+        articleService.decreaseCommentCountsByUserIds(userIds);
     }
 }

@@ -24,7 +24,7 @@ public class CommentLike extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "user_id", nullable = true)
-    @OnDelete(action = OnDeleteAction.SET_NULL) // 지워지면 user만 null, 좋아요는 유지
+    @OnDelete(action = OnDeleteAction.CASCADE) // 사용자가 지워지면 좋아요도 같이 지워짐
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
