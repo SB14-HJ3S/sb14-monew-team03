@@ -21,9 +21,10 @@ public class NaverNewsMapper {
 
         if (Objects.isNull(sourceUrl) || sourceUrl.isBlank()) {
             sourceUrl = articleItem.link();
-            if (Objects.isNull(sourceUrl) || sourceUrl.isBlank()) {
-                throw new MonewException(ArticleErrorType.ARTICLE_SOURCE_URL_MISSING);
-            }
+        }
+
+        if (Objects.isNull(sourceUrl) || sourceUrl.isBlank()) { // 둘 다 없으면 예외
+            throw new MonewException(ArticleErrorType.ARTICLE_SOURCE_URL_MISSING);
         }
 
         String title = sanitize(articleItem.title());
