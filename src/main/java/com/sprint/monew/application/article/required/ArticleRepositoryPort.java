@@ -35,5 +35,7 @@ public interface ArticleRepositoryPort {
 
     int softDeleteIfActive(UUID articleId, Instant deletedAt);
 
+    int hardDeleteById(UUID articleId);
+
     List<Article> findBackupChunk(Instant from, Instant to, UUID afterId, int limit);
 }

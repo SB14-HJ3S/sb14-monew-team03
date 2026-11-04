@@ -88,6 +88,9 @@ public class ArticleServiceImpl implements ArticleService {
         }
     }
 
+    @Override
+    public void hardDelete(UUID articleId) {}
+
     private MonewException articleNotFound(UUID articleId) {
         return new MonewException(
                 ArticleErrorType.ARTICLE_NOT_FOUND, Map.of("articleId", articleId));
