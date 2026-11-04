@@ -29,11 +29,11 @@ public interface ArticleViewStatusJpaRepository extends JpaRepository<ArticleVie
     @Query(
             value =
                     """
-            INSERT INTO article_view_statuses
-                (id, created_at, user_id, article_id, last_viewed_at)
-            VALUES (:id, :createdAt, :userId, :articleId, :viewedAt)
-            ON CONFLICT (user_id, article_id) DO NOTHING
-            """,
+                INSERT INTO article_view_statuses
+                    (id, created_at, user_id, article_id, last_viewed_at)
+                VALUES (:id, :createdAt, :userId, :articleId, :viewedAt)
+                ON CONFLICT (user_id, article_id) DO NOTHING
+                """,
             nativeQuery = true)
     int insertIfAbsent(
             @Param("id") UUID id,
@@ -44,13 +44,14 @@ public interface ArticleViewStatusJpaRepository extends JpaRepository<ArticleVie
 
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query(
-            value =
-                    """
-            UPDATE article_view_statuses
-            SET last_viewed_at = GREATEST(last_viewed_at, :viewedAt)
-            WHERE user_id = :userId AND article_id = :articleId
-            """,
-            nativeQuery = true)
+            """
+            UPDATE ArticleViewStatus v
+            SET v.lastViewedAt = CASE
+                WHEN v.lastViewedAt < :viewedAt THEN :viewedAt
+                ELSE v.lastViewedAt
+            END
+            WHERE v.user.id = :userId AND v.article.id = :articleId
+        """)
     int updateLastViewedAt(
             @Param("userId") UUID userId,
             @Param("articleId") UUID articleId,
