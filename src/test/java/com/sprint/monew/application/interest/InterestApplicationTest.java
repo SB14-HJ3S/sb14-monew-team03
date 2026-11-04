@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 
 import com.sprint.monew.application.article.ArticleInterestService;
 import com.sprint.monew.application.interest.provided.dto.SubscriptionResult;
+import com.sprint.monew.application.interest.required.InterestEventPublisherPort;
 import com.sprint.monew.application.user.IUserService;
 import com.sprint.monew.domain.interest.entity.Interest;
 import com.sprint.monew.domain.user.entity.Subscription;
@@ -35,6 +36,7 @@ class InterestApplicationTest {
     @Mock private ISubscriptionService subscriptionService;
     @Mock private ArticleInterestService articleInterestService;
     @Mock private IUserService userService;
+    @Mock private InterestEventPublisherPort interestEventPublisher;
 
     @InjectMocks private InterestApplication interestApplication;
 

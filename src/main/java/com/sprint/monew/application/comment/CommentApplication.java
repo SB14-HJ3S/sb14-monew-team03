@@ -1,6 +1,11 @@
 package com.sprint.monew.application.comment;
 
 import com.sprint.monew.application.article.ArticleService;
+import com.sprint.monew.application.comment.event.CommentCreatedEvent;
+import com.sprint.monew.application.comment.event.CommentDeletedEvent;
+import com.sprint.monew.application.comment.event.CommentLikeCreatedEvent;
+import com.sprint.monew.application.comment.event.CommentUnlikedEvent;
+import com.sprint.monew.application.comment.event.CommentUpdatedEvent;
 import com.sprint.monew.application.comment.provided.CommentUseCase;
 import com.sprint.monew.application.comment.provided.dto.CommentLikeResult;
 import com.sprint.monew.application.comment.provided.dto.CommentQuery;
@@ -17,6 +22,7 @@ import com.sprint.monew.global.annotation.ApplicationService;
 import com.sprint.monew.global.context.RequestIdContext;
 import com.sprint.monew.global.pagination.PageResult;
 import com.sprint.monew.global.type.ResourceType;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +48,8 @@ public class CommentApplication implements CommentUseCase {
         // 방금 만든 댓글이라 아직 아무도 좋아요를 누르지 않았다
         // +1 쿼리 뒤에는 댓글 정보를 못 읽을 수 있어서 결과를 먼저 만든다
         CommentResult result = CommentResult.of(comment, false);
+
+        commentEventPublisher.publish(CommentCreatedEvent.of(result, article.getTitle()));
 
         articleService.increaseCommentCount(articleId);
 
@@ -74,11 +82,14 @@ public class CommentApplication implements CommentUseCase {
                         comment.getUser().getId(),
                         user.getId(),
                         user.getNickname()));
-
+        String articleTitle = comment.getArticle().getTitle();
         commentService.increaseLikeCount(commentId);
 
         // 늘어난 좋아요 수를 응답에 넣으려고 댓글을 다시 읽는다
-        return CommentLikeResult.of(commentLike, commentService.getComment(commentId));
+        CommentLikeResult result =
+                CommentLikeResult.of(commentLike, commentService.getComment(commentId));
+        commentEventPublisher.publish(CommentLikeCreatedEvent.of(result, articleTitle));
+        return result;
     }
 
     @Override
@@ -89,6 +100,9 @@ public class CommentApplication implements CommentUseCase {
 
         commentService.deleteLike(commentId, requestUserId);
         commentService.decreaseLikeCount(commentId);
+
+        long likeCount = commentService.getComment(commentId).getLikeCount();
+        commentEventPublisher.publish(new CommentUnlikedEvent(commentId, requestUserId, likeCount));
     }
 
     @Override
@@ -98,6 +112,7 @@ public class CommentApplication implements CommentUseCase {
         Comment comment = commentService.getComment(commentId);
 
         comment.changeContent(requestUserId, content);
+        commentEventPublisher.publish(new CommentUpdatedEvent(commentId, comment.getContent()));
 
         boolean likedByMe = commentService.isLikedBy(commentId, requestUserId);
 
@@ -116,6 +131,7 @@ public class CommentApplication implements CommentUseCase {
         commentService.softDelete(commentId);
 
         articleService.decreaseCommentCount(articleId);
+        commentEventPublisher.publish(new CommentDeletedEvent(commentId));
     }
 
     @Override
@@ -134,6 +150,8 @@ public class CommentApplication implements CommentUseCase {
 
         // 물리 삭제할 때는 이 댓글의 좋아요 알림도 같이 지운다
         notificationService.deleteByResource(ResourceType.COMMENT, commentId);
+
+        commentEventPublisher.publish(new CommentDeletedEvent(commentId));
     }
 
     @Override
@@ -144,5 +162,12 @@ public class CommentApplication implements CommentUseCase {
         for (UUID commentId : commentService.findIdsByArticleId(articleId)) {
             notificationService.deleteByResource(ResourceType.COMMENT, commentId);
         }
+    }
+
+    @Override
+    @Transactional
+    public void cleanupCountsBeforeUserHardDeletion(List<UUID> userIds) {
+        commentService.decreaseLikeCountsByUserIds(userIds);
+        articleService.decreaseCommentCountsByUserIds(userIds);
     }
 }

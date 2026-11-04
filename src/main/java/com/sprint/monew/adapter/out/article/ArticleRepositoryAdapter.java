@@ -69,6 +69,16 @@ public class ArticleRepositoryAdapter implements ArticleRepositoryPort {
     }
 
     @Override
+    public int decreaseCommentCountsByUserIds(List<UUID> userIds) {
+        return jpaRepository.decreaseCommentCountsByUserIds(userIds);
+    }
+
+    @Override
+    public int increaseViewCount(UUID articleId) {
+        return jpaRepository.increaseViewCount(articleId);
+    }
+
+    @Override
     public int softDeleteIfActive(UUID articleId, Instant deletedAt) {
         return jpaRepository.softDeleteIfActive(articleId, deletedAt);
     }

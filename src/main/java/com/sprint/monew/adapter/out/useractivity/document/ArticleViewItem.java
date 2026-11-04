@@ -6,7 +6,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 public record ArticleViewItem(
-        UUID id,
+        UUID viewId,
         UUID viewedBy,
         Instant createdAt,
         UUID articleId,
@@ -17,9 +17,25 @@ public record ArticleViewItem(
         String articleSummary,
         long articleCommentCount,
         long articleViewCount) {
+
+    public static ArticleViewItem from(ArticleViewActivityResult r) {
+        return new ArticleViewItem(
+                r.id(),
+                r.viewedBy(),
+                r.createdAt(),
+                r.articleId(),
+                r.source(),
+                r.sourceUrl(),
+                r.articleTitle(),
+                r.articlePublishedDate(),
+                r.articleSummary(),
+                r.articleCommentCount(),
+                r.articleViewCount());
+    }
+
     public ArticleViewActivityResult toResult() {
         return new ArticleViewActivityResult(
-                id,
+                viewId,
                 viewedBy,
                 createdAt,
                 articleId,
