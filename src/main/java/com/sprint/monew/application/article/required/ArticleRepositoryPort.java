@@ -36,5 +36,9 @@ public interface ArticleRepositoryPort {
     // 사용자 완전 삭제 전에, 탈퇴자가 쓴 댓글 수만큼 기사마다 한 번에 줄임. 바뀐 기사 수를 돌려줌
     int decreaseCommentCountsByUserIds(List<UUID> userIds);
 
+    int softDeleteIfActive(UUID articleId, Instant deletedAt);
+
     List<Article> findBackupChunk(Instant from, Instant to, UUID afterId, int limit);
+
+    int increaseViewCount(UUID articleId);
 }

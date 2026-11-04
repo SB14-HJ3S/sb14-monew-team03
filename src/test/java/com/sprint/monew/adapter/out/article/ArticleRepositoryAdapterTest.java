@@ -208,4 +208,32 @@ class ArticleRepositoryAdapterTest {
             assertThat(commentCountOf(article.getId())).isZero();
         }
     }
+
+    @Test
+    @DisplayName("살아 있는 뉴스 기사를 논리 삭제하면 삭제 시각이 들어가고, 바뀐 줄 수 1을 돌려준다")
+    void givenActiveArticle_whenSoftDeleteIfActive_thenSetDeletedAtAndReturnOne() {
+        UUID articleId = savedArticleId();
+        Instant deletedAt = Instant.parse("2026-11-03T00:00:00Z");
+
+        int updated = articleRepository.softDeleteIfActive(articleId, deletedAt);
+
+        assertThat(updated).isEqualTo(1);
+        assertThat(articleRepository.findById(articleId).orElseThrow().getDeletedAt())
+                .isEqualTo(deletedAt);
+    }
+
+    @Test
+    @DisplayName("이미 논리 삭제된 뉴스 기사면 삭제 시각을 바꾸지 않고, 바뀐 줄 수 0을 돌려준다")
+    void givenDeletedArticle_whenSoftDeleteIfActive_thenKeepDeletedAtAndReturnZero() {
+        UUID articleId = savedArticleId();
+        Instant firstDeletedAt = Instant.parse("2026-11-03T00:00:00Z");
+        articleRepository.softDeleteIfActive(articleId, firstDeletedAt);
+
+        int updated =
+                articleRepository.softDeleteIfActive(articleId, firstDeletedAt.plusSeconds(60));
+
+        assertThat(updated).isZero();
+        assertThat(articleRepository.findById(articleId).orElseThrow().getDeletedAt())
+                .isEqualTo(firstDeletedAt);
+    }
 }

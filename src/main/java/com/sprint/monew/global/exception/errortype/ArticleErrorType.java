@@ -21,6 +21,9 @@ public enum ArticleErrorType implements ErrorType {
     ARTICLE_SAVE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, Level.ERROR, "수집한 기사 저장에 실패했습니다"),
     ARTICLE_COLLECTION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, Level.ERROR, "관심사 기사 수집에 실패했습니다"),
 
+    // 조회 관련 오류
+    ARTICLE_VIEW_STATUS_NOT_FOUND(HttpStatus.NOT_FOUND, Level.WARN, "해당 기사 조회 기록이 없습니다"),
+
     // 백업 관련 오류
     JSON_CONVERSION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, Level.ERROR, "기사 백업 JSON 변환에 실패했습니다"),
     ARTICLE_BACKUP_UPLOAD_FAILED(HttpStatus.BAD_GATEWAY, Level.ERROR, "기사 백업 파일의 S3 업로드에 실패했습니다"),
