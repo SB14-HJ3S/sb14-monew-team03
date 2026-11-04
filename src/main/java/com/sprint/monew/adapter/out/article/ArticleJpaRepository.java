@@ -27,4 +27,8 @@ public interface ArticleJpaRepository extends JpaRepository<Article, UUID>, Arti
             "UPDATE Article a SET a.commentCount = a.commentCount - 1"
                     + " WHERE a.id = :id AND a.commentCount > 0")
     int decreaseCommentCount(@Param("id") UUID id);
+
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("UPDATE Article a SET a.viewCount = a.viewCount + 1 WHERE a.id = :id")
+    int increaseViewCount(@Param("id") UUID id);
 }
