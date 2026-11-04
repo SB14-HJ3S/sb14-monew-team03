@@ -1,11 +1,16 @@
 package com.sprint.monew.application.interest;
 
 import com.sprint.monew.application.article.ArticleInterestService;
+import com.sprint.monew.application.interest.event.InterestDeletedEvent;
+import com.sprint.monew.application.interest.event.InterestKeywordsUpdatedEvent;
+import com.sprint.monew.application.interest.event.InterestSubscribedEvent;
+import com.sprint.monew.application.interest.event.InterestUnsubscribedEvent;
 import com.sprint.monew.application.interest.provided.InterestUseCase;
 import com.sprint.monew.application.interest.provided.UserDeletionSubscriptionCleaner;
 import com.sprint.monew.application.interest.provided.dto.InterestQuery;
 import com.sprint.monew.application.interest.provided.dto.InterestResult;
 import com.sprint.monew.application.interest.provided.dto.SubscriptionResult;
+import com.sprint.monew.application.interest.required.InterestEventPublisherPort;
 import com.sprint.monew.application.user.IUserService;
 import com.sprint.monew.domain.interest.entity.Interest;
 import com.sprint.monew.domain.user.entity.Subscription;
@@ -27,6 +32,7 @@ public class InterestApplication implements InterestUseCase, UserDeletionSubscri
     private final ISubscriptionService subscriptionService;
     private final ArticleInterestService articleInterestService;
     private final IUserService userService;
+    private final InterestEventPublisherPort interestEventPublisher;
 
     @Override
     @Transactional(readOnly = true)
@@ -63,7 +69,9 @@ public class InterestApplication implements InterestUseCase, UserDeletionSubscri
         Subscription created = subscriptionService.create(creating);
         Interest updatedInterest = interestService.increaseSubscriberCount(interestId);
 
-        return SubscriptionResult.of(updatedInterest, created);
+        SubscriptionResult result = SubscriptionResult.of(updatedInterest, created);
+        interestEventPublisher.publish(InterestSubscribedEvent.of(userId, result));
+        return result;
     }
 
     @Override
@@ -74,6 +82,8 @@ public class InterestApplication implements InterestUseCase, UserDeletionSubscri
         Interest interest = interestService.getById(interestId);
         subscriptionService.deleteByUserIdAndInterestId(user.getId(), interest.getId());
         interestService.decreaseSubscriberCount(interestId);
+
+        interestEventPublisher.publish(new InterestUnsubscribedEvent(userId, interestId));
     }
 
     @Override
@@ -83,12 +93,17 @@ public class InterestApplication implements InterestUseCase, UserDeletionSubscri
         articleInterestService.deleteAllByInterestId(interestId);
         subscriptionService.deleteAllByInterestId(interestId);
         interestService.delete(deleting);
+
+        interestEventPublisher.publish(new InterestDeletedEvent(interestId));
     }
 
     @Override
     @Transactional
     public InterestResult update(UUID interestId, List<String> keywords) {
         Interest updated = interestService.update(interestId, keywords);
+
+        interestEventPublisher.publish(
+                new InterestKeywordsUpdatedEvent(interestId, updated.getKeywordNames()));
         // 응답 필드에 subscribedByMe는 있는데 데모 페이지에 항상 null로 뜸
         // interest patch 요청할 때 프론트에서 request-user-id를 아예 안주므로 일단 맞춰서 null로 반환해놓음
         return InterestResult.of(updated, null);
