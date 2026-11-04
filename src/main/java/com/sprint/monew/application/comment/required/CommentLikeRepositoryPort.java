@@ -1,8 +1,10 @@
 package com.sprint.monew.application.comment.required;
 
 import com.sprint.monew.domain.comment.entity.CommentLike;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 public interface CommentLikeRepositoryPort {
@@ -25,4 +27,7 @@ public interface CommentLikeRepositoryPort {
 
     // 댓글 물리 삭제 시 그 댓글의 좋아요를 한 번에 지우기용
     int deleteAllByCommentId(UUID commentId);
+
+    // 목록 조회 시 요청자가 좋아요 누른 댓글을 한 번에 알아내기용
+    Set<UUID> findLikedCommentIds(UUID userId, Collection<UUID> commentIds);
 }

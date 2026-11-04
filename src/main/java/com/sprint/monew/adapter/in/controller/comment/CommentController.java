@@ -6,20 +6,28 @@ import com.sprint.monew.adapter.in.controller.comment.dto.response.CommentDto;
 import com.sprint.monew.adapter.in.controller.comment.dto.response.CommentLikeDto;
 import com.sprint.monew.application.comment.provided.CommentUseCase;
 import com.sprint.monew.application.comment.provided.dto.CommentLikeResult;
+import com.sprint.monew.application.comment.provided.dto.CommentQuery;
 import com.sprint.monew.application.comment.provided.dto.CommentResult;
 import com.sprint.monew.global.annotation.RequestId;
+import com.sprint.monew.global.pagination.PageResult;
+import com.sprint.monew.global.pagination.SortDirection;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import java.time.Instant;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
@@ -39,6 +47,29 @@ public class CommentController {
                 commentUseCase.register(request.userId(), request.articleId(), request.content());
         log.info("댓글 등록 완료: commentId={}, articleId={}", result.id(), result.articleId());
         return ResponseEntity.status(HttpStatus.CREATED).body(CommentDto.from(result));
+    }
+
+    @RequestId
+    @GetMapping
+    public ResponseEntity<PageResult<CommentDto>> findByQuery(
+            @RequestParam(name = "articleId", required = false) UUID articleId,
+            @RequestParam(name = "orderBy") CommentQuery.SortOrder orderBy,
+            @RequestParam(name = "direction") SortDirection direction,
+            @RequestParam(name = "cursor", required = false) String cursor,
+            @RequestParam(name = "after", required = false)
+                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                    Instant after,
+            @RequestParam(name = "limit") @Min(1) int limit) {
+        log.info(
+                "댓글 목록 조회 요청: articleId={}, orderBy={}, direction={}, limit={}",
+                articleId,
+                orderBy,
+                direction,
+                limit);
+        CommentQuery query = CommentQuery.of(articleId, orderBy, direction, cursor, after, limit);
+        PageResult<CommentDto> result = commentUseCase.findByQuery(query).map(CommentDto::from);
+        log.info("댓글 목록 조회 완료: size={}, hasNext={}", result.size(), result.hasNext());
+        return ResponseEntity.ok(result);
     }
 
     @RequestId

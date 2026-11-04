@@ -1,9 +1,13 @@
 package com.sprint.monew.application.comment;
 
+import com.sprint.monew.application.comment.provided.dto.CommentQuery;
 import com.sprint.monew.domain.comment.entity.Comment;
 import com.sprint.monew.domain.comment.entity.CommentLike;
 import com.sprint.monew.domain.user.entity.User;
+import com.sprint.monew.global.pagination.PageResult;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public interface CommentService {
@@ -27,6 +31,10 @@ public interface CommentService {
 
     // 지우기 전에 살아 있던 댓글이었으면 true
     boolean hardDelete(UUID commentId);
+
+    PageResult<Comment> findPageByQuery(CommentQuery query);
+
+    Set<UUID> findLikedCommentIds(UUID userId, Collection<UUID> commentIds);
 
     // 논리 삭제된 댓글도 포함한다
     List<UUID> findIdsByArticleId(UUID articleId);
