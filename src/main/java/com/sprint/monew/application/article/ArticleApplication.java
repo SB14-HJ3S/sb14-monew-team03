@@ -14,7 +14,6 @@ import com.sprint.monew.global.annotation.ApplicationService;
 import com.sprint.monew.global.context.RequestIdContext;
 import com.sprint.monew.global.pagination.PageResult;
 import com.sprint.monew.global.type.ArticleSourceType;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -83,11 +82,6 @@ public class ArticleApplication implements ArticleUseCase {
 
     @Override
     public void hardDeleteArticle(UUID articleId) {}
-
-    @Override
-    public List<Article> restoreArticles(LocalDateTime from, LocalDateTime to) {
-        return List.of();
-    }
 
     @Override
     @Transactional
