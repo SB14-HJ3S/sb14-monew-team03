@@ -36,6 +36,10 @@ public interface ArticleJpaRepository extends JpaRepository<Article, UUID>, Arti
                     + " WHERE a.id = :id AND a.deletedAt IS NULL")
     int softDeleteIfActive(@Param("id") UUID id, @Param("deletedAt") Instant deletedAt);
 
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("DELETE FROM Article a WHERE a.id = :id")
+    int hardDeleteById(@Param("id") UUID id);
+
     @Query(
             """
             SELECT a

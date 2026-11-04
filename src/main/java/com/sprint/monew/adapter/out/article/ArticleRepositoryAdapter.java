@@ -75,7 +75,7 @@ public class ArticleRepositoryAdapter implements ArticleRepositoryPort {
 
     @Override
     public int hardDeleteById(UUID articleId) {
-        return 0;
+        return jpaRepository.hardDeleteById(articleId);
     }
 
     @Override
