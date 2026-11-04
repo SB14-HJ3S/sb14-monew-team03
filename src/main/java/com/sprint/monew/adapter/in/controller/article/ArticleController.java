@@ -115,9 +115,13 @@ public class ArticleController {
         return ArticleViewDto.from(articleUseCase.register(articleId));
     }
 
+    @Operation(summary = "뉴스 기사 물리 삭제", description = "뉴스 기사를 물리적으로 삭제합니다.")
+    @ApiResponse(responseCode = "204", description = "삭제 성공")
+    @ApiResponse(responseCode = "404", description = "뉴스 기사 정보 없음")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{articleId}/hard")
-    public void hardDeleteArticle(@PathVariable UUID articleId) {
+    public void hardDeleteArticle(
+            @Parameter(description = "뉴스 기사 ID") @PathVariable UUID articleId) {
         log.info("뉴스 기사 물리 삭제 요청: articleId={}", articleId);
         articleUseCase.hardDeleteArticle(articleId);
         log.info("뉴스 기사 물리 삭제 완료: articleId={}", articleId);
