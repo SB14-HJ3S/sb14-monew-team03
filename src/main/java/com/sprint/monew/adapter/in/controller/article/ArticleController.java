@@ -10,6 +10,7 @@ import com.sprint.monew.global.pagination.PageResult;
 import com.sprint.monew.global.pagination.SortDirection;
 import com.sprint.monew.global.type.ArticleSourceType;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Min;
@@ -94,9 +95,13 @@ public class ArticleController {
                 result.hasNext());
     }
 
+    @Operation(summary = "뉴스 기사 논리 삭제", description = "뉴스 기사를 논리적으로 삭제합니다.")
+    @ApiResponse(responseCode = "204", description = "논리 삭제 성공")
+    @ApiResponse(responseCode = "404", description = "뉴스 기사 정보 없음")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{articleId}")
-    public void softDeleteArticle(@PathVariable UUID articleId) {
+    public void softDeleteArticle(
+            @Parameter(description = "뉴스 기사 ID") @PathVariable UUID articleId) {
         log.info("뉴스 기사 논리 삭제 요청: articleId={}", articleId);
         articleUseCase.softDeleteArticle(articleId);
         log.info("뉴스 기사 논리 삭제 완료: articleId={}", articleId);
