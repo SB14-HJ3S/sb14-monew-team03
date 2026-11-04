@@ -47,4 +47,27 @@ class ArticleServiceImplTest {
                 .extracting("errorType")
                 .isEqualTo(ArticleErrorType.ARTICLE_NOT_FOUND);
     }
+
+    @Test
+    @DisplayName("뉴스 기사를 물리 삭제하면 기사를 지우는 쿼리를 실행한다")
+    void givenArticle_whenHardDelete_thenDeleteArticle() {
+        UUID articleId = UUID.randomUUID();
+        given(repository.hardDeleteById(articleId)).willReturn(1);
+
+        articleService.hardDelete(articleId);
+
+        verify(repository).hardDeleteById(articleId);
+    }
+
+    @Test
+    @DisplayName("없는 뉴스 기사를 물리 삭제하면 ARTICLE_NOT_FOUND 예외가 난다")
+    void givenNoArticle_whenHardDelete_thenThrowArticleNotFound() {
+        UUID articleId = UUID.randomUUID();
+        given(repository.hardDeleteById(articleId)).willReturn(0);
+
+        assertThatThrownBy(() -> articleService.hardDelete(articleId))
+                .isInstanceOf(MonewException.class)
+                .extracting("errorType")
+                .isEqualTo(ArticleErrorType.ARTICLE_NOT_FOUND);
+    }
 }
