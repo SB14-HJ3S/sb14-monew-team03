@@ -112,10 +112,7 @@ public class ArticleApplication implements ArticleUseCase {
         ArticleViewStatusResult result = ArticleViewStatusResult.from(articleViewStatus);
         // 처음 볼 때·다시 볼 때 모두 활동 내역의 "최근 본 기사"를 갱신한다
         Instant viewedAt =
-                articleViewStatus
-                        .getLastViewedAt()
-                        .atZone(ZoneId.systemDefault())
-                        .toInstant(); // 👈
+                articleViewStatus.getLastViewedAt().atZone(ZoneId.systemDefault()).toInstant();
         eventPublisher.publish(ArticleViewedEvent.of(result, viewedAt));
         return result;
     }
