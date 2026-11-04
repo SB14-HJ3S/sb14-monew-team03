@@ -155,4 +155,11 @@ public class CommentApplication implements CommentUseCase {
             notificationService.deleteByResource(ResourceType.COMMENT, commentId);
         }
     }
+
+    @Override
+    @Transactional
+    public void cleanupCountsBeforeUserHardDeletion(List<UUID> userIds) {
+        commentService.decreaseLikeCountsByUserIds(userIds);
+        articleService.decreaseCommentCountsByUserIds(userIds);
+    }
 }

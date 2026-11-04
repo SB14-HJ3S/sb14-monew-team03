@@ -19,7 +19,7 @@ public record CommentQuery(
         String cursor,
         Instant after,
         @Min(1) int limit)
-        implements SortedPageQuery<Comment, CommentQuery.SortOrder> {
+        implements SortedPageQuery<Comment> {
     public static CommentQuery of(
             UUID articleId,
             CommentQuery.SortOrder orderBy,
@@ -41,8 +41,8 @@ public record CommentQuery(
 
         // 커서는 정렬 기준과 상관없이 마지막 댓글의 id (값은 서비스가 그 댓글을 찾아서 꺼냄)
         @Override
-        public String cursorToString(Comment cursor) {
-            return cursor.getId().toString();
+        public String extractNextCursorFromLastEntity(Comment lastEntity) {
+            return lastEntity.getId().toString();
         }
     }
 }

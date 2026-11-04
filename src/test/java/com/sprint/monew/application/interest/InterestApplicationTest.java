@@ -1,9 +1,7 @@
 package com.sprint.monew.application.interest;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -17,8 +15,6 @@ import com.sprint.monew.domain.interest.entity.Interest;
 import com.sprint.monew.domain.user.entity.Subscription;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.context.RequestIdContext;
-import com.sprint.monew.global.exception.MonewException;
-import com.sprint.monew.global.exception.errortype.UserErrorType;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -121,40 +117,26 @@ class InterestApplicationTest {
     }
 
     @Test
-    @DisplayName("비활성 사용자임을 검증한 뒤 구독한 관심사들의 구독자 수를 감소시킨다.")
-    void givenDeactivatedUser_whenCleanupBeforeHardDelete_thenDecreaseSubscriberCounts() {
+    @DisplayName("삭제 대상 사용자 목록을 전달해 관심사별 구독자 수를 정리한다.")
+    void givenDeactivatedUsers_whenCleanupBeforeHardDelete_thenDecreaseSubscriberCounts() {
         // given
-        UUID userId = UUID.randomUUID();
-        List<UUID> interestIds = List.of(UUID.randomUUID(), UUID.randomUUID());
-
-        when(subscriptionService.findInterestIdsByUserId(userId)).thenReturn(interestIds);
+        List<UUID> userIds = List.of(UUID.randomUUID(), UUID.randomUUID());
 
         // when
-        interestApplication.cleanupSubscriberCountBeforeUserHardDeletion(userId);
+        interestApplication.cleanupSubscriberCountBeforeUserHardDeletion(userIds);
 
         // then
-        InOrder inOrder = inOrder(userService, subscriptionService, interestService);
-        inOrder.verify(userService).validateDeactivatedUser(userId);
-        inOrder.verify(subscriptionService).findInterestIdsByUserId(userId);
-        inOrder.verify(interestService).decreaseSubscriberCount(interestIds);
+        verify(interestService).decreaseSubscriberCountsByUserIds(userIds);
+        verifyNoInteractions(userService, subscriptionService);
     }
 
     @Test
-    @DisplayName("물리 삭제 대상 사용자가 아니면 구독자 수를 감소시키지 않는다.")
-    void givenInvalidUser_whenCleanupBeforeHardDelete_thenDoNotDecreaseSubscriberCounts() {
-        // given
-        UUID userId = UUID.randomUUID();
-        MonewException exception = new MonewException(UserErrorType.USER_NOT_FOUND);
-        doThrow(exception).when(userService).validateDeactivatedUser(userId);
+    @DisplayName("빈 사용자 목록도 관심사 서비스에 전달한다.")
+    void givenEmptyUserIds_whenCleanupBeforeHardDelete_thenDelegateToInterestService() {
+        interestApplication.cleanupSubscriberCountBeforeUserHardDeletion(List.of());
 
-        // when & then
-        assertThatThrownBy(
-                        () ->
-                                interestApplication.cleanupSubscriberCountBeforeUserHardDeletion(
-                                        userId))
-                .isSameAs(exception);
-        verify(userService).validateDeactivatedUser(userId);
-        verifyNoInteractions(subscriptionService, interestService);
+        verify(interestService).decreaseSubscriberCountsByUserIds(List.of());
+        verifyNoInteractions(userService, subscriptionService);
     }
 
     @Test

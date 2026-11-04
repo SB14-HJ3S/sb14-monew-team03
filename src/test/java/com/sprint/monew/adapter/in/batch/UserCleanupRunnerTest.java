@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 
-import com.sprint.monew.application.notification.provided.NotificationUseCase;
+import com.sprint.monew.application.user.provided.UserUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,36 +14,34 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataAccessResourceFailureException;
 
 @ExtendWith(MockitoExtension.class)
-class NotificationCleanupRunnerTest {
+class UserCleanupRunnerTest {
 
-    @Mock private NotificationUseCase notificationUseCase;
+    @Mock private UserUseCase userUseCase;
 
-    @InjectMocks private NotificationCleanupRunner runner;
+    @InjectMocks private UserCleanupRunner runner;
 
     @Test
-    @DisplayName("알림 삭제 배치를 실행하면 유스케이스를 호출한다.")
+    @DisplayName("사용자 완전 삭제 배치를 실행하면 유스케이스를 호출한다")
     void whenRunCleanup_thenCallsUseCase() {
         runner.runCleanup();
 
-        verify(notificationUseCase).deleteOldReadNotifications();
+        verify(userUseCase).cleanupDeletedUsers();
     }
 
     @Test
-    @DisplayName("삭제 중 DB 오류가 나도 예외를 밖으로 던지지 않는다.")
+    @DisplayName("삭제 중 DB 오류가 나도 예외를 밖으로 던지지 않는다")
     void givenDbError_whenRunCleanup_thenDoesNotThrow() {
         doThrow(new DataAccessResourceFailureException("DB 오류"))
-                .when(notificationUseCase)
-                .deleteOldReadNotifications();
+                .when(userUseCase)
+                .cleanupDeletedUsers();
 
         assertThatCode(() -> runner.runCleanup()).doesNotThrowAnyException();
     }
 
     @Test
-    @DisplayName("예상하지 못한 오류가 나도 예외를 밖으로 던지지 않는다.")
+    @DisplayName("예상하지 못한 오류가 나도 예외를 밖으로 던지지 않는다")
     void givenUnexpectedError_whenRunCleanup_thenDoesNotThrow() {
-        doThrow(new IllegalStateException("예상 못한 오류"))
-                .when(notificationUseCase)
-                .deleteOldReadNotifications();
+        doThrow(new IllegalStateException("예상 못한 오류")).when(userUseCase).cleanupDeletedUsers();
 
         assertThatCode(() -> runner.runCleanup()).doesNotThrowAnyException();
     }

@@ -8,6 +8,7 @@ import com.sprint.monew.adapter.out.user.UserRepositoryAdapter;
 import com.sprint.monew.application.comment.provided.dto.CommentQuery;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.comment.entity.Comment;
+import com.sprint.monew.domain.comment.entity.CommentLike;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.pagination.SortDirection;
 import com.sprint.monew.global.type.ArticleSourceType;
@@ -203,6 +204,69 @@ class CommentRepositoryAdapterTest {
         // 기사를 물리 삭제하면 논리 삭제된 댓글도 같이 지워지니, 그 댓글의 알림도 지워야 한다
         assertThat(commentRepository.findIdsByArticleId(article.getId()))
                 .containsExactlyInAnyOrder(activeId, deletedId);
+    }
+
+    @Nested
+    @DisplayName("사용자 완전 삭제 전 좋아요 수 줄이기")
+    class DecreaseLikeCountsByUserIds {
+
+        @Autowired private CommentLikeRepositoryAdapter commentLikeRepository;
+
+        private User savedUser() {
+            return userRepository.save(
+                    User.create(UUID.randomUUID() + "@monew.com", "사용자", "password1!"));
+        }
+
+        // likers가 좋아요를 누른 댓글을 저장하고, 좋아요 수도 그 인원수로 맞춘다
+        private UUID savedLikedComment(User author, Article article, User... likers) {
+            Comment comment = commentRepository.save(Comment.create(author, article, "댓글 내용"));
+            for (User liker : likers) {
+                commentLikeRepository.save(CommentLike.create(liker, comment));
+            }
+            em.flush();
+            jdbcTemplate.update(
+                    "UPDATE comments SET like_count = ? WHERE id = ?",
+                    likers.length,
+                    comment.getId());
+            em.clear();
+            return comment.getId();
+        }
+
+        @Test
+        @DisplayName("탈퇴자들이 누른 좋아요 수만큼 댓글마다 좋아요 수를 줄이고, 탈퇴자가 안 누른 댓글은 그대로 둔다")
+        void decreaseByLeavingUsersLikes() {
+            User leaving = savedUser();
+            User otherLeaving = savedUser();
+            User staying = savedUser();
+            Article article = savedArticle("https://news.example.com/user-delete-like");
+            UUID likedByBoth = savedLikedComment(staying, article, leaving, otherLeaving, staying);
+            UUID likedByOne = savedLikedComment(staying, article, leaving);
+            UUID notLiked = savedLikedComment(staying, article, staying);
+
+            int updated =
+                    commentRepository.decreaseLikeCountsByUserIds(
+                            List.of(leaving.getId(), otherLeaving.getId()));
+
+            assertThat(updated).isEqualTo(2);
+            assertThat(likeCountOf(likedByBoth)).isEqualTo(1);
+            assertThat(likeCountOf(likedByOne)).isZero();
+            assertThat(likeCountOf(notLiked)).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("좋아요 수가 실제 좋아요보다 작아도 0 아래로 내려가지 않는다")
+        void notBelowZero() {
+            User leaving = savedUser();
+            User otherLeaving = savedUser();
+            Article article = savedArticle("https://news.example.com/user-delete-like-zero");
+            UUID commentId = savedLikedComment(leaving, article, leaving, otherLeaving);
+            jdbcTemplate.update("UPDATE comments SET like_count = 1 WHERE id = ?", commentId);
+
+            commentRepository.decreaseLikeCountsByUserIds(
+                    List.of(leaving.getId(), otherLeaving.getId()));
+
+            assertThat(likeCountOf(commentId)).isZero();
+        }
     }
 
     private Article savedArticle(String sourceUrl) {

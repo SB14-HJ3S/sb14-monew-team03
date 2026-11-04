@@ -5,6 +5,7 @@ import com.sprint.monew.application.comment.provided.dto.CommentQuery;
 import com.sprint.monew.application.comment.provided.dto.CommentResult;
 import com.sprint.monew.domain.comment.entity.Comment;
 import com.sprint.monew.global.pagination.PageResult;
+import java.util.List;
 import java.util.UUID;
 
 public interface CommentUseCase {
@@ -25,4 +26,7 @@ public interface CommentUseCase {
     void hardDeleteComment(UUID commentId);
 
     void deleteLikeNotificationsByArticle(UUID articleId);
+
+    // 사용자 완전 삭제 직전에 같은 트랜잭션에서 호출함
+    void cleanupCountsBeforeUserHardDeletion(List<UUID> userIds);
 }

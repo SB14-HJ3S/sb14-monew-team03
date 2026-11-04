@@ -155,4 +155,10 @@ public class CommentServiceImpl implements CommentService {
     public List<UUID> findIdsByArticleId(UUID articleId) {
         return commentRepository.findIdsByArticleId(articleId);
     }
+
+    @Override
+    @Transactional
+    public void decreaseLikeCountsByUserIds(List<UUID> userIds) {
+        commentRepository.decreaseLikeCountsByUserIds(userIds);
+    }
 }

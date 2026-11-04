@@ -12,7 +12,6 @@ import com.sprint.monew.application.interest.required.SubscriptionRepository;
 import com.sprint.monew.domain.user.entity.Subscription;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.SubscriptionErrorType;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -115,21 +114,5 @@ class SubscriptionServiceTest {
                 .containsEntry("interestId", interestId);
         verify(repository).findByUserIdAndInterestId(userId, interestId);
         verifyNoMoreInteractions(repository);
-    }
-
-    @Test
-    @DisplayName("사용자가 구독한 관심사 ID 목록을 조회한다.")
-    void givenUserId_whenFindInterestIds_thenReturnInterestIds() {
-        // given
-        UUID userId = UUID.randomUUID();
-        List<UUID> interestIds = List.of(UUID.randomUUID(), UUID.randomUUID());
-        when(repository.findInterestIdsByUserId(userId)).thenReturn(interestIds);
-
-        // when
-        List<UUID> result = service.findInterestIdsByUserId(userId);
-
-        // then
-        assertThat(result).containsExactlyElementsOf(interestIds);
-        verify(repository).findInterestIdsByUserId(userId);
     }
 }

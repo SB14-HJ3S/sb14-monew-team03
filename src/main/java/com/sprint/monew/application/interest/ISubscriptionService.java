@@ -15,6 +15,4 @@ public interface ISubscriptionService {
     Subscription create(Subscription creating);
 
     void deleteByUserIdAndInterestId(UUID userId, UUID interestId);
-
-    List<UUID> findInterestIdsByUserId(UUID id);
 }

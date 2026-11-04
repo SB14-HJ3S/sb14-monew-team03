@@ -39,4 +39,26 @@ public interface CommentJpaRepository extends JpaRepository<Comment, UUID>, Comm
     // 기사 물리 삭제 때 같이 지워질 댓글을 찾는다. 논리 삭제된 댓글도 지워지니 deletedAt 조건을 넣지 않는다
     @Query("SELECT c.id FROM Comment c WHERE c.article.id = :articleId")
     List<UUID> findIdsByArticleId(@Param("articleId") UUID articleId);
+
+    // 탈퇴자가 누른 좋아요 수만큼 댓글마다 한 번에 뺌. 0 아래로는 안 내려감
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query(
+            """
+            UPDATE Comment c
+            SET c.likeCount = greatest(
+                0L,
+                c.likeCount - (
+                    SELECT COUNT(l)
+                    FROM CommentLike l
+                    WHERE l.comment.id = c.id
+                      AND l.user.id IN :userIds
+                )
+            )
+            WHERE c.id IN (
+                SELECT l.comment.id
+                FROM CommentLike l
+                WHERE l.user.id IN :userIds
+            )
+            """)
+    int decreaseLikeCountsByUserIds(@Param("userIds") List<UUID> userIds);
 }

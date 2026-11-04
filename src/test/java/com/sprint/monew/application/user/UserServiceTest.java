@@ -1,7 +1,6 @@
 package com.sprint.monew.application.user;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -251,7 +250,7 @@ class UserServiceTest {
         userService.hardDeleteUser(userId);
 
         InOrder inOrder = inOrder(userEventPublisher, repository);
-        inOrder.verify(userEventPublisher).publish(new UserHardDeletingEvent(userId));
+        inOrder.verify(userEventPublisher).publish(new UserHardDeletingEvent(List.of(userId)));
         inOrder.verify(repository).deleteById(userId);
     }
 
@@ -282,39 +281,14 @@ class UserServiceTest {
     }
 
     @Test
-    @DisplayName("탈퇴한 사용자면 물리 삭제 대상 확인을 통과한다")
-    void givenDeletedUser_whenValidateDeactivatedUser_thenPass() {
-        UUID userId = UUID.randomUUID();
-        User user = User.create("me@monew.com", "탈퇴자", "암호화된비밀번호");
-        user.softDelete();
-        given(repository.findUserIncludingDeleted(userId)).willReturn(Optional.of(user));
+    @DisplayName("기준 시각 이전에 탈퇴한 사용자 id 목록을 돌려준다")
+    void givenThreshold_whenFindCleanupTargetIds_thenReturnIds() {
+        Instant threshold = Instant.parse("2026-11-01T00:00:00Z");
+        List<UUID> ids = List.of(UUID.randomUUID(), UUID.randomUUID());
+        given(repository.findDeletedUserIdsBefore(threshold)).willReturn(ids);
 
-        assertThatCode(() -> userService.validateDeactivatedUser(userId))
-                .doesNotThrowAnyException();
-    }
+        List<UUID> result = userService.findCleanupTargetIds(threshold);
 
-    @Test
-    @DisplayName("탈퇴하지 않은 사용자면 물리 삭제 대상 확인에서 USER_NOT_FOUND 예외가 난다")
-    void givenActiveUser_whenValidateDeactivatedUser_thenThrowUserNotFound() {
-        UUID userId = UUID.randomUUID();
-        User user = User.create("me@monew.com", "활성사용자", "암호화된비밀번호");
-        given(repository.findUserIncludingDeleted(userId)).willReturn(Optional.of(user));
-
-        assertThatThrownBy(() -> userService.validateDeactivatedUser(userId))
-                .isInstanceOf(MonewException.class)
-                .extracting("errorType")
-                .isEqualTo(UserErrorType.USER_NOT_FOUND);
-    }
-
-    @Test
-    @DisplayName("없는 사용자면 물리 삭제 대상 확인에서 USER_NOT_FOUND 예외가 난다")
-    void givenNoUser_whenValidateDeactivatedUser_thenThrowUserNotFound() {
-        UUID userId = UUID.randomUUID();
-        given(repository.findUserIncludingDeleted(userId)).willReturn(Optional.empty());
-
-        assertThatThrownBy(() -> userService.validateDeactivatedUser(userId))
-                .isInstanceOf(MonewException.class)
-                .extracting("errorType")
-                .isEqualTo(UserErrorType.USER_NOT_FOUND);
+        assertThat(result).isEqualTo(ids);
     }
 }

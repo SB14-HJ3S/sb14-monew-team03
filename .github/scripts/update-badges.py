@@ -109,7 +109,7 @@ def write_badges(directory, result, coverage):
             return
         coverage = None
     value = "unknown" if coverage is None else f"{coverage.quantize(Decimal('0.01'), rounding=ROUND_DOWN)}%"
-    color = UNKNOWN if coverage is None else SUCCESS if coverage >= 80 else COVERAGE_LOW
+    color = UNKNOWN if coverage is None else COVERAGE_LOW
     coverage_path.write_text(badge("codecov", value, color))
 
 

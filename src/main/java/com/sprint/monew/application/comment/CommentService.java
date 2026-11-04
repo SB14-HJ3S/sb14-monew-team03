@@ -38,4 +38,7 @@ public interface CommentService {
 
     // 논리 삭제된 댓글도 포함한다
     List<UUID> findIdsByArticleId(UUID articleId);
+
+    // 사용자 완전 삭제 전에, 탈퇴자가 누른 좋아요만큼 댓글마다 좋아요 수를 줄임
+    void decreaseLikeCountsByUserIds(List<UUID> userIds);
 }

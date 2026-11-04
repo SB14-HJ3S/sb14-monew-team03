@@ -6,11 +6,12 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterFactory;
 
-public class StringToSortOrderConverterFactory implements ConverterFactory<String, SortOrder> {
+public class StringToSortOrderConverterFactory implements ConverterFactory<String, SortOrder<?>> {
 
     @NonNull
     @Override
-    public <T extends SortOrder> Converter<String, T> getConverter(@NonNull Class<T> targetType) {
+    public <T extends SortOrder<?>> Converter<String, T> getConverter(
+            @NonNull Class<T> targetType) {
         validateInputIsEnum(targetType);
 
         List<T> constants = List.of(targetType.getEnumConstants());
@@ -25,7 +26,7 @@ public class StringToSortOrderConverterFactory implements ConverterFactory<Strin
                                                 "유효하지 않은 SortOrder 입니다. " + source));
     }
 
-    private <T extends SortOrder> void validateInputIsEnum(Class<T> type) {
+    private <T extends SortOrder<?>> void validateInputIsEnum(Class<T> type) {
         if (!type.isEnum()) {
             throw new IllegalArgumentException("SortOrder의 구현 타입은 Enum이여야 합니다. " + type.getName());
         }
