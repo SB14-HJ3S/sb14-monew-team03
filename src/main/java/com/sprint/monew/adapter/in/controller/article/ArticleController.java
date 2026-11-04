@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+@Slf4j
 @Tag(name = "뉴스 기사 관리", description = "뉴스 기사 관련 API")
 @RestWebAdapter(path = "/api/articles")
 @RequiredArgsConstructor
@@ -95,6 +97,8 @@ public class ArticleController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{articleId}")
     public void softDeleteArticle(@PathVariable UUID articleId) {
+        log.info("뉴스 기사 논리 삭제 요청: articleId={}", articleId);
         articleUseCase.softDeleteArticle(articleId);
+        log.info("뉴스 기사 논리 삭제 완료: articleId={}", articleId);
     }
 }
