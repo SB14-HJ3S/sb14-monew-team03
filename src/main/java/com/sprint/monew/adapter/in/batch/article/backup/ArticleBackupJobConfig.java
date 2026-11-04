@@ -2,6 +2,7 @@ package com.sprint.monew.adapter.in.batch.article.backup;
 
 import com.sprint.monew.application.article.provided.dto.ArticleResult;
 import java.util.List;
+import org.springframework.batch.core.ChunkListener;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.job.builder.JobBuilder;
@@ -19,11 +20,13 @@ public class ArticleBackupJobConfig {
             JobRepository jobRepository,
             PlatformTransactionManager transactionManager,
             ArticleBackupReader articleBackupReader,
-            ArticleBackupWriter articleBackupWriter) {
+            ArticleBackupWriter articleBackupWriter,
+            ArticleBackupListener listener) {
         return new StepBuilder("articleBackupStep", jobRepository)
                 .<List<ArticleResult>, List<ArticleResult>>chunk(1, transactionManager)
                 .reader(articleBackupReader)
                 .writer(articleBackupWriter)
+                .listener((ChunkListener) listener)
                 .build();
     }
 

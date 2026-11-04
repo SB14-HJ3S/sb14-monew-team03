@@ -6,22 +6,25 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.sprint.monew.application.article.provided.ArticleBackupUseCase;
+import com.sprint.monew.application.article.provided.dto.ArticleBackupResult;
 import com.sprint.monew.application.article.provided.dto.ArticleResult;
+import com.sprint.monew.global.exception.MonewException;
+import com.sprint.monew.global.exception.errortype.ArticleErrorType;
 import com.sprint.monew.global.type.ArticleSourceType;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
@@ -29,7 +32,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.MockedStatic;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
@@ -41,6 +43,7 @@ import org.springframework.batch.core.repository.support.ResourcelessJobReposito
 import org.springframework.batch.core.scope.StepScope;
 import org.springframework.batch.core.scope.context.StepSynchronizationManager;
 import org.springframework.batch.item.Chunk;
+import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.support.transaction.ResourcelessTransactionManager;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -63,10 +66,14 @@ class ArticleBackupJobTest {
         TestPropertyValues.of("monew.article.limit=" + LIMIT).applyTo(context);
         context.registerBean("stepScope", StepScope.class);
         context.registerBean(ArticleBackupUseCase.class, () -> useCase);
+        context.registerBean(MeterRegistry.class, SimpleMeterRegistry::new);
         context.registerBean(JobRepository.class, ResourcelessJobRepository::new);
         context.registerBean(PlatformTransactionManager.class, ResourcelessTransactionManager::new);
         context.register(
-                ArticleBackupJobConfig.class, ArticleBackupReader.class, ArticleBackupWriter.class);
+                ArticleBackupJobConfig.class,
+                ArticleBackupReader.class,
+                ArticleBackupWriter.class,
+                ArticleBackupListener.class);
         context.refresh();
         reader = context.getBean(ArticleBackupReader.class);
         writer = context.getBean(ArticleBackupWriter.class);
@@ -119,21 +126,15 @@ class ArticleBackupJobTest {
     }
 
     @Test
-    @DisplayName("Reader는 실행 시점 기준 전날의 기사를 조회한다")
-    void readArticlesForPreviousDay() throws Exception {
-        LocalDate today = LocalDate.of(2026, 1, 1);
-        LocalDate yesterday = today.minusDays(1);
+    @DisplayName("Reader는 실행 시점과 무관하게 JobParameter의 날짜로 조회한다")
+    void readArticlesForTargetDate() throws Exception {
         when(useCase.readArticles(any(LocalDate.class), isNull(), eq(LIMIT)))
                 .thenReturn(List.of(article()));
         openStep(TARGET_DATE);
 
-        try (MockedStatic<LocalDate> clock = mockStatic(LocalDate.class, CALLS_REAL_METHODS)) {
-            clock.when(() -> LocalDate.now(ZoneId.systemDefault())).thenReturn(today);
+        reader.read();
 
-            reader.read();
-        }
-
-        verify(useCase).readArticles(yesterday, null, LIMIT);
+        verify(useCase).readArticles(TARGET_DATE, null, LIMIT);
     }
 
     @Test
@@ -160,20 +161,62 @@ class ArticleBackupJobTest {
     }
 
     @Test
-    @DisplayName("Writer는 실행 시점 기준 전날 날짜로 백업한다")
-    void writeArticlesForPreviousDay() throws Exception {
-        LocalDate today = LocalDate.of(2026, 1, 1);
-        LocalDate yesterday = today.minusDays(1);
+    @DisplayName("Writer는 실행 시점과 무관하게 JobParameter의 날짜로 백업한다")
+    void writeArticlesForTargetDate() throws Exception {
         List<ArticleResult> page = List.of(article());
         openStep(TARGET_DATE);
 
-        try (MockedStatic<LocalDate> clock = mockStatic(LocalDate.class, CALLS_REAL_METHODS)) {
-            clock.when(() -> LocalDate.now(ZoneId.systemDefault())).thenReturn(today);
+        writer.write(new Chunk<>(List.of(page)));
 
-            writer.write(new Chunk<>(List.of(page)));
-        }
+        verify(useCase).backupChunk(eq(TARGET_DATE), anyLong(), eq(page));
+    }
 
-        verify(useCase).backupChunk(eq(yesterday), anyLong(), eq(page));
+    @Test
+    @DisplayName("Reader를 다시 열면 저장된 커서와 이전 실행의 페이지 크기를 복원한다")
+    void restoreReaderCheckpoint() throws Exception {
+        UUID afterId = UUID.randomUUID();
+        ExecutionContext checkpoint = new ExecutionContext();
+        checkpoint.putString(ArticleBackupReader.AFTER_ID, afterId.toString());
+        checkpoint.putInt(ArticleBackupReader.LIMIT, LIMIT + 1);
+        when(useCase.readArticles(TARGET_DATE, afterId, LIMIT + 1)).thenReturn(List.of());
+        openStep(TARGET_DATE);
+
+        reader.open(checkpoint);
+        assertThat(reader.read()).isNull();
+
+        verify(useCase).readArticles(TARGET_DATE, afterId, LIMIT + 1);
+    }
+
+    @Test
+    @DisplayName("Writer를 다시 열면 저장된 파일 번호로 업로드한다")
+    void restoreWriterCheckpoint() throws Exception {
+        List<ArticleResult> page = List.of(article());
+        ExecutionContext checkpoint = new ExecutionContext();
+        checkpoint.putLong(ArticleBackupWriter.NEXT_PART_NUMBER, 4L);
+        openStep(TARGET_DATE);
+
+        writer.open(checkpoint);
+        writer.write(new Chunk<>(List.of(page)));
+        writer.update(checkpoint);
+
+        verify(useCase).backupChunk(TARGET_DATE, 4L, page);
+        assertThat(checkpoint.getLong(ArticleBackupWriter.NEXT_PART_NUMBER)).isEqualTo(5L);
+    }
+
+    @Test
+    @DisplayName("업로드 실패를 다시 던지고 같은 청크를 재시도할 때 파일 번호를 유지한다")
+    void retainPartNumberAfterUploadFailure() throws Exception {
+        List<ArticleResult> page = List.of(article());
+        MonewException failure = new MonewException(ArticleErrorType.ARTICLE_BACKUP_UPLOAD_FAILED);
+        when(useCase.backupChunk(TARGET_DATE, 1L, page))
+                .thenThrow(failure)
+                .thenReturn(new ArticleBackupResult("backup-key", TARGET_DATE, page.size()));
+        openStep(TARGET_DATE);
+
+        assertThatThrownBy(() -> writer.write(new Chunk<>(List.of(page)))).isSameAs(failure);
+        writer.write(new Chunk<>(List.of(page)));
+
+        verify(useCase, times(2)).backupChunk(TARGET_DATE, 1L, page);
     }
 
     @Test

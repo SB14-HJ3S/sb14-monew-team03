@@ -33,7 +33,7 @@ public class ArticleBackupScheduler {
                     JobExecutionAlreadyRunningException,
                     JobParametersInvalidException,
                     JobRestartException {
-        LocalDate targetDate = LocalDate.now(ZoneId.systemDefault()).minusDays(1L);
+        LocalDate targetDate = LocalDate.now(ZoneId.of("Asia/Seoul")).minusDays(1L);
         JobParameters parameters =
                 new JobParametersBuilder().addLocalDate("targetDate", targetDate).toJobParameters();
 
