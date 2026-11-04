@@ -92,4 +92,10 @@ public class ArticleServiceImpl implements ArticleService {
         return new MonewException(
                 ArticleErrorType.ARTICLE_NOT_FOUND, Map.of("articleId", articleId));
     }
+
+    @Override
+    @Transactional
+    public void increaseViewCount(UUID articleId) {
+        repository.increaseViewCount(articleId);
+    }
 }

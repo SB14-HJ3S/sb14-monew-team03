@@ -1,6 +1,7 @@
 package com.sprint.monew.adapter.in.controller.article;
 
 import com.sprint.monew.adapter.in.controller.article.dto.response.ArticleDto;
+import com.sprint.monew.adapter.in.controller.article.dto.response.ArticleViewDto;
 import com.sprint.monew.application.article.provided.ArticleUseCase;
 import com.sprint.monew.application.article.provided.dto.ArticleQuery;
 import com.sprint.monew.application.article.provided.dto.ArticleResult;
@@ -25,6 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
@@ -105,5 +107,11 @@ public class ArticleController {
         log.info("뉴스 기사 논리 삭제 요청: articleId={}", articleId);
         articleUseCase.softDeleteArticle(articleId);
         log.info("뉴스 기사 논리 삭제 완료: articleId={}", articleId);
+    }
+
+    @RequestId
+    @PostMapping("/{articleId}/article-views")
+    public ArticleViewDto registerView(@PathVariable UUID articleId) {
+        return ArticleViewDto.from(articleUseCase.register(articleId));
     }
 }
