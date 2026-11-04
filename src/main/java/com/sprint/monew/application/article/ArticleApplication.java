@@ -1,8 +1,10 @@
 package com.sprint.monew.application.article;
 
+import com.sprint.monew.application.article.event.ArticleSoftDeletedEvent;
 import com.sprint.monew.application.article.provided.ArticleUseCase;
 import com.sprint.monew.application.article.provided.dto.ArticleQuery;
 import com.sprint.monew.application.article.provided.dto.ArticleResult;
+import com.sprint.monew.application.article.required.ArticleEventPublisherPort;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.article.entity.ArticleViewStatus;
 import com.sprint.monew.global.annotation.ApplicationService;
@@ -14,6 +16,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 
 @ApplicationService
 @RequiredArgsConstructor
@@ -21,6 +24,7 @@ public class ArticleApplication implements ArticleUseCase {
 
     private final ArticleService articleService;
     private final ArticleViewStatusService articleViewStatusService;
+    private final ArticleEventPublisherPort eventPublisher;
 
     @Override
     public PageResult<ArticleResult> findArticlePage(ArticleQuery query) {
@@ -67,7 +71,11 @@ public class ArticleApplication implements ArticleUseCase {
     }
 
     @Override
-    public void softDeleteArticle(UUID articleId) {}
+    @Transactional
+    public void softDeleteArticle(UUID articleId) {
+        articleService.softDelete(articleId);
+        eventPublisher.publish(new ArticleSoftDeletedEvent(articleId));
+    }
 
     @Override
     public void hardDeleteArticle(UUID articleId) {}

@@ -46,11 +46,7 @@ public class ArticleServiceImpl implements ArticleService {
         return repository
                 .findById(articleId)
                 .filter(article -> !article.isDeleted())
-                .orElseThrow(
-                        () ->
-                                new MonewException(
-                                        ArticleErrorType.ARTICLE_NOT_FOUND,
-                                        Map.of("articleId", articleId)));
+                .orElseThrow(() -> articleNotFound(articleId));
     }
 
     @Override
@@ -82,5 +78,18 @@ public class ArticleServiceImpl implements ArticleService {
     @Transactional
     public void decreaseCommentCount(UUID articleId) {
         repository.decreaseCommentCount(articleId);
+    }
+
+    @Override
+    @Transactional
+    public void softDelete(UUID articleId) {
+        if (repository.softDeleteIfActive(articleId, Instant.now()) == 0) {
+            throw articleNotFound(articleId);
+        }
+    }
+
+    private MonewException articleNotFound(UUID articleId) {
+        return new MonewException(
+                ArticleErrorType.ARTICLE_NOT_FOUND, Map.of("articleId", articleId));
     }
 }

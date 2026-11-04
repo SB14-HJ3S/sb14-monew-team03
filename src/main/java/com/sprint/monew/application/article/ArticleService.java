@@ -23,4 +23,6 @@ public interface ArticleService {
     void increaseCommentCount(UUID articleId);
 
     void decreaseCommentCount(UUID articleId);
+
+    void softDelete(UUID articleId);
 }
