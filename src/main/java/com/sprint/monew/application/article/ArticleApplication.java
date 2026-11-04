@@ -1,9 +1,11 @@
 package com.sprint.monew.application.article;
 
+import com.sprint.monew.application.article.event.ArticleSoftDeletedEvent;
 import com.sprint.monew.application.article.provided.ArticleUseCase;
 import com.sprint.monew.application.article.provided.dto.ArticleQuery;
 import com.sprint.monew.application.article.provided.dto.ArticleResult;
 import com.sprint.monew.application.article.provided.dto.ArticleViewStatusResult;
+import com.sprint.monew.application.article.required.ArticleEventPublisherPort;
 import com.sprint.monew.application.user.IUserService;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.article.entity.ArticleViewStatus;
@@ -25,6 +27,7 @@ public class ArticleApplication implements ArticleUseCase {
 
     private final ArticleService articleService;
     private final ArticleViewStatusService articleViewStatusService;
+    private final ArticleEventPublisherPort eventPublisher;
     private final IUserService userService;
 
     @Override
@@ -72,7 +75,11 @@ public class ArticleApplication implements ArticleUseCase {
     }
 
     @Override
-    public void softDeleteArticle(UUID articleId) {}
+    @Transactional
+    public void softDeleteArticle(UUID articleId) {
+        articleService.softDelete(articleId);
+        eventPublisher.publish(new ArticleSoftDeletedEvent(articleId));
+    }
 
     @Override
     public void hardDeleteArticle(UUID articleId) {}

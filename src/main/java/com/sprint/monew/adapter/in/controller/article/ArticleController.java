@@ -11,6 +11,7 @@ import com.sprint.monew.global.pagination.PageResult;
 import com.sprint.monew.global.pagination.SortDirection;
 import com.sprint.monew.global.type.ArticleSourceType;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Min;
@@ -19,12 +20,17 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
+@Slf4j
 @Tag(name = "뉴스 기사 관리", description = "뉴스 기사 관련 API")
 @RestWebAdapter(path = "/api/articles")
 @RequiredArgsConstructor
@@ -89,6 +95,18 @@ public class ArticleController {
                 result.size(),
                 result.totalElements(),
                 result.hasNext());
+    }
+
+    @Operation(summary = "뉴스 기사 논리 삭제", description = "뉴스 기사를 논리적으로 삭제합니다.")
+    @ApiResponse(responseCode = "204", description = "논리 삭제 성공")
+    @ApiResponse(responseCode = "404", description = "뉴스 기사 정보 없음")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/{articleId}")
+    public void softDeleteArticle(
+            @Parameter(description = "뉴스 기사 ID") @PathVariable UUID articleId) {
+        log.info("뉴스 기사 논리 삭제 요청: articleId={}", articleId);
+        articleUseCase.softDeleteArticle(articleId);
+        log.info("뉴스 기사 논리 삭제 완료: articleId={}", articleId);
     }
 
     @RequestId
