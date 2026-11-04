@@ -53,6 +53,12 @@ public interface ArticleJpaRepository extends JpaRepository<Article, UUID>, Arti
             Pageable pageable);
 
     @Modifying(flushAutomatically = true, clearAutomatically = true)
-    @Query("UPDATE Article a SET a.viewCount = a.viewCount + 1 WHERE a.id = :id")
+    @Query(
+            """
+            UPDATE Article a
+                    SET a.viewCount = a.viewCount + 1
+                    WHERE a.id = :id
+                            AND a.deletedAt IS NULL
+            """)
     int increaseViewCount(@Param("id") UUID id);
 }
