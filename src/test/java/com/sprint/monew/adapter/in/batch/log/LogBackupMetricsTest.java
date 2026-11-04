@@ -48,19 +48,19 @@ class LogBackupMetricsTest {
         SimpleMeterRegistry registry = new SimpleMeterRegistry();
         try {
             LogBackupStepListener listener = new LogBackupStepListener(registry);
+            StepContribution contribution = new StepContribution(stepExecution);
 
             if (status == BatchStatus.FAILED) {
                 assertThatThrownBy(
                                 () ->
                                         tasklet.execute(
-                                                new StepContribution(stepExecution),
+                                                contribution,
                                                 new ChunkContext(new StepContext(stepExecution))))
                         .isInstanceOf(LogBackupFailedException.class);
             } else {
-                tasklet.execute(
-                        new StepContribution(stepExecution),
-                        new ChunkContext(new StepContext(stepExecution)));
+                tasklet.execute(contribution, new ChunkContext(new StepContext(stepExecution)));
             }
+            stepExecution.apply(contribution);
             ExitStatus exitStatus =
                     status == BatchStatus.FAILED ? ExitStatus.FAILED : ExitStatus.COMPLETED;
             stepExecution.setStatus(status);
@@ -69,6 +69,7 @@ class LogBackupMetricsTest {
             assertThat(listener.afterStep(stepExecution)).isNull();
             assertThat(stepExecution.getStatus()).isEqualTo(status);
             assertThat(stepExecution.getExitStatus()).isEqualTo(exitStatus);
+            assertThat(stepExecution.getWriteCount()).isEqualTo(expectedUploaded);
 
             assertThat(registry.get(LogMetrics.TOTAL_FILES).counter().count())
                     .isEqualTo(expectedTotal);

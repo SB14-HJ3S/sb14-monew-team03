@@ -23,7 +23,7 @@ public class LogBackupStepListener implements StepExecutionListener {
     public ExitStatus afterStep(StepExecution stepExecution) {
         ExecutionContext context = stepExecution.getExecutionContext();
         int totalFileCount = context.getInt(LogMetrics.TOTAL_FILES, 0);
-        int uploadedFileCount = context.getInt(LogMetrics.UPLOADED_FILES, 0);
+        long uploadedFileCount = stepExecution.getWriteCount();
 
         totalFilesCounter.increment(totalFileCount);
         uploadedFilesCounter.increment(uploadedFileCount);

@@ -60,7 +60,11 @@ class LogBackupJobIntegrationTest {
                 .isEqualTo(BatchStatus.FAILED);
         assertThat(failed.getStepExecutions())
                 .singleElement()
-                .satisfies(step -> assertThat(step.getStatus()).isEqualTo(BatchStatus.FAILED));
+                .satisfies(
+                        step -> {
+                            assertThat(step.getStatus()).isEqualTo(BatchStatus.FAILED);
+                            assertThat(step.getWriteCount()).isEqualTo(uploadedFileCount);
+                        });
         assertThat(failed.getAllFailureExceptions())
                 .anySatisfy(
                         failure ->
@@ -109,6 +113,9 @@ class LogBackupJobIntegrationTest {
         assertThat(execution.getExitStatus().getExitCode())
                 .isEqualTo(ExitStatus.COMPLETED.getExitCode());
         assertMetricCounts(previousTotal + totalFileCount, previousUploaded + uploadedFileCount);
+        assertThat(jobExplorer.getJobExecution(execution.getId()).getStepExecutions())
+                .singleElement()
+                .satisfies(step -> assertThat(step.getWriteCount()).isEqualTo(uploadedFileCount));
         assertThat(jobExplorer.getJobExecution(execution.getId()).getStatus())
                 .isEqualTo(BatchStatus.COMPLETED);
     }
