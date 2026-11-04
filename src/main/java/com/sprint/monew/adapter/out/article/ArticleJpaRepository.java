@@ -30,6 +30,12 @@ public interface ArticleJpaRepository extends JpaRepository<Article, UUID>, Arti
                     + " WHERE a.id = :id AND a.commentCount > 0")
     int decreaseCommentCount(@Param("id") UUID id);
 
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query(
+            "UPDATE Article a SET a.deletedAt = :deletedAt"
+                    + " WHERE a.id = :id AND a.deletedAt IS NULL")
+    int softDeleteIfActive(@Param("id") UUID id, @Param("deletedAt") Instant deletedAt);
+
     @Query(
             """
             SELECT a
@@ -45,4 +51,14 @@ public interface ArticleJpaRepository extends JpaRepository<Article, UUID>, Arti
             @Param("to") Instant to,
             @Param("afterId") UUID afterId,
             Pageable pageable);
+
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query(
+            """
+            UPDATE Article a
+                    SET a.viewCount = a.viewCount + 1
+                    WHERE a.id = :id
+                            AND a.deletedAt IS NULL
+            """)
+    int increaseViewCount(@Param("id") UUID id);
 }

@@ -69,6 +69,16 @@ public class ArticleRepositoryAdapter implements ArticleRepositoryPort {
     }
 
     @Override
+    public int increaseViewCount(UUID articleId) {
+        return jpaRepository.increaseViewCount(articleId);
+    }
+
+    @Override
+    public int softDeleteIfActive(UUID articleId, Instant deletedAt) {
+        return jpaRepository.softDeleteIfActive(articleId, deletedAt);
+    }
+
+    @Override
     public List<Article> findBackupChunk(Instant from, Instant to, UUID afterId, int limit) {
         return jpaRepository.findBackupChunk(from, to, afterId, PageRequest.of(0, limit));
     }
