@@ -50,7 +50,7 @@ services:
     volumes:
       - './monitoring/grafana/provisioning/datasources/prometheus.yml:/etc/grafana/provisioning/datasources/prometheus.yml:ro'
       - './monitoring/grafana/provisioning/dashboards/monew.yml:/etc/grafana/provisioning/dashboards/monew.yml:ro'
-      - './monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro'
+      - './monitoring/grafana/dashboards:/etc/grafana/dashboards:ro'
     depends_on:
       - prometheus
 
