@@ -101,7 +101,8 @@ public class CommentApplication implements CommentUseCase {
         commentService.deleteLike(commentId, requestUserId);
         commentService.decreaseLikeCount(commentId);
 
-        commentEventPublisher.publish(new CommentUnlikedEvent(commentId, requestUserId));
+        long likeCount = commentService.getComment(commentId).getLikeCount();
+        commentEventPublisher.publish(new CommentUnlikedEvent(commentId, requestUserId, likeCount));
     }
 
     @Override

@@ -213,9 +213,9 @@ class UserActivityEventListenerTest {
         UUID commentId = UUID.randomUUID();
         UUID likedById = UUID.randomUUID();
 
-        listener.on(new CommentUnlikedEvent(commentId, likedById));
+        listener.on(new CommentUnlikedEvent(commentId, likedById, 3L));
 
-        verify(userActivityUseCase).commentUnliked(likedById, commentId);
+        verify(userActivityUseCase).commentUnliked(likedById, commentId, 3L);
     }
 
     @Test

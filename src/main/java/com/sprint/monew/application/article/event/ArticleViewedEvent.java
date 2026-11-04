@@ -18,7 +18,7 @@ public record ArticleViewedEvent(
         long articleCommentCount,
         long articleViewCount,
         Instant viewedAt) {
-    public static ArticleViewedEvent of(ArticleViewStatusResult result) {
+    public static ArticleViewedEvent of(ArticleViewStatusResult result, Instant viewedAt) {
         return new ArticleViewedEvent(
                 result.id(),
                 result.viewedBy(),
@@ -30,6 +30,6 @@ public record ArticleViewedEvent(
                 result.articleSummary(),
                 result.articleCommentCount(),
                 result.articleViewCount(),
-                result.createdAt());
+                viewedAt);
     }
 }

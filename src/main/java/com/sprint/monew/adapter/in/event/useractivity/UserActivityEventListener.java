@@ -35,13 +35,13 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Async("userActivityExecutor")
 public class UserActivityEventListener {
 
     private final UserActivityUseCase userActivityUseCase;
 
     // ===== 사용자 =====
 
-    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(UserRegisteredEvent e) {
         run(
@@ -51,13 +51,11 @@ public class UserActivityEventListener {
                                 e.userId(), e.email(), e.nickname(), e.createdAt()));
     }
 
-    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(UserNicknameUpdatedEvent e) {
         run(e, () -> userActivityUseCase.nicknameUpdated(e.userId(), e.nickname()));
     }
 
-    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(UserHardDeletingEvent e) {
         run(e, () -> userActivityUseCase.usersHardDeleted(e.userIds()));
@@ -65,7 +63,6 @@ public class UserActivityEventListener {
 
     // ===== 구독 관심사 =====
 
-    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(InterestSubscribedEvent e) {
         run(
@@ -82,19 +79,16 @@ public class UserActivityEventListener {
                                         e.createdAt())));
     }
 
-    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(InterestUnsubscribedEvent e) {
         run(e, () -> userActivityUseCase.unsubscribed(e.userId(), e.interestId()));
     }
 
-    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(InterestKeywordsUpdatedEvent e) {
         run(e, () -> userActivityUseCase.interestKeywordsUpdated(e.interestId(), e.keywords()));
     }
 
-    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(InterestDeletedEvent e) {
         run(e, () -> userActivityUseCase.interestDeleted(e.interestId()));
@@ -102,7 +96,6 @@ public class UserActivityEventListener {
 
     // ===== 댓글 =====
 
-    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(CommentCreatedEvent e) {
         run(
@@ -121,13 +114,11 @@ public class UserActivityEventListener {
                                         e.createdAt())));
     }
 
-    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(CommentUpdatedEvent e) {
         run(e, () -> userActivityUseCase.commentUpdated(e.commentId(), e.content()));
     }
 
-    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(CommentDeletedEvent e) {
         run(e, () -> userActivityUseCase.commentDeleted(e.commentId()));
@@ -135,7 +126,6 @@ public class UserActivityEventListener {
 
     // ===== 좋아요 =====
 
-    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(CommentLikeCreatedEvent e) {
         run(
@@ -156,15 +146,17 @@ public class UserActivityEventListener {
                                         e.commentCreatedAt())));
     }
 
-    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(CommentUnlikedEvent e) {
-        run(e, () -> userActivityUseCase.commentUnliked(e.likedById(), e.commentId()));
+        run(
+                e,
+                () ->
+                        userActivityUseCase.commentUnliked(
+                                e.likedById(), e.commentId(), e.commentLikeCount()));
     }
 
     // ===== 기사 =====
 
-    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(ArticleViewedEvent e) {
         run(
@@ -186,13 +178,11 @@ public class UserActivityEventListener {
                                         e.articleViewCount())));
     }
 
-    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(ArticleSoftDeletedEvent e) {
         run(e, () -> userActivityUseCase.articleDeleted(e.articleId()));
     }
 
-    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(ArticleHardDeletingEvent e) {
         // 논리 삭제 때 이미 빠졌으면 $pull이 아무것도 하지 않는다

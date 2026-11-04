@@ -39,7 +39,7 @@ public interface UserActivityUseCase {
     // 좋아요
     void commentLiked(UUID likedById, CommentLikeActivityResult item);
 
-    void commentUnliked(UUID likedById, UUID commentId);
+    void commentUnliked(UUID likedById, UUID commentId, long likeCount);
 
     // 기사
     void articleViewed(UUID userId, ArticleViewActivityResult item);

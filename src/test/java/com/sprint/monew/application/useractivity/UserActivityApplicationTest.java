@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.sprint.monew.application.useractivity.provided.dto.CommentActivityResult;
+import com.sprint.monew.application.useractivity.provided.dto.CommentLikeActivityResult;
 import com.sprint.monew.application.useractivity.provided.dto.UserActivityResult;
 import com.sprint.monew.application.useractivity.required.UserActivityReader;
 import com.sprint.monew.application.useractivity.required.UserActivityWriter;
@@ -95,5 +96,41 @@ class UserActivityApplicationTest {
         userActivityApplication.commentCreated(userId, item);
 
         verify(writer).addComment(userId, item);
+    }
+
+    @Test
+    @DisplayName("좋아요는 항목을 추가하고, 그 댓글의 좋아요 수를 모든 문서에 맞춘다.")
+    void whenCommentLiked_thenAddLikeAndUpdateCount() {
+        UUID likedById = UUID.randomUUID();
+        UUID commentId = UUID.randomUUID();
+        CommentLikeActivityResult item =
+                new CommentLikeActivityResult(
+                        UUID.randomUUID(),
+                        Instant.now(),
+                        commentId,
+                        UUID.randomUUID(),
+                        "기사",
+                        UUID.randomUUID(),
+                        "버즈",
+                        "내용",
+                        4L,
+                        Instant.now());
+
+        userActivityApplication.commentLiked(likedById, item);
+
+        verify(writer).addCommentLike(likedById, item);
+        verify(writer).updateCommentLikeCount(commentId, 4L);
+    }
+
+    @Test
+    @DisplayName("좋아요 취소는 항목을 빼고, 그 댓글의 좋아요 수를 모든 문서에 맞춘다.")
+    void whenCommentUnliked_thenRemoveLikeAndUpdateCount() {
+        UUID likedById = UUID.randomUUID();
+        UUID commentId = UUID.randomUUID();
+
+        userActivityApplication.commentUnliked(likedById, commentId, 3L);
+
+        verify(writer).removeCommentLike(likedById, commentId);
+        verify(writer).updateCommentLikeCount(commentId, 3L);
     }
 }

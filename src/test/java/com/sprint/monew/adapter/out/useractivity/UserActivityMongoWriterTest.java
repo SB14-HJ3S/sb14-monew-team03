@@ -221,6 +221,19 @@ class UserActivityMongoWriterTest {
         assertThat(find(buzz).comments()).isEmpty();
     }
 
+    @Test
+    @DisplayName("좋아요 수를 바꾸면 쓴 사람의 댓글과 좋아요 누른 사람들의 항목 숫자가 함께 바뀐다.")
+    void givenCommentAndLike_whenUpdateLikeCount_thenUpdatedEverywhere() {
+        UUID commentId = UUID.randomUUID();
+        writer.addComment(buzz, comment(commentId, UUID.randomUUID(), buzz));
+        writer.addCommentLike(woody, like(commentId, UUID.randomUUID(), buzz));
+
+        writer.updateCommentLikeCount(commentId, 5L);
+
+        assertThat(find(buzz).comments().get(0).likeCount()).isEqualTo(5L);
+        assertThat(find(woody).commentLikes().get(0).commentLikeCount()).isEqualTo(5L);
+    }
+
     // ===== 도우미 =====
 
     private UserActivityDocument find(UUID userId) {

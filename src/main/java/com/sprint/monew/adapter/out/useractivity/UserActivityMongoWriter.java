@@ -158,6 +158,24 @@ public class UserActivityMongoWriter implements UserActivityWriter {
         pullFromUser(userId, FIELD_COMMENT_LIKES, "commentId", commentId);
     }
 
+    @Override
+    public void updateCommentLikeCount(UUID commentId, long likeCount) {
+        // 쓴 사람 문서 "최근 작성한 댓글"
+        mongoTemplate.updateMulti(
+                Query.query(Criteria.where(FIELD_COMMENTS + ".commentId").is(commentId)),
+                new Update()
+                        .set(FIELD_COMMENTS + ".$[c].likeCount", likeCount)
+                        .filterArray(Criteria.where("c.commentId").is(commentId)),
+                DOC);
+        // 좋아요 누른 사람들 문서 "좋아요한 댓글"
+        mongoTemplate.updateMulti(
+                Query.query(Criteria.where(FIELD_COMMENT_LIKES + ".commentId").is(commentId)),
+                new Update()
+                        .set(FIELD_COMMENT_LIKES + ".$[l].commentLikeCount", likeCount)
+                        .filterArray(Criteria.where("l.commentId").is(commentId)),
+                DOC);
+    }
+
     // 기사
 
     @Override

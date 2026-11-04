@@ -99,11 +99,13 @@ public class UserActivityApplication implements UserActivityUseCase {
     @Override
     public void commentLiked(UUID likedById, CommentLikeActivityResult item) {
         writer.addCommentLike(likedById, item);
+        writer.updateCommentLikeCount(item.commentId(), item.commentLikeCount());
     }
 
     @Override
-    public void commentUnliked(UUID likedById, UUID commentId) {
+    public void commentUnliked(UUID likedById, UUID commentId, long likeCount) {
         writer.removeCommentLike(likedById, commentId);
+        writer.updateCommentLikeCount(commentId, likeCount);
     }
 
     // ===== 기사 =====

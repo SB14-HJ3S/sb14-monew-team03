@@ -53,6 +53,8 @@ public interface UserActivityWriter {
 
     void removeCommentLike(UUID userId, UUID commentId);
 
+    void updateCommentLikeCount(UUID commentId, long likeCount);
+
     // 기사
 
     /** 이미 본 기사면 맨 앞으로 올린다 */
