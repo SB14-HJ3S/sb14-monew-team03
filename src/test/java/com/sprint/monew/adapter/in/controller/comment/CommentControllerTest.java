@@ -1,11 +1,13 @@
 package com.sprint.monew.adapter.in.controller.comment;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -16,15 +18,20 @@ import com.sprint.monew.adapter.in.controller.comment.dto.request.CommentRegiste
 import com.sprint.monew.adapter.in.controller.comment.dto.request.CommentUpdateRequest;
 import com.sprint.monew.application.comment.provided.CommentUseCase;
 import com.sprint.monew.application.comment.provided.dto.CommentLikeResult;
+import com.sprint.monew.application.comment.provided.dto.CommentQuery;
 import com.sprint.monew.application.comment.provided.dto.CommentResult;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.ArticleErrorType;
 import com.sprint.monew.global.exception.errortype.CommentErrorType;
+import com.sprint.monew.global.pagination.PageResult;
+import com.sprint.monew.global.pagination.SortDirection;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
@@ -398,6 +405,151 @@ class CommentControllerTest {
             mockMvc.perform(delete("/api/comments/{commentId}/hard", commentId))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.code").value("COMMENT_NOT_FOUND"));
+        }
+    }
+
+    @Nested
+    @DisplayName("GET /api/comments 댓글 목록 조회")
+    class FindByQuery {
+
+        private final UUID articleId = UUID.randomUUID();
+
+        private CommentQuery capturedQuery() {
+            ArgumentCaptor<CommentQuery> captor = ArgumentCaptor.forClass(CommentQuery.class);
+            verify(commentUseCase).findByQuery(captor.capture());
+            return captor.getValue();
+        }
+
+        @Test
+        @DisplayName("정상 요청이면 200과 댓글 페이지를 응답하고, 파라미터를 CommentQuery로 넘긴다")
+        void success() throws Exception {
+            CommentResult comment =
+                    new CommentResult(
+                            commentId,
+                            articleId,
+                            requestUserId,
+                            "작성자",
+                            "댓글 내용",
+                            2L,
+                            true,
+                            Instant.parse("2026-11-03T02:00:00Z"));
+            given(commentUseCase.findByQuery(any()))
+                    .willReturn(
+                            new PageResult<>(
+                                    List.of(comment),
+                                    "2026-11-03T02:00:00Z",
+                                    Instant.parse("2026-11-03T02:00:00Z"),
+                                    1,
+                                    5L,
+                                    true));
+
+            mockMvc.perform(
+                            get("/api/comments")
+                                    .header(USER_ID_HEADER, requestUserId)
+                                    .param("articleId", articleId.toString())
+                                    .param("orderBy", "likeCount")
+                                    .param("direction", "DESC")
+                                    .param("limit", "1"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content[0].id").value(commentId.toString()))
+                    .andExpect(jsonPath("$.content[0].articleId").value(articleId.toString()))
+                    .andExpect(jsonPath("$.content[0].userNickname").value("작성자"))
+                    .andExpect(jsonPath("$.content[0].likeCount").value(2))
+                    .andExpect(jsonPath("$.content[0].likedByMe").value(true))
+                    .andExpect(jsonPath("$.nextCursor").value("2026-11-03T02:00:00Z"))
+                    .andExpect(jsonPath("$.nextAfter").value("2026-11-03T02:00:00Z"))
+                    .andExpect(jsonPath("$.size").value(1))
+                    .andExpect(jsonPath("$.totalElements").value(5))
+                    .andExpect(jsonPath("$.hasNext").value(true));
+
+            CommentQuery query = capturedQuery();
+            assertThat(query.articleId()).isEqualTo(articleId);
+            assertThat(query.orderBy()).isEqualTo(CommentQuery.SortOrder.LIKE_COUNT);
+            assertThat(query.direction()).isEqualTo(SortDirection.DESC);
+            assertThat(query.cursor()).isNull();
+            assertThat(query.after()).isNull();
+            assertThat(query.limit()).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("다음 페이지 요청이면 cursor와 after를 CommentQuery로 넘긴다")
+        void nextPage() throws Exception {
+            given(commentUseCase.findByQuery(any()))
+                    .willReturn(new PageResult<>(List.of(), null, null, 0, 0L, false));
+
+            mockMvc.perform(
+                            get("/api/comments")
+                                    .header(USER_ID_HEADER, requestUserId)
+                                    .param("articleId", articleId.toString())
+                                    .param("orderBy", "createdAt")
+                                    .param("direction", "ASC")
+                                    .param("cursor", "2026-11-03T02:00:00Z")
+                                    .param("after", "2026-11-03T02:00:00Z")
+                                    .param("limit", "10"))
+                    .andExpect(status().isOk());
+
+            CommentQuery query = capturedQuery();
+            assertThat(query.orderBy()).isEqualTo(CommentQuery.SortOrder.CREATED_AT);
+            assertThat(query.direction()).isEqualTo(SortDirection.ASC);
+            assertThat(query.cursor()).isEqualTo("2026-11-03T02:00:00Z");
+            // 응답의 nextAfter(UTC, Z 붙음)를 그대로 돌려받아도 시각이 밀리지 않아야 함
+            assertThat(query.after()).isEqualTo(Instant.parse("2026-11-03T02:00:00Z"));
+        }
+
+        @Test
+        @DisplayName("articleId 없이 요청해도 200을 응답한다 (Swagger에서 선택 값)")
+        void withoutArticleId() throws Exception {
+            given(commentUseCase.findByQuery(any()))
+                    .willReturn(new PageResult<>(List.of(), null, null, 0, 0L, false));
+
+            mockMvc.perform(
+                            get("/api/comments")
+                                    .header(USER_ID_HEADER, requestUserId)
+                                    .param("orderBy", "createdAt")
+                                    .param("direction", "DESC")
+                                    .param("limit", "10"))
+                    .andExpect(status().isOk());
+
+            assertThat(capturedQuery().articleId()).isNull();
+        }
+
+        @Test
+        @DisplayName("Monew-Request-User-ID 헤더가 없으면 400을 응답하고 유스케이스를 부르지 않는다")
+        void missingUserIdHeader() throws Exception {
+            mockMvc.perform(
+                            get("/api/comments")
+                                    .param("orderBy", "createdAt")
+                                    .param("direction", "DESC")
+                                    .param("limit", "10"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+            verifyNoInteractions(commentUseCase);
+        }
+
+        @Test
+        @DisplayName("Swagger에 없는 정렬 기준이면 400을 응답하고 유스케이스를 부르지 않는다")
+        void invalidOrderBy() throws Exception {
+            mockMvc.perform(
+                            get("/api/comments")
+                                    .header(USER_ID_HEADER, requestUserId)
+                                    .param("orderBy", "content")
+                                    .param("direction", "DESC")
+                                    .param("limit", "10"))
+                    .andExpect(status().isBadRequest());
+            verifyNoInteractions(commentUseCase);
+        }
+
+        @Test
+        @DisplayName("limit이 0이면 400을 응답하고 유스케이스를 부르지 않는다")
+        void zeroLimit() throws Exception {
+            mockMvc.perform(
+                            get("/api/comments")
+                                    .header(USER_ID_HEADER, requestUserId)
+                                    .param("orderBy", "createdAt")
+                                    .param("direction", "DESC")
+                                    .param("limit", "0"))
+                    .andExpect(status().isBadRequest());
+            verifyNoInteractions(commentUseCase);
         }
     }
 }
