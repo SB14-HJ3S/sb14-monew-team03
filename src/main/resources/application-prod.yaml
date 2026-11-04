@@ -22,3 +22,9 @@ logging:
       max-file-size: 10MB
       max-history: 15
       total-size-cap: 300MB
+
+monew:
+  cloudwatch:
+    namespace: Monew
+    # 배치 걸린 시간은 spring.batch.job:Job이름 형식
+    metrics: ${CLOUDWATCH_METRICS:batch.notification.cleanup.deleted,spring.batch.job:notificationCleanupJob}
