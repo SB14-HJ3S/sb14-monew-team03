@@ -11,7 +11,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "user_activities")
 @CompoundIndexes({
-    @CompoundIndex(name = "idx_comments_id", def = "{'comments.id': 1}"),
+    @CompoundIndex(name = "idx_comments_id", def = "{'comments.commentId': 1}"),
     @CompoundIndex(name = "idx_comments_article", def = "{'comments.articleId': 1}"),
     @CompoundIndex(name = "idx_likes_comment", def = "{'commentLikes.commentId': 1}"),
     @CompoundIndex(name = "idx_likes_comment_user", def = "{'commentLikes.commentUserId': 1}"),

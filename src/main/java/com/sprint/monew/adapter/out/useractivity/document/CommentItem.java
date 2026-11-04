@@ -5,7 +5,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 public record CommentItem(
-        UUID id,
+        UUID commentId,
         UUID articleId,
         String articleTitle,
         UUID userId,
@@ -14,8 +14,27 @@ public record CommentItem(
         long likeCount,
         Instant createdAt) {
 
+    public static CommentItem from(CommentActivityResult r) {
+        return new CommentItem(
+                r.id(),
+                r.articleId(),
+                r.articleTitle(),
+                r.userId(),
+                r.userNickname(),
+                r.content(),
+                r.likeCount(),
+                r.createdAt());
+    }
+
     public CommentActivityResult toResult() {
         return new CommentActivityResult(
-                id, articleId, articleTitle, userId, userNickname, content, likeCount, createdAt);
+                commentId,
+                articleId,
+                articleTitle,
+                userId,
+                userNickname,
+                content,
+                likeCount,
+                createdAt);
     }
 }

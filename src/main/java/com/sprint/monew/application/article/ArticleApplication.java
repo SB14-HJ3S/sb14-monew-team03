@@ -1,6 +1,7 @@
 package com.sprint.monew.application.article;
 
 import com.sprint.monew.application.article.event.ArticleSoftDeletedEvent;
+import com.sprint.monew.application.article.event.ArticleViewedEvent;
 import com.sprint.monew.application.article.provided.ArticleUseCase;
 import com.sprint.monew.application.article.provided.dto.ArticleQuery;
 import com.sprint.monew.application.article.provided.dto.ArticleResult;
@@ -14,7 +15,9 @@ import com.sprint.monew.global.annotation.ApplicationService;
 import com.sprint.monew.global.context.RequestIdContext;
 import com.sprint.monew.global.pagination.PageResult;
 import com.sprint.monew.global.type.ArticleSourceType;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -106,6 +109,11 @@ public class ArticleApplication implements ArticleUseCase {
         ArticleViewStatus articleViewStatus =
                 articleViewStatusService.findByUserIdAndArticleId(requestUserId, articleId);
 
-        return ArticleViewStatusResult.from(articleViewStatus);
+        ArticleViewStatusResult result = ArticleViewStatusResult.from(articleViewStatus);
+        // 처음 볼 때·다시 볼 때 모두 활동 내역의 "최근 본 기사"를 갱신한다
+        Instant viewedAt =
+                articleViewStatus.getLastViewedAt().atZone(ZoneId.systemDefault()).toInstant();
+        eventPublisher.publish(ArticleViewedEvent.of(result, viewedAt));
+        return result;
     }
 }
