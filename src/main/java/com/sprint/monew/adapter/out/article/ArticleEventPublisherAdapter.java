@@ -1,5 +1,6 @@
 package com.sprint.monew.adapter.out.article;
 
+import com.sprint.monew.application.article.event.ArticleHardDeletingEvent;
 import com.sprint.monew.application.article.event.ArticleSoftDeletedEvent;
 import com.sprint.monew.application.article.event.ArticlesSavedEvent;
 import com.sprint.monew.application.article.required.ArticleEventPublisherPort;
@@ -20,6 +21,11 @@ public class ArticleEventPublisherAdapter implements ArticleEventPublisherPort {
 
     @Override
     public void publish(ArticleSoftDeletedEvent event) {
+        eventPublisher.publishEvent(event);
+    }
+
+    @Override
+    public void publish(ArticleHardDeletingEvent event) {
         eventPublisher.publishEvent(event);
     }
 }
