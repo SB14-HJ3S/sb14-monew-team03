@@ -62,6 +62,6 @@ public class CommentRepositoryAdapter implements CommentRepositoryPort {
 
     @Override
     public int decreaseLikeCountsByUserIds(List<UUID> userIds) {
-        return 0;
+        return jpaRepository.decreaseLikeCountsByUserIds(userIds);
     }
 }

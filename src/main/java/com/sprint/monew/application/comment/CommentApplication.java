@@ -149,5 +149,8 @@ public class CommentApplication implements CommentUseCase {
 
     @Override
     @Transactional
-    public void cleanupCountsBeforeUserHardDeletion(List<UUID> userIds) {}
+    public void cleanupCountsBeforeUserHardDeletion(List<UUID> userIds) {
+        commentService.decreaseLikeCountsByUserIds(userIds);
+        articleService.decreaseCommentCountsByUserIds(userIds);
+    }
 }

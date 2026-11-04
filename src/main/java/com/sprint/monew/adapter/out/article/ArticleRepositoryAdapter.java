@@ -70,7 +70,7 @@ public class ArticleRepositoryAdapter implements ArticleRepositoryPort {
 
     @Override
     public int decreaseCommentCountsByUserIds(List<UUID> userIds) {
-        return 0;
+        return jpaRepository.decreaseCommentCountsByUserIds(userIds);
     }
 
     @Override

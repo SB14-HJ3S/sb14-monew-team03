@@ -20,5 +20,7 @@ public class CommentEventListener {
 
     // 사용자를 지우기 직전에 같은 트랜잭션에서 받음 (아직 탈퇴자의 좋아요·댓글을 셀 수 있음)
     @EventListener
-    public void onUserHardDeleting(UserHardDeletingEvent event) {}
+    public void onUserHardDeleting(UserHardDeletingEvent event) {
+        commentUseCase.cleanupCountsBeforeUserHardDeletion(event.userIds());
+    }
 }

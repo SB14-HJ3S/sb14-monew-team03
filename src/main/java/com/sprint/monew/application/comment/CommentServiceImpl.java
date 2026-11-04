@@ -115,5 +115,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional
-    public void decreaseLikeCountsByUserIds(List<UUID> userIds) {}
+    public void decreaseLikeCountsByUserIds(List<UUID> userIds) {
+        commentRepository.decreaseLikeCountsByUserIds(userIds);
+    }
 }
