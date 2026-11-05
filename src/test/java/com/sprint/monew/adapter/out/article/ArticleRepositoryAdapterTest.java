@@ -236,4 +236,23 @@ class ArticleRepositoryAdapterTest {
         assertThat(articleRepository.findById(articleId).orElseThrow().getDeletedAt())
                 .isEqualTo(firstDeletedAt);
     }
+
+    @Test
+    @DisplayName("뉴스 기사를 물리 삭제하면 DB에서 사라지고, 지운 줄 수 1을 돌려준다")
+    void givenArticle_whenHardDeleteById_thenRemoveAndReturnOne() {
+        UUID articleId = savedArticleId();
+
+        int deleted = articleRepository.hardDeleteById(articleId);
+
+        assertThat(deleted).isEqualTo(1);
+        assertThat(articleRepository.findById(articleId)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("없는 뉴스 기사면 지운 줄 수 0을 돌려준다")
+    void givenNoArticle_whenHardDeleteById_thenReturnZero() {
+        int deleted = articleRepository.hardDeleteById(UUID.randomUUID());
+
+        assertThat(deleted).isZero();
+    }
 }

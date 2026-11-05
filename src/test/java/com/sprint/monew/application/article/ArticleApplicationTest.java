@@ -8,6 +8,7 @@ import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import com.sprint.monew.application.article.event.ArticleHardDeletingEvent;
 import com.sprint.monew.application.article.event.ArticleSoftDeletedEvent;
 import com.sprint.monew.application.article.required.ArticleEventPublisherPort;
 import com.sprint.monew.global.exception.MonewException;
@@ -63,5 +64,31 @@ class ArticleApplicationTest {
         assertThatThrownBy(() -> articleApplication.softDeleteArticle(articleId))
                 .isInstanceOf(MonewException.class);
         verify(eventPublisher, never()).publish(any(ArticleSoftDeletedEvent.class));
+    }
+
+    @Test
+    @DisplayName("뉴스 기사를 물리 삭제하면 물리 삭제 이벤트를 보낸 뒤 서비스에 물리 삭제를 맡긴다")
+    void givenArticleId_whenHardDeleteArticle_thenPublishEventAndDelegate() {
+        UUID articleId = UUID.randomUUID();
+
+        articleApplication.hardDeleteArticle(articleId);
+
+        InOrder inOrder = inOrder(eventPublisher, articleService);
+        inOrder.verify(eventPublisher).publish(new ArticleHardDeletingEvent(articleId));
+        inOrder.verify(articleService).hardDelete(articleId);
+    }
+
+    @Test
+    @DisplayName("물리 삭제할 뉴스 기사가 없으면 서비스의 ARTICLE_NOT_FOUND 예외가 그대로 난다")
+    void givenNoArticle_whenHardDeleteArticle_thenThrowArticleNotFound() {
+        UUID articleId = UUID.randomUUID();
+        willThrow(new MonewException(ArticleErrorType.ARTICLE_NOT_FOUND))
+                .given(articleService)
+                .hardDelete(articleId);
+
+        assertThatThrownBy(() -> articleApplication.hardDeleteArticle(articleId))
+                .isInstanceOf(MonewException.class)
+                .extracting("errorType")
+                .isEqualTo(ArticleErrorType.ARTICLE_NOT_FOUND);
     }
 }
