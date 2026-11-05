@@ -8,16 +8,22 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.sprint.monew.application.user.IUserService;
+import com.sprint.monew.application.useractivity.provided.dto.ArticleViewActivityResult;
 import com.sprint.monew.application.useractivity.provided.dto.CommentActivityResult;
 import com.sprint.monew.application.useractivity.provided.dto.CommentLikeActivityResult;
+import com.sprint.monew.application.useractivity.provided.dto.SubscriptionActivityResult;
 import com.sprint.monew.application.useractivity.provided.dto.UserActivityResult;
+import com.sprint.monew.application.useractivity.required.ArticleStatReader;
+import com.sprint.monew.application.useractivity.required.ArticleStatReader.ArticleStat;
 import com.sprint.monew.application.useractivity.required.UserActivityReader;
 import com.sprint.monew.application.useractivity.required.UserActivitySourceReader;
 import com.sprint.monew.application.useractivity.required.UserActivityWriter;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.UserErrorType;
+import com.sprint.monew.global.type.ArticleSourceType;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -35,6 +41,7 @@ class UserActivityApplicationTest {
     @Mock private UserActivitySourceReader userActivitySourceReader;
     @Mock private UserActivityWriter writer;
     @Mock private IUserService userService;
+    @Mock private ArticleStatReader articleStatReader;
 
     @InjectMocks private UserActivityApplication userActivityApplication;
 
@@ -190,5 +197,193 @@ class UserActivityApplicationTest {
                 List.of(),
                 List.of(),
                 List.of());
+    }
+
+    @Test
+    @DisplayName("가입하면 빈 문서를 만든다.")
+    void whenUserRegistered_thenCreate() {
+        UUID userId = UUID.randomUUID();
+        Instant createdAt = Instant.now();
+
+        userActivityApplication.userRegistered(userId, "woody@monew.com", "우디", createdAt);
+
+        verify(writer).create(userId, "woody@monew.com", "우디", createdAt);
+    }
+
+    @Test
+    @DisplayName("닉네임이 바뀌면 문서 닉네임을 바꾼다.")
+    void whenNicknameUpdated_thenUpdateNickname() {
+        UUID userId = UUID.randomUUID();
+
+        userActivityApplication.nicknameUpdated(userId, "버즈");
+
+        verify(writer).updateNickname(userId, "버즈");
+    }
+
+    @Test
+    @DisplayName("구독하면 구독 항목을 추가한다.")
+    void whenSubscribed_thenAddSubscription() {
+        UUID userId = UUID.randomUUID();
+        SubscriptionActivityResult item =
+                new SubscriptionActivityResult(
+                        UUID.randomUUID(),
+                        UUID.randomUUID(),
+                        "축구",
+                        List.of("손흥민"),
+                        1L,
+                        Instant.now());
+
+        userActivityApplication.subscribed(userId, item);
+
+        verify(writer).addSubscription(userId, item);
+    }
+
+    @Test
+    @DisplayName("구독을 취소하면 구독 항목을 뺀다.")
+    void whenUnsubscribed_thenRemoveSubscription() {
+        UUID userId = UUID.randomUUID();
+        UUID interestId = UUID.randomUUID();
+
+        userActivityApplication.unsubscribed(userId, interestId);
+
+        verify(writer).removeSubscription(userId, interestId);
+    }
+
+    @Test
+    @DisplayName("관심사 키워드가 바뀌면 구독자 문서 키워드를 바꾼다.")
+    void whenInterestKeywordsUpdated_thenUpdateKeywords() {
+        UUID interestId = UUID.randomUUID();
+
+        userActivityApplication.interestKeywordsUpdated(interestId, List.of("EPL"));
+
+        verify(writer).updateInterestKeywords(interestId, List.of("EPL"));
+    }
+
+    @Test
+    @DisplayName("관심사가 삭제되면 구독 목록에서 뺀다.")
+    void whenInterestDeleted_thenRemoveInterest() {
+        UUID interestId = UUID.randomUUID();
+
+        userActivityApplication.interestDeleted(interestId);
+
+        verify(writer).removeInterest(interestId);
+    }
+
+    @Test
+    @DisplayName("댓글이 수정되면 댓글 내용을 바꾼다.")
+    void whenCommentUpdated_thenUpdateContent() {
+        UUID commentId = UUID.randomUUID();
+
+        userActivityApplication.commentUpdated(commentId, "수정");
+
+        verify(writer).updateCommentContent(commentId, "수정");
+    }
+
+    @Test
+    @DisplayName("댓글이 삭제되면 댓글을 뺀다.")
+    void whenCommentDeleted_thenRemoveComment() {
+        UUID commentId = UUID.randomUUID();
+
+        userActivityApplication.commentDeleted(commentId);
+
+        verify(writer).removeComment(commentId);
+    }
+
+    @Test
+    @DisplayName("기사를 보면 본 기사에 추가한다.")
+    void whenArticleViewed_thenAddArticleView() {
+        UUID userId = UUID.randomUUID();
+        ArticleViewActivityResult item =
+                new ArticleViewActivityResult(
+                        UUID.randomUUID(),
+                        userId,
+                        Instant.now(),
+                        UUID.randomUUID(),
+                        ArticleSourceType.NAVER,
+                        "https://a.com",
+                        "기사",
+                        Instant.now(),
+                        "요약",
+                        0L,
+                        1L);
+
+        userActivityApplication.articleViewed(userId, item);
+
+        verify(writer).addArticleView(userId, item);
+    }
+
+    @Test
+    @DisplayName("기사가 삭제되면 그 기사 항목을 뺀다.")
+    void whenArticleDeleted_thenRemoveArticle() {
+        UUID articleId = UUID.randomUUID();
+
+        userActivityApplication.articleDeleted(articleId);
+
+        verify(writer).removeArticle(articleId);
+    }
+
+    @Test
+    @DisplayName("최근 본 기사의 조회 수·댓글 수는 원본의 현재 값으로 덮어쓴다.")
+    void givenStaleCounts_whenFind_thenOverwrittenWithCurrent() {
+        UUID userId = UUID.randomUUID();
+        UUID articleId = UUID.randomUUID();
+        ArticleViewActivityResult staleView = view(userId, articleId, 0L, 0L); // 본 시점 값
+        when(userActivityReader.findByUserId(userId))
+                .thenReturn(Optional.of(activityWithViews(userId, List.of(staleView))));
+        when(articleStatReader.findStats(List.of(articleId)))
+                .thenReturn(Map.of(articleId, new ArticleStat(5L, 2L))); // 현재 값
+
+        UserActivityResult result = userActivityApplication.findByUserId(userId);
+
+        ArticleViewActivityResult view = result.articleViews().get(0);
+        assertThat(view.articleViewCount()).isEqualTo(5L);
+        assertThat(view.articleCommentCount()).isEqualTo(2L);
+        assertThat(view.articleTitle()).isEqualTo(staleView.articleTitle()); // 나머지는 그대로
+    }
+
+    @Test
+    @DisplayName("원본에 숫자가 없는 기사는 문서의 값을 그대로 둔다.")
+    void givenNoStat_whenFind_thenKeepsDocumentCounts() {
+        UUID userId = UUID.randomUUID();
+        UUID articleId = UUID.randomUUID();
+        when(userActivityReader.findByUserId(userId))
+                .thenReturn(
+                        Optional.of(
+                                activityWithViews(
+                                        userId, List.of(view(userId, articleId, 3L, 1L)))));
+        when(articleStatReader.findStats(List.of(articleId))).thenReturn(Map.of());
+
+        UserActivityResult result = userActivityApplication.findByUserId(userId);
+
+        assertThat(result.articleViews().get(0).articleViewCount()).isEqualTo(3L);
+    }
+
+    private UserActivityResult activityWithViews(
+            UUID userId, List<ArticleViewActivityResult> views) {
+        return new UserActivityResult(
+                userId,
+                "woody@monew.com",
+                "우디",
+                Instant.now(),
+                List.of(),
+                List.of(),
+                List.of(),
+                views);
+    }
+
+    private ArticleViewActivityResult view(
+            UUID userId, UUID articleId, long viewCount, long commentCount) {
+        return new ArticleViewActivityResult(
+                UUID.randomUUID(),
+                userId,
+                Instant.now(),
+                articleId,
+                ArticleSourceType.NAVER,
+                "https://a.com",
+                "기사 제목",
+                Instant.now(),
+                "요약",
+                commentCount,
+                viewCount);
     }
 }

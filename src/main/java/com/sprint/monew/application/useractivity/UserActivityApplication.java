@@ -7,6 +7,7 @@ import com.sprint.monew.application.useractivity.provided.dto.CommentActivityRes
 import com.sprint.monew.application.useractivity.provided.dto.CommentLikeActivityResult;
 import com.sprint.monew.application.useractivity.provided.dto.SubscriptionActivityResult;
 import com.sprint.monew.application.useractivity.provided.dto.UserActivityResult;
+import com.sprint.monew.application.useractivity.required.ArticleStatReader;
 import com.sprint.monew.application.useractivity.required.UserActivityReader;
 import com.sprint.monew.application.useractivity.required.UserActivitySourceReader;
 import com.sprint.monew.application.useractivity.required.UserActivityWriter;
@@ -28,6 +29,7 @@ public class UserActivityApplication implements UserActivityUseCase {
     private final UserActivitySourceReader userActivitySourceReader;
     private final UserActivityWriter writer;
     private final IUserService userService;
+    private final ArticleStatReader articleStatReader;
 
     @Override
     @Transactional(readOnly = true)
@@ -35,7 +37,9 @@ public class UserActivityApplication implements UserActivityUseCase {
         // 탈퇴(논리 삭제) 중에도 Mongo 문서는 남아 있으므로, 활성 사용자인지 먼저 확인한다 (없거나 탈퇴면 404)
         userService.getActiveUser(userId);
 
-        return userActivityReader.findByUserId(userId).orElseGet(() -> rebuildFromSource(userId));
+        UserActivityResult activity =
+                userActivityReader.findByUserId(userId).orElseGet(() -> rebuildFromSource(userId));
+        return withCurrentArticleStats(activity);
     }
 
     /** Mongo 문서가 없는 사용자(Mongo 도입 전 가입자 등)는 원본에서 만들어 저장한 뒤 돌려준다 */
@@ -134,5 +138,44 @@ public class UserActivityApplication implements UserActivityUseCase {
     @Override
     public void articleDeleted(UUID articleId) {
         writer.removeArticle(articleId);
+    }
+
+    /** 최근 본 기사의 조회 수·댓글 수는 자주 바뀌므로 원본에서 현재 값을 읽어 덮어쓴다 */
+    private UserActivityResult withCurrentArticleStats(UserActivityResult activity) {
+        List<UUID> articleIds =
+                activity.articleViews().stream().map(ArticleViewActivityResult::articleId).toList();
+        Map<UUID, ArticleStatReader.ArticleStat> stats = articleStatReader.findStats(articleIds);
+
+        List<ArticleViewActivityResult> views =
+                activity.articleViews().stream()
+                        .map(
+                                v -> {
+                                    ArticleStatReader.ArticleStat s = stats.get(v.articleId());
+                                    return s == null
+                                            ? v
+                                            : new ArticleViewActivityResult(
+                                                    v.id(),
+                                                    v.viewedBy(),
+                                                    v.createdAt(),
+                                                    v.articleId(),
+                                                    v.source(),
+                                                    v.sourceUrl(),
+                                                    v.articleTitle(),
+                                                    v.articlePublishedDate(),
+                                                    v.articleSummary(),
+                                                    s.commentCount(),
+                                                    s.viewCount());
+                                })
+                        .toList();
+
+        return new UserActivityResult(
+                activity.id(),
+                activity.email(),
+                activity.nickname(),
+                activity.createdAt(),
+                activity.subscriptions(),
+                activity.comments(),
+                activity.commentLikes(),
+                views);
     }
 }
