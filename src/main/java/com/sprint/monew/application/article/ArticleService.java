@@ -30,4 +30,6 @@ public interface ArticleService {
     void increaseViewCount(UUID articleId);
 
     void softDelete(UUID articleId);
+
+    void hardDelete(UUID articleId);
 }

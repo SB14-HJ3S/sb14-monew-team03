@@ -1,5 +1,6 @@
 package com.sprint.monew.application.article;
 
+import com.sprint.monew.application.article.event.ArticleHardDeletingEvent;
 import com.sprint.monew.application.article.event.ArticleSoftDeletedEvent;
 import com.sprint.monew.application.article.event.ArticleViewedEvent;
 import com.sprint.monew.application.article.provided.ArticleUseCase;
@@ -85,7 +86,11 @@ public class ArticleApplication implements ArticleUseCase {
     }
 
     @Override
-    public void hardDeleteArticle(UUID articleId) {}
+    @Transactional
+    public void hardDeleteArticle(UUID articleId) {
+        eventPublisher.publish(new ArticleHardDeletingEvent(articleId));
+        articleService.hardDelete(articleId);
+    }
 
     @Override
     public List<Article> restoreArticles(LocalDateTime from, LocalDateTime to) {
