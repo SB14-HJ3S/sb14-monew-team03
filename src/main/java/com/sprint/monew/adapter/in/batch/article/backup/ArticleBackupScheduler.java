@@ -27,7 +27,7 @@ public class ArticleBackupScheduler {
     private final JobLauncher jobLauncher;
     private final Job articleBackupJob;
 
-    @Scheduled(cron = "${monew.article.backup.cron}")
+    @Scheduled(cron = "${monew.article.backup.cron}", zone = "Asia/Seoul")
     public JobExecution backup()
             throws JobInstanceAlreadyCompleteException,
                     JobExecutionAlreadyRunningException,
