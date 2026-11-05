@@ -1,5 +1,8 @@
 package com.sprint.monew.adapter.in.batch.log;
 
+import java.nio.file.Path;
+import java.util.List;
+import org.springframework.batch.core.ChunkListener;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.job.builder.JobBuilder;
@@ -16,11 +19,14 @@ public class LogBackupJobConfig {
     public Step logBackupStep(
             JobRepository jobRepository,
             PlatformTransactionManager transactionManager,
-            LogBackupTasklet tasklet,
-            LogBackupStepListener listener) {
+            LogBackupReader reader,
+            LogBackupWriter writer,
+            LogBackupListener listener) {
         return new StepBuilder("logBackupStep", jobRepository)
-                .tasklet(tasklet, transactionManager)
-                .listener(listener)
+                .<List<Path>, List<Path>>chunk(1, transactionManager)
+                .reader(reader)
+                .writer(writer)
+                .listener((ChunkListener) listener)
                 .build();
     }
 

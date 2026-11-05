@@ -104,8 +104,7 @@ class S3LogStorageAdapterTest {
         ArgumentCaptor<RequestBody> body = ArgumentCaptor.forClass(RequestBody.class);
         verify(s3Client).putObject(request.capture(), body.capture());
         assertThat(request.getValue().bucket()).isEqualTo("test-bucket");
-        assertThat(request.getValue().key())
-                .isEqualTo("logs/2026-10-31/logs-2026-10-31-000002.tar.gz");
+        assertThat(request.getValue().key()).isEqualTo("logs/2026-10-31/logs-2.tar.gz");
         assertThat(request.getValue().contentType()).isEqualTo("application/gzip");
         Map<String, byte[]> restored = extract(body.getValue());
         assertThat(restored.keySet()).containsExactlyElementsOf(original.keySet());
@@ -144,7 +143,7 @@ class S3LogStorageAdapterTest {
         verify(s3Client, times(2)).putObject(requests.capture(), bodies.capture());
         assertThat(requests.getAllValues())
                 .extracting(PutObjectRequest::key)
-                .containsOnly("logs/2026-10-31/logs-2026-10-31-000002.tar.gz");
+                .containsOnly("logs/2026-10-31/logs-2.tar.gz");
         for (RequestBody body : bodies.getAllValues()) {
             Map<String, byte[]> restored = extract(body);
             assertThat(restored.keySet())
@@ -172,9 +171,9 @@ class S3LogStorageAdapterTest {
         assertThat(requests.getAllValues())
                 .extracting(PutObjectRequest::key)
                 .containsExactly(
-                        "logs/2026-10-31/logs-2026-10-31-000001.tar.gz",
-                        "logs/2026-10-31/logs-2026-10-31-000002.tar.gz",
-                        "logs/2026-11-01/logs-2026-11-01-000001.tar.gz");
+                        "logs/2026-10-31/logs-1.tar.gz",
+                        "logs/2026-10-31/logs-2.tar.gz",
+                        "logs/2026-11-01/logs-1.tar.gz");
     }
 
     @Test

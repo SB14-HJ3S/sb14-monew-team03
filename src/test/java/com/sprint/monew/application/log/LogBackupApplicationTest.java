@@ -68,16 +68,13 @@ class LogBackupApplicationTest {
     }
 
     @Test
-    @DisplayName("파일이 없으면 저장소를 호출하지 않고 0건을 반환한다")
-    void skipEmptyArchive() throws Exception {
+    @DisplayName("대상 파일이 없으면 빈 목록을 반환하고 저장소를 호출하지 않는다")
+    void readEmptyLogFiles() throws Exception {
         var application = application();
         var date = LocalDate.of(2026, 10, 31);
         var files = application.readLogs(date, -1, 10).logPath();
 
-        var result = application.backup(date, 1L, files);
-
-        assertThat(result.totalFileCount()).isZero();
-        assertThat(result.uploadedFileCount()).isZero();
+        assertThat(files).isEmpty();
         verifyNoInteractions(logStoragePort);
     }
 
