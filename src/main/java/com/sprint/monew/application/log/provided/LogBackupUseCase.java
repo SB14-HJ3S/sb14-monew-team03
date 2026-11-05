@@ -14,7 +14,7 @@ import java.util.List;
 public interface LogBackupUseCase {
 
     LogResult readLogs(
-            @NotNull @Past LocalDate targetDate, @Min(-1) int afterIndex, @Min(0) int limit)
+            @NotNull @Past LocalDate targetDate, @Min(-1) int afterIndex, @Min(1) int limit)
             throws IOException;
 
     LogBackupResult backup(
