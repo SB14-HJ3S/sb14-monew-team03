@@ -52,4 +52,16 @@ public record UserActivityDocument(
                 commentLikes.stream().map(CommentLikeItem::toResult).toList(),
                 articleViews.stream().map(ArticleViewItem::toResult).toList());
     }
+
+    public static UserActivityDocument from(UserActivityResult r) {
+        return new UserActivityDocument(
+                r.id(),
+                r.email(),
+                r.nickname(),
+                r.createdAt(),
+                r.subscriptions().stream().map(SubscriptionItem::from).toList(),
+                r.comments().stream().map(CommentItem::from).toList(),
+                r.commentLikes().stream().map(CommentLikeItem::from).toList(),
+                r.articleViews().stream().map(ArticleViewItem::from).toList());
+    }
 }

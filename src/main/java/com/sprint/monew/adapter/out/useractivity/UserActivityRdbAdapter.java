@@ -17,7 +17,7 @@ import com.sprint.monew.application.useractivity.provided.dto.CommentActivityRes
 import com.sprint.monew.application.useractivity.provided.dto.CommentLikeActivityResult;
 import com.sprint.monew.application.useractivity.provided.dto.SubscriptionActivityResult;
 import com.sprint.monew.application.useractivity.provided.dto.UserActivityResult;
-import com.sprint.monew.application.useractivity.required.UserActivityReader;
+import com.sprint.monew.application.useractivity.required.UserActivitySourceReader;
 import com.sprint.monew.domain.user.entity.QUser;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -32,7 +32,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
-public class UserActivityRdbAdapter implements UserActivityReader {
+public class UserActivityRdbAdapter implements UserActivitySourceReader {
 
     private static final int RECENT_LIMIT = 10;
     private final JPAQueryFactory queryFactory;

@@ -8,6 +8,7 @@ import com.sprint.monew.application.useractivity.provided.dto.ArticleViewActivit
 import com.sprint.monew.application.useractivity.provided.dto.CommentActivityResult;
 import com.sprint.monew.application.useractivity.provided.dto.CommentLikeActivityResult;
 import com.sprint.monew.application.useractivity.provided.dto.SubscriptionActivityResult;
+import com.sprint.monew.application.useractivity.provided.dto.UserActivityResult;
 import com.sprint.monew.global.type.ArticleSourceType;
 import com.sprint.monew.support.MongoIntegrationTest;
 import java.time.Instant;
@@ -232,6 +233,26 @@ class UserActivityMongoWriterTest {
 
         assertThat(find(buzz).comments().get(0).likeCount()).isEqualTo(5L);
         assertThat(find(woody).commentLikes().get(0).commentLikeCount()).isEqualTo(5L);
+    }
+
+    @Test
+    @DisplayName("활동 내역 전체를 저장하면 같은 내용으로 다시 꺼내진다.")
+    void whenSave_thenSameResult() {
+        UUID userId = UUID.randomUUID();
+        UserActivityResult activity =
+                new UserActivityResult(
+                        userId,
+                        "rex@monew.com",
+                        "렉스",
+                        T,
+                        List.of(subscription(UUID.randomUUID(), List.of("손흥민"))),
+                        List.of(comment(UUID.randomUUID(), UUID.randomUUID(), userId)),
+                        List.of(),
+                        List.of());
+
+        writer.save(activity);
+
+        assertThat(find(userId).toResult()).isEqualTo(activity);
     }
 
     // ===== 도우미 =====
