@@ -14,6 +14,7 @@ import com.sprint.monew.application.useractivity.provided.dto.ArticleViewActivit
 import com.sprint.monew.application.useractivity.provided.dto.CommentActivityResult;
 import com.sprint.monew.application.useractivity.provided.dto.CommentLikeActivityResult;
 import com.sprint.monew.application.useractivity.provided.dto.SubscriptionActivityResult;
+import com.sprint.monew.application.useractivity.provided.dto.UserActivityResult;
 import com.sprint.monew.application.useractivity.required.UserActivityWriter;
 import java.time.Instant;
 import java.util.List;
@@ -37,6 +38,11 @@ public class UserActivityMongoWriter implements UserActivityWriter {
 
     private final MongoTemplate mongoTemplate;
     private final UserActivityDocumentUpdater updater;
+
+    @Override
+    public void save(UserActivityResult activity) {
+        mongoTemplate.save(UserActivityDocument.from(activity));
+    }
 
     // 사용자
 
