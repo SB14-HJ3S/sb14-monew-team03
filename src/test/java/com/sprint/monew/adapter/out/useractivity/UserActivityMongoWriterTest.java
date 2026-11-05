@@ -173,6 +173,20 @@ class UserActivityMongoWriterTest {
         assertThat(find(woody).commentLikes()).isEmpty();
     }
 
+    @Test
+    @DisplayName("최근 댓글 중 하나가 지워져도 담아둔 다음 댓글로 10건을 채운다.")
+    void givenElevenComments_whenRemoveLatest_thenStillTen() {
+        UUID latestId = UUID.randomUUID();
+        for (int i = 1; i <= 10; i++) {
+            writer.addComment(woody, comment(UUID.randomUUID(), UUID.randomUUID(), woody));
+        }
+        writer.addComment(woody, comment(latestId, UUID.randomUUID(), woody)); // 11번째 = 가장 최신
+
+        writer.removeComment(latestId);
+
+        assertThat(find(woody).toResult().comments()).hasSize(10);
+    }
+
     // ===== 좋아요 =====
 
     @Test

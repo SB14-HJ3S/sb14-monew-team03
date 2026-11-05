@@ -28,7 +28,11 @@ public record UserActivityDocument(
         List<CommentItem> comments,
         List<CommentLikeItem> commentLikes,
         List<ArticleViewItem> articleViews) {
+    /** 화면에 보여주는 최근 목록 개수 */
     public static final int RECENT_LIMIT = 10;
+
+    /** 문서에 담아두는 최근 목록 개수. 일부가 삭제·취소돼도 10개를 채워 보여줄 수 있게 여유를 둔다 */
+    public static final int STORED_LIMIT = 20;
 
     public static final String FIELD_SUBSCRIPTIONS = "subscriptions";
     public static final String FIELD_COMMENTS = "comments";
@@ -48,9 +52,9 @@ public record UserActivityDocument(
                 nickname,
                 createdAt,
                 subscriptions.stream().map(SubscriptionItem::toResult).toList(),
-                comments.stream().map(CommentItem::toResult).toList(),
-                commentLikes.stream().map(CommentLikeItem::toResult).toList(),
-                articleViews.stream().map(ArticleViewItem::toResult).toList());
+                comments.stream().limit(RECENT_LIMIT).map(CommentItem::toResult).toList(),
+                commentLikes.stream().limit(RECENT_LIMIT).map(CommentLikeItem::toResult).toList(),
+                articleViews.stream().limit(RECENT_LIMIT).map(ArticleViewItem::toResult).toList());
     }
 
     public static UserActivityDocument from(UserActivityResult r) {

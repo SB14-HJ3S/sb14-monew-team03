@@ -3,7 +3,7 @@ package com.sprint.monew.adapter.out.useractivity;
 import static com.sprint.monew.adapter.out.useractivity.document.UserActivityDocument.FIELD_ARTICLE_VIEWS;
 import static com.sprint.monew.adapter.out.useractivity.document.UserActivityDocument.FIELD_COMMENTS;
 import static com.sprint.monew.adapter.out.useractivity.document.UserActivityDocument.FIELD_COMMENT_LIKES;
-import static com.sprint.monew.adapter.out.useractivity.document.UserActivityDocument.RECENT_LIMIT;
+import static com.sprint.monew.adapter.out.useractivity.document.UserActivityDocument.STORED_LIMIT;
 
 import com.mongodb.client.result.UpdateResult;
 import com.sprint.monew.adapter.out.useractivity.document.ArticleViewItem;
@@ -39,7 +39,7 @@ public class UserActivityDocumentUpdater {
 
     private void pushRecent(UUID userId, String field, Object item) {
         Query query = Query.query(Criteria.where("_id").is(userId));
-        Update update = new Update().push(field).atPosition(0).slice(RECENT_LIMIT).each(item);
+        Update update = new Update().push(field).atPosition(0).slice(STORED_LIMIT).each(item);
 
         UpdateResult result = mongoTemplate.updateFirst(query, update, UserActivityDocument.class);
         if (result.getMatchedCount() == 0) {
