@@ -1,5 +1,6 @@
 package com.sprint.monew.application.article;
 
+import com.sprint.monew.application.article.provided.dto.ArticleBackupItem;
 import com.sprint.monew.application.article.provided.dto.ArticleQuery;
 import com.sprint.monew.application.article.required.ArticleRepositoryPort;
 import com.sprint.monew.domain.article.entity.Article;
@@ -10,9 +11,12 @@ import com.sprint.monew.global.pagination.PageResult;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -92,6 +96,41 @@ public class ArticleServiceImpl implements ArticleService {
         if (repository.softDeleteIfActive(articleId, Instant.now()) == 0) {
             throw articleNotFound(articleId);
         }
+    }
+
+    // 복구 후보 골라내는 로직 - 비교 시점의 복구 후보 반환
+    @Override
+    public List<ArticleBackupItem> findMissingArticles(List<ArticleBackupItem> backupItems) {
+        if (backupItems.isEmpty()) {
+            return List.of();
+        }
+
+        Set<UUID> backupIds = new HashSet<>();
+        Set<String> backupUrls = new HashSet<>();
+
+        for (ArticleBackupItem item : backupItems) {
+            backupIds.add(item.id());
+            backupUrls.add(item.sourceUrl());
+        }
+
+        Set<UUID> knownIds = new HashSet<>(repository.findExistingIds(backupIds));
+        Set<String> knownUrls = new HashSet<>();
+
+        for (Article article : repository.findAllBySourceUrlIn(backupUrls)) {
+            knownUrls.add(article.getSourceUrl());
+        }
+
+        List<ArticleBackupItem> missing = new ArrayList<>();
+
+        for (ArticleBackupItem item : backupItems) {
+            if (knownIds.contains(item.id()) || knownUrls.contains(item.sourceUrl())) {
+                continue;
+            }
+            missing.add(item);
+            knownIds.add(item.id());
+            knownUrls.add(item.sourceUrl());
+        }
+        return missing;
     }
 
     private MonewException articleNotFound(UUID articleId) {

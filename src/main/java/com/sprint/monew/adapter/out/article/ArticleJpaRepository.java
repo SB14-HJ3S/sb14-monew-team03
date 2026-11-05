@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -85,4 +86,7 @@ public interface ArticleJpaRepository extends JpaRepository<Article, UUID>, Arti
                             AND a.deletedAt IS NULL
             """)
     int increaseViewCount(@Param("id") UUID id);
+
+    @Query("SELECT a.id FROM Article a WHERE a.id IN :ids")
+    Set<UUID> findExistingIds(@Param("ids") Collection<UUID> ids);
 }

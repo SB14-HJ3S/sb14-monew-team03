@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 public interface ArticleRepositoryPort {
@@ -41,4 +42,6 @@ public interface ArticleRepositoryPort {
     List<Article> findBackupChunk(Instant from, Instant to, UUID afterId, int limit);
 
     int increaseViewCount(UUID articleId);
+
+    Set<UUID> findExistingIds(Collection<UUID> ids);
 }
