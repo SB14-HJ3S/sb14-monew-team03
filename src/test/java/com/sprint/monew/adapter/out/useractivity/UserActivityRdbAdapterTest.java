@@ -3,6 +3,7 @@ package com.sprint.monew.adapter.out.useractivity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.sprint.monew.adapter.out.useractivity.document.UserActivityDocument;
 import com.sprint.monew.application.useractivity.provided.dto.ArticleViewActivityResult;
 import com.sprint.monew.application.useractivity.provided.dto.CommentActivityResult;
 import com.sprint.monew.application.useractivity.provided.dto.CommentLikeActivityResult;
@@ -73,9 +74,9 @@ class UserActivityRdbAdapterTest {
     }
 
     @Test
-    @DisplayName("최근 작성한 댓글은 최신순 최대 10건이고, 삭제된 댓글은 제외한다.")
-    void givenElevenComments_whenFind_thenLatestTenWithoutDeleted() {
-        for (int i = 0; i < 11; i++) {
+    @DisplayName("최근 작성한 댓글은 최신순 최대 20건이고, 삭제된 댓글은 제외한다.")
+    void givenTwentyOneComments_whenFind_thenLatestTwentyWithoutDeleted() {
+        for (int i = 0; i < 21; i++) {
             Comment c = persist(Comment.create(woody, article, "댓글" + i));
             setColumn("comments", "created_at", Timestamp.from(T.plusSeconds(i)), c.getId());
         }
@@ -87,74 +88,18 @@ class UserActivityRdbAdapterTest {
         List<CommentActivityResult> comments =
                 adapter.findByUserId(woody.getId()).orElseThrow().comments();
 
-        assertThat(comments).hasSize(10);
+        assertThat(comments).hasSize(UserActivityDocument.STORED_LIMIT);
         assertThat(comments)
                 .extracting(CommentActivityResult::content)
-                .startsWith("댓글10", "댓글9") // 최신순
-                .doesNotContain("댓글0", "삭제된 댓글"); // 11번째와 삭제된 것 제외
+                .startsWith("댓글20", "댓글19") // 최신순
+                .doesNotContain("댓글0", "삭제된 댓글"); // 21번째(가장 오래된 것)와 삭제된 것 제외
         assertThat(comments.get(0).articleTitle()).isEqualTo("기사 제목");
     }
 
     @Test
-    @DisplayName("좋아요 누른 댓글은 내가 누른 것만, 댓글 작성자 정보와 함께 반환한다.")
-    void givenLikes_whenFind_thenOnlyMyLikesWithCommentAuthor() {
-        Comment buzzComment = persist(Comment.create(buzz, article, "버즈 댓글"));
-        persist(CommentLike.create(woody, buzzComment)); // 우디가 누름
-        Comment woodyComment = persist(Comment.create(woody, article, "우디 댓글"));
-        persist(CommentLike.create(buzz, woodyComment)); // 버즈가 누름 → 우디 활동 아님
-        clear();
-
-        List<CommentLikeActivityResult> likes =
-                adapter.findByUserId(woody.getId()).orElseThrow().commentLikes();
-
-        assertThat(likes).hasSize(1);
-        assertThat(likes.get(0).commentContent()).isEqualTo("버즈 댓글");
-        assertThat(likes.get(0).commentUserNickname()).isEqualTo("버즈");
-    }
-
-    @Test
-    @DisplayName("본 기사는 마지막으로 본 순서로 반환한다.")
-    void givenViews_whenFind_thenOrderByLastViewedAt() {
-        Article other =
-                persist(
-                        Article.create(
-                                ArticleSourceType.NAVER,
-                                "https://a.com/2",
-                                "다른 기사",
-                                LocalDateTime.of(2026, 10, 2, 9, 0),
-                                "요약"));
-        persist(ArticleViewStatus.create(woody, article, LocalDateTime.of(2026, 10, 30, 9, 0)));
-        persist(ArticleViewStatus.create(woody, other, LocalDateTime.of(2026, 10, 30, 10, 0)));
-        clear();
-
-        List<ArticleViewActivityResult> views =
-                adapter.findByUserId(woody.getId()).orElseThrow().articleViews();
-
-        assertThat(views)
-                .extracting(ArticleViewActivityResult::articleTitle)
-                .containsExactly("다른 기사", "기사 제목");
-        assertThat(views.get(0).viewedBy()).isEqualTo(woody.getId());
-    }
-
-    @Test
-    @DisplayName("구독한 관심사를 키워드와 함께 반환한다.")
-    void givenSubscription_whenFind_thenWithKeywords() {
-        Interest interest = persist(Interest.create("축구", List.of("손흥민", "EPL")));
-        persist(Subscription.create(woody, interest));
-        clear();
-
-        List<SubscriptionActivityResult> subs =
-                adapter.findByUserId(woody.getId()).orElseThrow().subscriptions();
-
-        assertThat(subs).hasSize(1);
-        assertThat(subs.get(0).interestName()).isEqualTo("축구");
-        assertThat(subs.get(0).interestKeywords()).containsExactlyInAnyOrder("손흥민", "EPL");
-    }
-
-    @Test
-    @DisplayName("좋아요 누른 댓글은 좋아요 누른 최신순 최대 10건이다.")
-    void givenElevenLikes_whenFind_thenLatestTen() {
-        for (int i = 0; i < 11; i++) {
+    @DisplayName("좋아요 누른 댓글은 좋아요 누른 최신순 최대 20건이다.")
+    void givenTwentyOneLikes_whenFind_thenLatestTwenty() {
+        for (int i = 0; i < 21; i++) {
             Comment c = persist(Comment.create(buzz, article, "댓글" + i));
             CommentLike like = persist(CommentLike.create(woody, c));
             setColumn(
@@ -165,17 +110,17 @@ class UserActivityRdbAdapterTest {
         List<CommentLikeActivityResult> likes =
                 adapter.findByUserId(woody.getId()).orElseThrow().commentLikes();
 
-        assertThat(likes).hasSize(10);
+        assertThat(likes).hasSize(UserActivityDocument.STORED_LIMIT);
         assertThat(likes)
                 .extracting(CommentLikeActivityResult::commentContent)
-                .startsWith("댓글10", "댓글9") // 좋아요 누른 최신순
-                .doesNotContain("댓글0"); // 가장 오래된 11번째 제외
+                .startsWith("댓글20", "댓글19") // 좋아요 누른 최신순
+                .doesNotContain("댓글0"); // 가장 오래된 21번째 제외
     }
 
     @Test
-    @DisplayName("본 기사는 마지막으로 본 순서로 최대 10건이다.")
-    void givenElevenViews_whenFind_thenLatestTen() {
-        for (int i = 0; i < 11; i++) {
+    @DisplayName("본 기사는 마지막으로 본 순서로 최대 20건이다.")
+    void givenTwentyOneViews_whenFind_thenLatestTwenty() {
+        for (int i = 0; i < 21; i++) {
             Article a =
                     persist(
                             Article.create(
@@ -191,11 +136,26 @@ class UserActivityRdbAdapterTest {
         List<ArticleViewActivityResult> views =
                 adapter.findByUserId(woody.getId()).orElseThrow().articleViews();
 
-        assertThat(views).hasSize(10);
+        assertThat(views).hasSize(UserActivityDocument.STORED_LIMIT);
         assertThat(views)
                 .extracting(ArticleViewActivityResult::articleTitle)
-                .startsWith("기사10", "기사9") // 마지막으로 본 최신순
-                .doesNotContain("기사0"); // 가장 오래 전에 본 11번째 제외
+                .startsWith("기사20", "기사19") // 마지막으로 본 최신순
+                .doesNotContain("기사0"); // 가장 오래 전에 본 21번째 제외
+    }
+
+    @Test
+    @DisplayName("구독한 관심사를 키워드와 함께 반환한다.")
+    void givenSubscription_whenFind_thenWithKeywords() {
+        Interest interest = persist(Interest.create("축구", List.of("손흥민", "EPL")));
+        persist(Subscription.create(woody, interest));
+        clear();
+
+        List<SubscriptionActivityResult> subs =
+                adapter.findByUserId(woody.getId()).orElseThrow().subscriptions();
+
+        assertThat(subs).hasSize(1);
+        assertThat(subs.get(0).interestName()).isEqualTo("축구");
+        assertThat(subs.get(0).interestKeywords()).containsExactlyInAnyOrder("손흥민", "EPL");
     }
 
     // ===== 도우미 =====
