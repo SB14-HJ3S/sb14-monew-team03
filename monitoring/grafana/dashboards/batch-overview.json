@@ -1,0 +1,626 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "배치가 제때 돌고 성공하는지, 얼마나 걸리고 얼마나 처리하는지 한 화면에서 봅니다.",
+  "editable": false,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "panels": [],
+      "title": "한눈에 보기 (선택한 기간 기준)",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
+      "description": "선택한 기간 동안 끝난 배치 Job 실행 횟수입니다. 성공·실패를 모두 셉니다.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": { "mode": "absolute", "steps": [{"color": "green", "value": null}] },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
+          "editorMode": "code",
+          "expr": "round(sum(increase(spring_batch_job_seconds_count[$__range]))) or vector(0)",
+          "legendFormat": "",
+          "range": false,
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "배치 실행 횟수",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
+      "description": "선택한 기간 동안 COMPLETED가 아닌 상태로 끝난 Job 실행 횟수입니다. 0이 아니면 아래 표에서 어떤 배치인지 확인하세요.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": { "mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 1}] },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
+          "editorMode": "code",
+          "expr": "round(sum(increase(spring_batch_job_seconds_count{spring_batch_job_status!=\"COMPLETED\"}[$__range]))) or vector(0)",
+          "legendFormat": "",
+          "range": false,
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "실패 횟수",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
+      "description": "선택한 기간 동안 끝난 Job 중 COMPLETED로 끝난 비율입니다.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "decimals": 1,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "orange", "value": 0.9 },
+              { "color": "green", "value": 0.99 }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
+          "editorMode": "code",
+          "expr": "sum(increase(spring_batch_job_seconds_count{spring_batch_job_status=\"COMPLETED\"}[$__range])) / sum(increase(spring_batch_job_seconds_count[$__range]))",
+          "legendFormat": "",
+          "range": false,
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "성공률",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
+      "description": "지금 이 순간 실행 중인 배치 Job 수입니다.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": { "mode": "absolute", "steps": [{"color": "green", "value": null}] },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
+          "editorMode": "code",
+          "expr": "sum(spring_batch_job_active_seconds_count{spring_batch_job_active_name!=\"\"}) or vector(0)",
+          "legendFormat": "",
+          "range": false,
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "지금 실행 중인 Job",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "id": 6,
+      "panels": [],
+      "title": "배치 Job별 상태",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
+      "description": "선택한 기간 동안 배치 Job별로 성공·실패한 횟수입니다.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "articleCollectionJob": { "text": "뉴스 기사 수집" },
+                "notificationCleanupJob": { "text": "알림 삭제" },
+                "logBackupJob": { "text": "로그 백업" }
+              }
+            }
+          ],
+          "noValue": "0",
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "실패" },
+            "properties": [
+              { "id": "custom.cellOptions", "value": {"type": "color-text"} },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [{"color": "text", "value": null}, {"color": "red", "value": 1}]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "평균 실행 시간" },
+            "properties": [{"id": "unit", "value": "s"}, {"id": "decimals", "value": 2}]
+          }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 6 },
+      "id": 7,
+      "options": { "cellHeight": "sm", "showHeader": true, "footer": {"show": false, "reducer": ["sum"], "fields": ""} },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
+          "editorMode": "code",
+          "expr": "round(sum by (spring_batch_job_name) (increase(spring_batch_job_seconds_count[$__range])))",
+          "legendFormat": "",
+          "range": false,
+          "instant": true,
+          "refId": "A",
+          "format": "table"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
+          "editorMode": "code",
+          "expr": "round(sum by (spring_batch_job_name) (increase(spring_batch_job_seconds_count{spring_batch_job_status=\"COMPLETED\"}[$__range]))) or (round(sum by (spring_batch_job_name) (increase(spring_batch_job_seconds_count[$__range]))) * 0)",
+          "legendFormat": "",
+          "range": false,
+          "instant": true,
+          "refId": "B",
+          "format": "table"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
+          "editorMode": "code",
+          "expr": "round(sum by (spring_batch_job_name) (increase(spring_batch_job_seconds_count{spring_batch_job_status!=\"COMPLETED\"}[$__range]))) or (round(sum by (spring_batch_job_name) (increase(spring_batch_job_seconds_count[$__range]))) * 0)",
+          "legendFormat": "",
+          "range": false,
+          "instant": true,
+          "refId": "C",
+          "format": "table"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
+          "editorMode": "code",
+          "expr": "sum by (spring_batch_job_name) (increase(spring_batch_job_seconds_sum[$__range])) / sum by (spring_batch_job_name) (increase(spring_batch_job_seconds_count[$__range]))",
+          "legendFormat": "",
+          "range": false,
+          "instant": true,
+          "refId": "D",
+          "format": "table"
+        }
+      ],
+      "title": "배치 Job별 실행 결과",
+      "transformations": [
+        { "id": "merge", "options": {} },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": { "Time": true },
+            "renameByName": {
+              "spring_batch_job_name": "배치",
+              "Value #A": "실행",
+              "Value #B": "성공",
+              "Value #C": "실패",
+              "Value #D": "평균 실행 시간"
+            },
+            "indexByName": { "spring_batch_job_name": 0, "Value #A": 1, "Value #B": 2, "Value #C": 3, "Value #D": 4 }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
+      "description": "1시간 단위로 배치 Job별 실행 횟수를 보여 줍니다. 매시 도는 기사 수집은 막대가 매시간, 하루 한 번 도는 배치는 하루에 한 번 나와야 정상입니다.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisLabel": "실행 횟수",
+            "drawStyle": "bars",
+            "fillOpacity": 45,
+            "lineWidth": 1,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" }
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "articleCollectionJob": { "text": "뉴스 기사 수집" },
+                "notificationCleanupJob": { "text": "알림 삭제" },
+                "logBackupJob": { "text": "로그 백업" }
+              }
+            }
+          ],
+          "min": 0,
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 14 },
+      "id": 8,
+      "options": {
+        "legend": { "calcs": ["sum"], "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
+          "editorMode": "code",
+          "expr": "round(sum by (spring_batch_job_name) (increase(spring_batch_job_seconds_count[1h])))",
+          "legendFormat": "{{spring_batch_job_name}}",
+          "range": true,
+          "instant": false,
+          "refId": "A",
+          "interval": "1h"
+        }
+      ],
+      "title": "시간대별 배치 실행 횟수",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
+      "description": "1시간 단위로 배치 Job 한 번이 끝나기까지 걸린 평균 시간입니다. 갑자기 길어지면 외부 API나 DB가 느려졌는지 확인하세요.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisLabel": "실행 시간",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" }
+          },
+          "decimals": 2,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "articleCollectionJob": { "text": "뉴스 기사 수집" },
+                "notificationCleanupJob": { "text": "알림 삭제" },
+                "logBackupJob": { "text": "로그 백업" }
+              }
+            }
+          ],
+          "min": 0,
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 14 },
+      "id": 9,
+      "options": {
+        "legend": { "calcs": ["mean", "max"], "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
+          "editorMode": "code",
+          "expr": "sum by (spring_batch_job_name) (increase(spring_batch_job_seconds_sum[1h])) / sum by (spring_batch_job_name) (increase(spring_batch_job_seconds_count[1h]))",
+          "legendFormat": "{{spring_batch_job_name}}",
+          "range": true,
+          "instant": false,
+          "refId": "A",
+          "interval": "1h"
+        }
+      ],
+      "title": "배치 Job별 평균 실행 시간",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 },
+      "id": 10,
+      "panels": [],
+      "title": "배치별 처리량",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
+      "description": "1시간 단위로 출처(네이버·RSS)별 수집 요청이 성공·실패한 횟수입니다. 실패가 이어지면 해당 출처의 API 상태를 확인하세요.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisLabel": "요청 수",
+            "drawStyle": "bars",
+            "fillOpacity": 45,
+            "lineWidth": 1,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" }
+          },
+          "decimals": 0,
+          "mappings": [],
+          "min": 0,
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 24 },
+      "id": 11,
+      "options": {
+        "legend": { "calcs": ["sum"], "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
+          "editorMode": "code",
+          "expr": "round(sum by (source) (increase(batch_article_collection_fetch_success_total[1h])))",
+          "legendFormat": "{{source}} 성공",
+          "range": true,
+          "instant": false,
+          "refId": "A",
+          "interval": "1h"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
+          "editorMode": "code",
+          "expr": "round(sum by (source) (increase(batch_article_collection_fetch_failed_total[1h])))",
+          "legendFormat": "{{source}} 실패",
+          "range": true,
+          "instant": false,
+          "refId": "B",
+          "interval": "1h"
+        }
+      ],
+      "title": "뉴스 기사 수집: 출처별 수집 성공·실패",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
+      "description": "1시간 단위로 외부에서 가져온 기사 수와, 그중 처음 보는 기사라 새로 저장한 수입니다.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisLabel": "기사 수",
+            "drawStyle": "bars",
+            "fillOpacity": 45,
+            "lineWidth": 1,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" }
+          },
+          "decimals": 0,
+          "mappings": [],
+          "min": 0,
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 24 },
+      "id": 12,
+      "options": {
+        "legend": { "calcs": ["sum"], "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
+          "editorMode": "code",
+          "expr": "round(sum(increase(batch_article_collection_fetched_articles_total[1h])))",
+          "legendFormat": "가져온 기사",
+          "range": true,
+          "instant": false,
+          "refId": "A",
+          "interval": "1h"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
+          "editorMode": "code",
+          "expr": "round(sum(increase(batch_article_collection_saved_total[1h])))",
+          "legendFormat": "새로 저장",
+          "range": true,
+          "instant": false,
+          "refId": "B",
+          "interval": "1h"
+        }
+      ],
+      "title": "뉴스 기사 수집: 가져온 기사 vs 새로 저장한 기사",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
+      "description": "하루 단위로 확인 후 1주일 지난 알림을 지운 건수입니다.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisLabel": "삭제 건수",
+            "drawStyle": "bars",
+            "fillOpacity": 45,
+            "lineWidth": 1,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" }
+          },
+          "decimals": 0,
+          "mappings": [],
+          "min": 0,
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 33 },
+      "id": 13,
+      "options": {
+        "legend": { "calcs": ["sum"], "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
+          "editorMode": "code",
+          "expr": "round(sum(increase(batch_notification_cleanup_deleted_total[1d])))",
+          "legendFormat": "삭제한 알림",
+          "range": true,
+          "instant": false,
+          "refId": "A",
+          "interval": "1d"
+        }
+      ],
+      "title": "알림 삭제: 하루 삭제 건수",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
+      "description": "하루 단위로 S3에 올려야 할 로그 파일 수와 실제로 올린 수입니다. 두 값이 다르면 일부 파일이 올라가지 않은 것입니다.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisLabel": "파일 수",
+            "drawStyle": "bars",
+            "fillOpacity": 45,
+            "lineWidth": 1,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" }
+          },
+          "decimals": 0,
+          "mappings": [],
+          "min": 0,
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 33 },
+      "id": 14,
+      "options": {
+        "legend": { "calcs": ["sum"], "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
+          "editorMode": "code",
+          "expr": "round(sum(increase(batch_log_backup_total_files_total[1d])))",
+          "legendFormat": "대상 파일",
+          "range": true,
+          "instant": false,
+          "refId": "A",
+          "interval": "1d"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
+          "editorMode": "code",
+          "expr": "round(sum(increase(batch_log_backup_uploaded_files_total[1d])))",
+          "legendFormat": "올린 파일",
+          "range": true,
+          "instant": false,
+          "refId": "B",
+          "interval": "1d"
+        }
+      ],
+      "title": "로그 백업: 대상 파일 vs 올린 파일",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 41,
+  "tags": ["monew", "batch"],
+  "templating": { "list": [] },
+  "time": { "from": "now-7d", "to": "now" },
+  "timepicker": {},
+  "timezone": "Asia/Seoul",
+  "title": "Monew 배치 현황",
+  "uid": "monew-batch-overview",
+  "version": 1
+}
