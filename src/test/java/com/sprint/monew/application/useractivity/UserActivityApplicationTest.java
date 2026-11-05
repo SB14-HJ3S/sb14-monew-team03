@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,36 +47,17 @@ class UserActivityApplicationTest {
     @InjectMocks private UserActivityApplication userActivityApplication;
 
     @Test
-    @DisplayName("활동 내역이 있으면 그대로 반환한다.")
-    void givenExistingUser_whenFind_thenReturnsActivity() {
+    @DisplayName("Mongo 문서도 원본 활동 내역도 없으면 USER_NOT_FOUND 예외를 던지고 저장하지 않는다.")
+    void givenNoDocumentAndNoSource_whenFind_thenThrowsUserNotFound() {
         UUID userId = UUID.randomUUID();
-        UserActivityResult activity =
-                new UserActivityResult(
-                        userId,
-                        "woody@monew.com",
-                        "우디",
-                        Instant.now(),
-                        List.of(),
-                        List.of(),
-                        List.of(),
-                        List.of());
-        when(userActivityReader.findByUserId(userId)).thenReturn(Optional.of(activity));
-
-        UserActivityResult result = userActivityApplication.findByUserId(userId);
-
-        assertThat(result).isEqualTo(activity);
-    }
-
-    @Test
-    @DisplayName("없거나 탈퇴한 사용자면 USER_NOT_FOUND 예외를 던진다.")
-    void givenUnknownUser_whenFind_thenThrowsUserNotFound() {
-        UUID userId = UUID.randomUUID();
-        when(userActivityReader.findByUserId(userId)).thenReturn(Optional.empty());
+        when(userActivityReader.findByUserId(userId)).thenReturn(Optional.empty()); // Mongo 문서 없음
+        when(userActivitySourceReader.findByUserId(userId)).thenReturn(Optional.empty()); // 원본에도 없음
 
         assertThatThrownBy(() -> userActivityApplication.findByUserId(userId))
                 .isInstanceOf(MonewException.class)
                 .extracting("errorType")
                 .isEqualTo(UserErrorType.USER_NOT_FOUND);
+        verifyNoInteractions(writer); // 아무것도 저장하지 않음
     }
 
     @Test
@@ -147,6 +129,44 @@ class UserActivityApplicationTest {
     }
 
     @Test
+    @DisplayName("Mongo 문서가 없으면 원본을 그대로 저장하고, 응답은 최근 10건만 돌려준다.")
+    void givenNoDocument_whenFind_thenSavesAllAndReturnsLatestTen() {
+        UUID userId = UUID.randomUUID();
+        List<CommentActivityResult> fifteen =
+                IntStream.range(0, 15)
+                        .mapToObj(
+                                i ->
+                                        new CommentActivityResult(
+                                                UUID.randomUUID(),
+                                                UUID.randomUUID(),
+                                                "기사",
+                                                userId,
+                                                "우디",
+                                                "댓글" + i,
+                                                0L,
+                                                Instant.now()))
+                        .toList();
+        UserActivityResult source =
+                new UserActivityResult(
+                        userId,
+                        "woody@monew.com",
+                        "우디",
+                        Instant.now(),
+                        List.of(),
+                        fifteen,
+                        List.of(),
+                        List.of());
+        when(userActivityReader.findByUserId(userId)).thenReturn(Optional.empty());
+        when(userActivitySourceReader.findByUserId(userId)).thenReturn(Optional.of(source));
+
+        UserActivityResult result = userActivityApplication.findByUserId(userId);
+
+        verify(writer).save(source); // 저장은 15건 그대로
+        assertThat(result.comments()).hasSize(UserActivityResult.RECENT_LIMIT); // 응답은 10건
+        assertThat(result.comments().get(0).content()).isEqualTo("댓글0"); // 앞(최신)부터
+    }
+
+    @Test
     @DisplayName("Mongo 문서가 있으면 그대로 돌려주고 원본은 읽지 않는다.")
     void givenDocument_whenFind_thenReturnsFromMongo() {
         UUID userId = UUID.randomUUID();
@@ -157,20 +177,6 @@ class UserActivityApplicationTest {
 
         assertThat(result).isEqualTo(activity);
         verifyNoInteractions(userActivitySourceReader);
-    }
-
-    @Test
-    @DisplayName("Mongo 문서가 없으면 원본에서 만들어 저장하고 돌려준다.")
-    void givenNoDocument_whenFind_thenRebuildsAndSaves() {
-        UUID userId = UUID.randomUUID();
-        UserActivityResult activity = emptyActivity(userId);
-        when(userActivityReader.findByUserId(userId)).thenReturn(Optional.empty());
-        when(userActivitySourceReader.findByUserId(userId)).thenReturn(Optional.of(activity));
-
-        UserActivityResult result = userActivityApplication.findByUserId(userId);
-
-        assertThat(result).isEqualTo(activity);
-        verify(writer).save(activity);
     }
 
     @Test

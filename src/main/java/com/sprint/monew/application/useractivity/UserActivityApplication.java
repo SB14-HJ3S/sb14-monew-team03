@@ -53,7 +53,7 @@ public class UserActivityApplication implements UserActivityUseCase {
                                                 UserErrorType.USER_NOT_FOUND,
                                                 Map.of("userId", userId)));
         writer.save(activity);
-        return activity;
+        return activity.limitRecent();
     }
 
     // ===== 사용자 =====

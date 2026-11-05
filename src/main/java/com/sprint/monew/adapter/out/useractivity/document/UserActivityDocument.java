@@ -29,7 +29,7 @@ public record UserActivityDocument(
         List<CommentLikeItem> commentLikes,
         List<ArticleViewItem> articleViews) {
     /** 화면에 보여주는 최근 목록 개수 */
-    public static final int RECENT_LIMIT = 10;
+    public static final int RECENT_LIMIT = UserActivityResult.RECENT_LIMIT;
 
     /** 문서에 담아두는 최근 목록 개수. 일부가 삭제·취소돼도 10개를 채워 보여줄 수 있게 여유를 둔다 */
     public static final int STORED_LIMIT = 20;
