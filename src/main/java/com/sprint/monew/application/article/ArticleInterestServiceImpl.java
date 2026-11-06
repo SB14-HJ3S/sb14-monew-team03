@@ -6,9 +6,11 @@ import com.sprint.monew.domain.article.entity.ArticleInterest;
 import com.sprint.monew.domain.interest.entity.Interest;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,29 @@ import org.springframework.transaction.annotation.Transactional;
 public class ArticleInterestServiceImpl implements ArticleInterestService {
 
     private final ArticleInterestRepositoryPort repository;
+
+    @Override
+    public Set<UUID> findLinkedArticleIds(UUID interestId, List<UUID> articleIds) {
+        if (articleIds.isEmpty()) {
+            return Set.of();
+        }
+
+        return new HashSet<>(repository.findLinkedArticleIds(interestId, articleIds));
+    }
+
+    @Override
+    @Transactional
+    public void createLinks(Interest interest, List<Article> articles) {
+        if (articles.isEmpty()) {
+            return;
+        }
+
+        List<ArticleInterest> links =
+                articles.stream()
+                        .map(article -> ArticleInterest.create(article, interest))
+                        .toList();
+        repository.saveAll(links);
+    }
 
     @Override
     @Transactional

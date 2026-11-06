@@ -3,6 +3,7 @@ package com.sprint.monew.application.article;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -22,7 +23,8 @@ import com.sprint.monew.global.exception.errortype.ExternalErrorType;
 import com.sprint.monew.global.type.ArticleSourceType;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +34,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class ArticleCollectionApplicationTest {
@@ -132,21 +135,19 @@ class ArticleCollectionApplicationTest {
         var deleted = collected("deleted", "AI", "");
         Article saved = fresh.toArticle();
         Article existingEntity = existing.toArticle();
+        ReflectionTestUtils.setField(existingEntity, "id", UUID.randomUUID());
         Article deletedEntity = deleted.toArticle();
         deletedEntity.softDelete();
-        when(articles.findBySourceUrl("new")).thenReturn(Optional.empty());
-        when(articles.findBySourceUrl("existing")).thenReturn(Optional.of(existingEntity));
-        when(articles.findBySourceUrl("deleted")).thenReturn(Optional.of(deletedEntity));
+        when(articles.findAllBySourceUrls(List.of("new", "existing", "deleted")))
+                .thenReturn(List.of(existingEntity, deletedEntity));
         when(articles.save(any())).thenReturn(saved);
-        when(links.createIfAbsent(saved, interest)).thenReturn(true);
-        when(links.createIfAbsent(existingEntity, interest)).thenReturn(true);
 
         assertThat(application.saveArticles(interest, List.of(fresh, existing, deleted)))
                 .isEqualTo(1);
 
         verify(articles).save(any());
-        verify(links).createIfAbsent(saved, interest);
-        verify(links).createIfAbsent(existingEntity, interest);
+        verify(links).findLinkedArticleIds(interest.getId(), List.of(existingEntity.getId()));
+        verify(links).createLinks(interest, List.of(saved, existingEntity));
         verifyNoMoreInteractions(links);
         verify(eventPublisher).publish(new ArticlesSavedEvent(interest.getId(), "기술", 2));
     }
@@ -158,10 +159,9 @@ class ArticleCollectionApplicationTest {
         Interest second = Interest.create("경제", List.of("AI"));
         var item = collected("shared", "AI", "");
         Article saved = item.toArticle();
-        when(articles.findBySourceUrl("shared")).thenReturn(Optional.empty(), Optional.of(saved));
+        ReflectionTestUtils.setField(saved, "id", UUID.randomUUID());
+        when(articles.findAllBySourceUrls(List.of("shared"))).thenReturn(List.of(), List.of(saved));
         when(articles.save(any())).thenReturn(saved);
-        when(links.createIfAbsent(saved, first)).thenReturn(true);
-        when(links.createIfAbsent(saved, second)).thenReturn(true);
 
         assertThat(application.saveArticles(first, List.of(item))).isEqualTo(1);
         assertThat(application.saveArticles(second, List.of(item))).isZero();
@@ -178,11 +178,12 @@ class ArticleCollectionApplicationTest {
         Interest interest = Interest.create("기술", List.of("AI"));
         var item = collected("shared", "AI", "");
         Article existing = item.toArticle();
-        when(articles.findBySourceUrl("shared")).thenReturn(Optional.of(existing));
-        when(links.createIfAbsent(existing, interest)).thenReturn(true, false);
+        ReflectionTestUtils.setField(existing, "id", UUID.randomUUID());
+        when(articles.findAllBySourceUrls(List.of("shared"))).thenReturn(List.of(existing));
 
         assertThat(application.saveArticles(interest, List.of(item, item))).isZero();
 
+        verify(links).createLinks(interest, List.of(existing));
         verify(eventPublisher).publish(new ArticlesSavedEvent(interest.getId(), "기술", 1));
         verifyNoMoreInteractions(eventPublisher);
     }
@@ -193,11 +194,14 @@ class ArticleCollectionApplicationTest {
         Interest interest = Interest.create("기술", List.of("AI"));
         var item = collected("existing", "AI", "");
         Article existing = item.toArticle();
-        when(articles.findBySourceUrl("existing")).thenReturn(Optional.of(existing));
+        ReflectionTestUtils.setField(existing, "id", UUID.randomUUID());
+        when(articles.findAllBySourceUrls(List.of("existing"))).thenReturn(List.of(existing));
+        when(links.findLinkedArticleIds(interest.getId(), List.of(existing.getId())))
+                .thenReturn(Set.of(existing.getId()));
 
         assertThat(application.saveArticles(interest, List.of(item))).isZero();
 
-        verify(links).createIfAbsent(existing, interest);
+        verify(links).createLinks(interest, List.of());
         verifyNoInteractions(eventPublisher);
     }
 
@@ -216,7 +220,7 @@ class ArticleCollectionApplicationTest {
         Article saved = item.toArticle();
         var failure = new IllegalStateException("link failed");
         when(articles.save(any())).thenReturn(saved);
-        when(links.createIfAbsent(saved, interest)).thenThrow(failure);
+        doThrow(failure).when(links).createLinks(interest, List.of(saved));
         assertThatThrownBy(() -> application.saveArticles(interest, List.of(item)))
                 .isSameAs(failure);
         verifyNoInteractions(eventPublisher);

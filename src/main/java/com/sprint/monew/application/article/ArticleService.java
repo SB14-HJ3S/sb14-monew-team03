@@ -18,6 +18,8 @@ public interface ArticleService {
 
     Optional<Article> findBySourceUrl(String sourceUrl);
 
+    List<Article> findAllBySourceUrls(List<String> sourceUrls);
+
     Article save(Article article);
 
     void increaseCommentCount(UUID articleId);

@@ -7,8 +7,19 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface ArticleInterestJpaRepository extends JpaRepository<ArticleInterest, UUID> {
+    @Query(
+            """
+            select ai.article.id
+            from ArticleInterest ai
+            where ai.interest.id = :interestId
+              and ai.article.id in :articleIds
+            """)
+    List<UUID> findLinkedArticleIds(
+            @Param("interestId") UUID interestId, @Param("articleIds") List<UUID> articleIds);
+
     Optional<ArticleInterest> findByArticleIdAndInterestId(UUID articleId, UUID interestId);
 
     @Query(

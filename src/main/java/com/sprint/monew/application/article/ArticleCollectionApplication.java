@@ -13,10 +13,13 @@ import com.sprint.monew.domain.interest.entity.Interest;
 import com.sprint.monew.global.annotation.ApplicationService;
 import com.sprint.monew.global.type.ArticleSourceType;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,30 +60,56 @@ public class ArticleCollectionApplication implements ArticleCollectionUseCase {
     @Override
     @Transactional
     public int saveArticles(Interest interest, List<CollectedArticle> articles) {
+        // articles에 같은 url 있는지 확인
+        List<CollectedArticle> uniqueArticles = removeDuplicateArticles(articles);
+        if (uniqueArticles.isEmpty()) {
+            return 0;
+        }
 
-        int newCollectedArticleCount = 0; // 새로 수집된 기사 개수
-        int newLinkedArticleCount = 0; // 관심사에 새로 연결된 기사 개수
+        List<String> urls = uniqueArticles.stream().map(CollectedArticle::sourceUrl).toList();
 
-        for (CollectedArticle collected : articles) {
-            Optional<Article> existing = articleService.findBySourceUrl(collected.sourceUrl());
+        // 이번 기사들의 url로 기존에 저장되어 있는 기사들 한번에 조회
+        Map<String, Article> existingUrl = new HashMap<>();
+        for (Article article : articleService.findAllBySourceUrls(urls)) {
+            existingUrl.put(article.getSourceUrl(), article);
+        }
 
-            Article article;
+        // 기존 기사 중 이미 현재 관심사와 연결되어있던 기사 id조회
+        List<UUID> existingArticleInterests =
+                existingUrl.values().stream()
+                        .filter(article -> !article.isDeleted())
+                        .map(Article::getId)
+                        .toList();
 
-            if (existing.isPresent()) {
-                article = existing.get();
+        Set<UUID> linkedArticleIds =
+                existingArticleInterests.isEmpty()
+                        ? Set.of()
+                        : articleInterestService.findLinkedArticleIds(
+                                interest.getId(), existingArticleInterests);
 
-                if (article.isDeleted()) {
-                    continue;
-                }
-            } else {
-                article = articleService.save(collected.toArticle());
-                newCollectedArticleCount++;
+        int newArticleCount = 0;
+        List<Article> articlesToLink = new ArrayList<>();
+
+        for (CollectedArticle collectedArticle : uniqueArticles) {
+            Article existing = existingUrl.get(collectedArticle.sourceUrl());
+            if (Objects.isNull(existing)) {
+                Article saved = articleService.save(collectedArticle.toArticle());
+                newArticleCount++;
+                articlesToLink.add(saved);
+                continue;
             }
 
-            if (articleInterestService.createIfAbsent(article, interest)) {
-                newLinkedArticleCount++;
+            if (existing.isDeleted()) {
+                continue;
+            }
+
+            if (!linkedArticleIds.contains(existing.getId())) {
+                articlesToLink.add(existing);
             }
         }
+
+        articleInterestService.createLinks(interest, articlesToLink);
+        int newLinkedArticleCount = articlesToLink.size();
 
         if (newLinkedArticleCount > 0) {
             eventPublisher.publish(
@@ -88,7 +117,7 @@ public class ArticleCollectionApplication implements ArticleCollectionUseCase {
                             interest.getId(), interest.getName(), newLinkedArticleCount));
         }
 
-        return newCollectedArticleCount;
+        return newArticleCount;
     }
 
     // 기사 제목이나 요약에 관심사 키워드 중 하나라도 있으면 return true, else false
@@ -110,18 +139,4 @@ public class ArticleCollectionApplication implements ArticleCollectionUseCase {
 
         return new ArrayList<>(byUrl.values());
     }
-
-    // 참고용: 나중에 batch에서 알림 발행하기
-    //    private void publishArticlesSaved(Interest interest, int articleCount) {
-    //        // 트랜잭션으로 감싸지 않으면 publishArticlesSaved가 트랜잭션 밖에서 실행되고,
-    //        //      AFTER_COMMIT 리스너는 이벤트를 무시
-    //        transactionTemplate.execute(
-    //            status -> {
-    // 알림 호출 여기서!!
-    //                eventPublisherPort.publish(
-    //                    new ArticlesSavedEvent(
-    //                        interest.getId(), interest.getName(), articleCount));
-    //                return null;
-    //            });
-    //    }
 }

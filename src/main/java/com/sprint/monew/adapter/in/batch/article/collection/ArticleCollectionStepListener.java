@@ -3,6 +3,7 @@ package com.sprint.monew.adapter.in.batch.article.collection;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.StepExecution;
@@ -10,6 +11,7 @@ import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @StepScope
 @Component
 @RequiredArgsConstructor
@@ -18,13 +20,21 @@ public class ArticleCollectionStepListener implements StepExecutionListener {
     private final MeterRegistry meterRegistry;
     private double initialFailureCount;
 
+    private long startedNanos; // 추가
+
     @Override
     public void beforeStep(StepExecution stepExecution) {
         this.initialFailureCount = fetchFailureCount();
+        this.startedNanos = System.nanoTime();
     }
 
     @Override
     public ExitStatus afterStep(StepExecution stepExecution) {
+        // 추가: 기존 실패 판정 로직보다 앞에서 시간 기록
+        double elapsedSeconds = (System.nanoTime() - startedNanos) / 1_000_000_000.0;
+
+        log.info("기사 수집 Step 소요시간: {}초, 처리 관심사={}개", elapsedSeconds, stepExecution.getReadCount());
+
         if (stepExecution.getStatus() != BatchStatus.COMPLETED) {
             return null;
         }
