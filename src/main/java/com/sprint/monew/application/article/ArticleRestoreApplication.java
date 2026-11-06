@@ -23,8 +23,10 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @RequiredArgsConstructor
 @ApplicationService
 public class ArticleRestoreApplication implements ArticleRestoreUseCase {
@@ -116,6 +118,13 @@ public class ArticleRestoreApplication implements ArticleRestoreUseCase {
             }
         }
         articleInterestService.saveAll(links);
+        for (Article a : saved) {
+            log.info(
+                    "기사 복구 완료. 제목={},  게시일시={},  id={}",
+                    a.getTitle(),
+                    a.getPublishedAt(),
+                    a.getId());
+        }
         return saved.stream().map(Article::getId).toList();
     }
 }
