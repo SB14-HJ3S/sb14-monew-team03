@@ -20,7 +20,7 @@
 </tr>
 <tr>
   <td align="left" valign="top"><b>핵심 목표</b></td>
-  <td align="left">· 관심사 기반 뉴스 큐레이션 및 자동 수집<br>· 사용자 활동(댓글, 좋아요, 알림) 통합 관리<br>· 스케줄러 기반 기사 동기화 및 S3 백업 · 복구 기능<br>· Actuator 기반 모니터링으로 운영 관찰성 확보</td>
+  <td align="left">· 관심사 기반 뉴스 큐레이션 및 자동 수집<br>· 사용자 활동(댓글, 좋아요, 알림) 통합 관리<br>· 스케줄러 기반 기사 동기화 및 S3 백업 · 복구 기능<br>· Prometheus · Grafana · CloudWatch 기반 모니터링으로 운영 관찰성 확보</td>
 </tr>
 <tr>
   <td align="left"><b>관련 링크</b></td>
@@ -74,7 +74,7 @@
   <td align="center" valign="top"><b>김민재</b><br/>기술팀장<br/><br/><sub><kbd><b>뉴스&nbsp;기사&nbsp;도메인</b></kbd>&nbsp;⭐<br/>·&nbsp;네이버&nbsp;API&nbsp;·&nbsp;RSS&nbsp;수집<br/>·&nbsp;기사&nbsp;검색&nbsp;·&nbsp;조회수<br/>·&nbsp;기사&nbsp;S3&nbsp;백업&nbsp;·&nbsp;복구<br/><kbd><b>공통</b></kbd><br/>·&nbsp;헥사고날&nbsp;패키지&nbsp;설계<br/>·&nbsp;도메인별&nbsp;엔티티&nbsp;설계</sub></td>
   <td align="center" valign="top"><b>박수민</b><br/>기술부팀장<br/><br/><sub><kbd><b>관심사&nbsp;도메인</b></kbd><br/>·&nbsp;관심사&nbsp;등록&nbsp;·&nbsp;수정&nbsp;·&nbsp;삭제<br/>·&nbsp;관심사&nbsp;이름&nbsp;유사도&nbsp;검사<br/>·&nbsp;관심사&nbsp;구독&nbsp;·&nbsp;취소<br/><kbd><b>Spring&nbsp;Batch&nbsp;적용</b></kbd>&nbsp;🚀<br/>·&nbsp;배치&nbsp;5종&nbsp;Spring&nbsp;Batch&nbsp;전환<br/>(기사&nbsp;수집&nbsp;·&nbsp;기사&nbsp;S3&nbsp;백업&nbsp;·<br/>알림&nbsp;삭제&nbsp;·&nbsp;사용자&nbsp;삭제&nbsp;·<br/>로그&nbsp;백업)<br/>·&nbsp;배치&nbsp;로그&nbsp;S3&nbsp;적재<br/>·&nbsp;배치&nbsp;메트릭&nbsp;모니터링<br/><kbd><b>공통</b></kbd><br/>·&nbsp;도메인별&nbsp;UseCase&nbsp;·&nbsp;Port&nbsp;정의<br/>·&nbsp;커서&nbsp;페이지네이션<br/>·&nbsp;요청자&nbsp;ID&nbsp;처리<br/>·&nbsp;Bean&nbsp;Validation&nbsp;적용</sub></td>
   <td align="center" valign="top"><b>이수찬</b><br/>팀원<br/><br/><sub><kbd><b>알림&nbsp;도메인</b></kbd><br/>·&nbsp;기사&nbsp;·&nbsp;좋아요&nbsp;알림&nbsp;생성<br/>·&nbsp;알림&nbsp;조회&nbsp;·&nbsp;확인&nbsp;처리<br/>·&nbsp;오래된&nbsp;알림&nbsp;삭제&nbsp;배치<br/><kbd><b>활동&nbsp;내역&nbsp;도메인</b></kbd>&nbsp;🚀<br/>·&nbsp;활동&nbsp;내역&nbsp;조회<br/>·&nbsp;MongoDB&nbsp;조회&nbsp;최적화</sub></td>
-  <td align="center" valign="top"><b>이승현</b><br/>행정팀장<br/><br/><sub><kbd><b>사용자&nbsp;도메인</b></kbd><br/>·&nbsp;회원가입&nbsp;·&nbsp;로그인<br/>·&nbsp;닉네임&nbsp;수정<br/>·&nbsp;논리&nbsp;·&nbsp;물리&nbsp;삭제<br/>·&nbsp;탈퇴&nbsp;사용자&nbsp;삭제&nbsp;배치<br/><kbd><b>뉴스&nbsp;기사&nbsp;도메인</b></kbd><br/>·&nbsp;출처&nbsp;목록&nbsp;조회<br/>·&nbsp;기사&nbsp;논리&nbsp;·&nbsp;물리&nbsp;삭제<br/><kbd><b>AWS&nbsp;무중단&nbsp;자동&nbsp;배포</b></kbd><br/>·&nbsp;모니터링&nbsp;환경&nbsp;구축<br/><kbd><b>공통</b></kbd><br/>·&nbsp;공통&nbsp;코드&nbsp;·&nbsp;예외<br/>·&nbsp;Swagger&nbsp;설정<br/>·&nbsp;CI&nbsp;·&nbsp;협업&nbsp;자동화<br/>·&nbsp;배치&nbsp;중복&nbsp;실행&nbsp;방지<br/><kbd><b>발표&nbsp;·&nbsp;문서</b></kbd><br/>·&nbsp;최종&nbsp;발표&nbsp;PPT&nbsp;·&nbsp;영상<br/>·&nbsp;README&nbsp;작성</sub></td>
+  <td align="center" valign="top"><b>이승현</b><br/>행정팀장<br/><br/><sub><kbd><b>사용자&nbsp;도메인</b></kbd><br/>·&nbsp;회원가입&nbsp;·&nbsp;로그인<br/>·&nbsp;닉네임&nbsp;수정<br/>·&nbsp;논리&nbsp;·&nbsp;물리&nbsp;삭제<br/>·&nbsp;탈퇴&nbsp;사용자&nbsp;삭제&nbsp;배치<br/><kbd><b>뉴스&nbsp;기사&nbsp;도메인</b></kbd><br/>·&nbsp;출처&nbsp;목록&nbsp;조회<br/>·&nbsp;기사&nbsp;논리&nbsp;·&nbsp;물리&nbsp;삭제<br/><kbd><b>배포&nbsp;·&nbsp;모니터링</b></kbd><br/>·&nbsp;AWS&nbsp;무중단&nbsp;자동&nbsp;배포<br/>·&nbsp;모니터링&nbsp;환경&nbsp;구축<br/><kbd><b>공통</b></kbd><br/>·&nbsp;공통&nbsp;코드&nbsp;·&nbsp;예외<br/>·&nbsp;Swagger&nbsp;설정<br/>·&nbsp;CI&nbsp;·&nbsp;협업&nbsp;자동화<br/>·&nbsp;배치&nbsp;중복&nbsp;실행&nbsp;방지<br/><kbd><b>발표&nbsp;·&nbsp;문서</b></kbd><br/>·&nbsp;최종&nbsp;발표&nbsp;PPT&nbsp;·&nbsp;영상<br/>·&nbsp;README&nbsp;작성</sub></td>
   <td align="center" valign="top"><b>정수환</b><br/>팀원<br/><br/><sub><kbd><b>댓글&nbsp;도메인</b></kbd><br/>·&nbsp;댓글&nbsp;등록&nbsp;·&nbsp;수정<br/>·&nbsp;댓글&nbsp;논리&nbsp;·&nbsp;물리&nbsp;삭제<br/>·&nbsp;기사별&nbsp;댓글&nbsp;목록&nbsp;조회<br/>·&nbsp;댓글&nbsp;좋아요&nbsp;·&nbsp;취소</sub></td>
 </tr>
 </table>
@@ -146,12 +146,12 @@
 | 구분 | 기술 |
 | :--- | :--- |
 | **Language** | ![Java](https://img.shields.io/badge/Java-17-3A6E8F?logo=openjdk&logoColor=white&style=flat-square&labelColor=475569) |
-| **Backend** | ![QueryDSL](https://img.shields.io/badge/QueryDSL-4A6A8F?style=flat-square) ![Lombok](https://img.shields.io/badge/Lombok-8F6A3F?style=flat-square)<br>![Spring](https://img.shields.io/badge/Spring-Boot%203.5.16%20%7C%20Data%20JPA%20%7C%20Batch%20%7C%20Actuator-5A8F4A?logo=spring&logoColor=white&style=flat-square&labelColor=475569) |
-| **Database** | ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-3B5F9E?logo=postgresql&logoColor=white&style=flat-square) ![MongoDB](https://img.shields.io/badge/MongoDB-3F7F4A?logo=mongodb&logoColor=white&style=flat-square) |
-| **Cloud & Infra** | ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white&style=flat-square) ![AWS](https://img.shields.io/badge/AWS-ECS%20%7C%20ECR%20%7C%20RDS%20%7C%20S3-232F3E?style=flat-square&labelColor=475569) |
-| **Monitoring** | ![Prometheus](https://img.shields.io/badge/Prometheus-A8573A?logo=prometheus&logoColor=white&style=flat-square) ![Grafana](https://img.shields.io/badge/Grafana-A8743A?logo=grafana&logoColor=white&style=flat-square) ![CloudWatch](https://img.shields.io/badge/AWS-CloudWatch-232F3E?style=flat-square&labelColor=475569) |
+| **Backend** | ![QueryDSL](https://img.shields.io/badge/QueryDSL-6.10.1-4A6A8F?style=flat-square&labelColor=475569) ![ShedLock](https://img.shields.io/badge/ShedLock-6.10.0-5E6A8F?style=flat-square&labelColor=475569) ![Lombok](https://img.shields.io/badge/Lombok-8F6A3F?style=flat-square)<br>![Spring](https://img.shields.io/badge/Spring-Boot%203.5.16%20%7C%20Data%20JPA%20%7C%20Batch%20%7C%20Actuator-5A8F4A?logo=spring&logoColor=white&style=flat-square&labelColor=475569) |
+| **Database** | ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-3B5F9E?logo=postgresql&logoColor=white&style=flat-square&labelColor=475569) ![MongoDB](https://img.shields.io/badge/MongoDB-7-3F7F4A?logo=mongodb&logoColor=white&style=flat-square&labelColor=475569) |
+| **Cloud & Infra** | ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white&style=flat-square) ![AWS](https://img.shields.io/badge/AWS-ECS%20%28EC2%29%20%7C%20ECR%20%7C%20ALB%20%7C%20RDS%20%7C%20S3%20%7C%20SSM-232F3E?style=flat-square&labelColor=475569) |
+| **Monitoring** | ![Prometheus](https://img.shields.io/badge/Prometheus-A8573A?logo=prometheus&logoColor=white&style=flat-square) ![Grafana](https://img.shields.io/badge/Grafana-A8743A?logo=grafana&logoColor=white&style=flat-square) ![CloudWatch](https://img.shields.io/badge/AWS-CloudWatch-232F3E?style=flat-square&labelColor=475569) ![Micrometer](https://img.shields.io/badge/Micrometer-3F6E7F?style=flat-square) |
 | **CI/CD** | ![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-3B6FA8?logo=githubactions&logoColor=white&style=flat-square) ![Gradle](https://img.shields.io/badge/Gradle-02303A?logo=gradle&logoColor=white&style=flat-square) |
-| **Test & Quality** | ![JUnit5](https://img.shields.io/badge/JUnit5-3F7F5E?logo=junit5&logoColor=white&style=flat-square) ![Mockito](https://img.shields.io/badge/Mockito-6A4F8F?style=flat-square) ![JaCoCo](https://img.shields.io/badge/JaCoCo-3F7F7F?style=flat-square) ![Codecov](https://img.shields.io/badge/Codecov-A8476F?logo=codecov&logoColor=white&style=flat-square)<br>![Testcontainers](https://img.shields.io/badge/Testcontainers-3A6E8F?logo=testcontainers&logoColor=white&style=flat-square) ![ArchUnit](https://img.shields.io/badge/ArchUnit-5E6A8F?style=flat-square) |
+| **Test & Quality** | ![JUnit5](https://img.shields.io/badge/JUnit5-3F7F5E?logo=junit5&logoColor=white&style=flat-square) ![Mockito](https://img.shields.io/badge/Mockito-6A4F8F?style=flat-square) ![JaCoCo](https://img.shields.io/badge/JaCoCo-3F7F7F?style=flat-square) ![Codecov](https://img.shields.io/badge/Codecov-A8476F?logo=codecov&logoColor=white&style=flat-square)<br>![Testcontainers](https://img.shields.io/badge/Testcontainers-3A6E8F?logo=testcontainers&logoColor=white&style=flat-square) ![ArchUnit](https://img.shields.io/badge/ArchUnit-5E6A8F?style=flat-square) ![Checkstyle](https://img.shields.io/badge/Checkstyle-6A7F3F?style=flat-square) ![Spotless](https://img.shields.io/badge/Spotless-3F5E8F?style=flat-square) |
 | **Docs** | ![Swagger](https://img.shields.io/badge/Swagger-5E8F3A?logo=swagger&logoColor=white&style=flat-square) |
 | **Review** | ![CodeRabbit](https://img.shields.io/badge/CodeRabbit-A8743A?logo=coderabbit&logoColor=white&style=flat-square) ![Claude Code](https://img.shields.io/badge/Claude%20Code-9E5A4A?logo=claude&logoColor=white&style=flat-square) |
 | **Collaboration** | ![GitHub](https://img.shields.io/badge/GitHub-181717?logo=github&logoColor=white&style=flat-square) ![Notion](https://img.shields.io/badge/Notion-787774?logo=notion&logoColor=white&style=flat-square) ![Discord](https://img.shields.io/badge/Discord-5865F2?logo=discord&logoColor=white&style=flat-square) |
@@ -682,7 +682,7 @@
 
 ## 📌 ERD
 
-PostgreSQL 10개 테이블 + MongoDB 1개 · 모든 테이블 공통 컬럼 `id`(uuid) · `created_at`
+PostgreSQL 도메인 테이블 10개 (ShedLock · Spring Batch 메타 테이블 제외) + MongoDB 1개 · 모든 테이블 공통 컬럼 `id`(uuid) · `created_at`
 
 <p align="center"><img width="1000" alt="ERD 전체 관계도" src="docs/images/erd.png" /></p>
 
@@ -1027,10 +1027,10 @@ flowchart TB
   subgraph CD["🚀 자동 배포"]
     direction TB
     gha["⚙️ GitHub Actions<br/>develop 머지 시"]
-    ecr["📦 ECR<br/>앱 이미지"]
+    ecr["📦 ECR<br/>앱 · 모니터링 이미지"]
   end
   ssm["🔐 SSM<br/>비밀번호 · API 키"]
-  cw["📜 CloudWatch Logs<br/>컨테이너 로그"]
+  cw["📜 CloudWatch<br/>컨테이너 로그 · 배치 지표"]
 
   subgraph EC2["🖥️ EC2 1대 · 4GB · 컨테이너 3개"]
     direction LR
@@ -1067,7 +1067,8 @@ flowchart TB
   gha -- "OIDC로 AWS 인증 후 업로드" --> ecr
   ecr -. "새 버전 배포" .-> app
   ssm -. "시작할 때 주입" .-> app
-  app -. "로그" .-> cw
+  app -. "로그 · 배치 지표" .-> cw
+  graf -. "지표 · 로그 조회" .-> cw
 
   classDef client fill:#F8FAFC,stroke:#94A3B8,stroke-width:1.5px,color:#0F172A
   classDef net fill:#F5F3FF,stroke:#8B5CF6,stroke-width:2px,color:#4C1D95
@@ -1109,7 +1110,7 @@ flowchart TB
 ### CI
 
 `main` · `develop`으로 가는 Pull Request와 `develop` 머지(push) 때
-GitHub Actions CI가 실행됩니다. (문서 · 프론트엔드 정적 파일만 바뀐 경우는 빌드 생략)
+GitHub Actions CI가 실행됩니다. (PR은 문서 · 프론트엔드 정적 파일만, develop 머지는 문서만 바뀐 경우 빌드 생략)
 
 ```bash
 ./gradlew build
@@ -1165,7 +1166,7 @@ GitHub Actions CI가 실행됩니다. (문서 · 프론트엔드 정적 파일�
 | 구분 | 규칙 |
 | :--- | :--- |
 | 브랜치 전략 | `{타입}/{이슈번호}-{작업명}` → `develop` → `main` (예: `feat/12-interest-subscribe`) — 이슈의 Branch Keyword 칸에 작업명을 적으면 브랜치가 자동으로 생성됨 |
-| 커밋 컨벤션 | `타입 : 작업 내용 [#이슈번호]` (예: `feat : 관심사 구독 API 추가 [#12]`) — 이슈 번호는 브랜치 이름에서 자동으로 붙음, TDD 단계는 `test(red)` · `feat(green)` · `refactor(blue)` (단축키 `t1` · `f1` · `r1`), 리뷰 반영 커밋은 제목 끝에 `;c` · `;r` |
+| 커밋 컨벤션 | `타입 : 작업 내용 [#이슈번호]` (예: `feat : 관심사 구독 API 추가 [#12]`) — 이슈 번호는 브랜치 이름에서 자동으로 붙음, TDD 단계는 `test(red)` · `feat(green)`/`fix(green)` · `refactor(blue)` (단축키 `t1` · `f1`/`x1` · `r1`), 리뷰 반영 커밋은 제목 끝에 `;c`(클로드) · `;r`(코드래빗) · `;t`(팀원) |
 | PR 규칙 | 이슈 연결(`close #이슈번호`) · 리뷰 승인 1명 이상 후 **일반 머지가 기본**(TDD 단계 커밋을 develop에 그대로 남김) |
 | 코드 스타일 | Spotless(google-java-format `aosp()`, 들여쓰기 4칸) — 커밋 시 Git Hook으로 자동 적용, **최종 포맷 기준**. push 전에는 포맷 검사 · 컴파일을 한 번 더 확인 |
 | 협업 자동화 | PR 제목 · 라벨 자동 정리, 이슈 · PR · 리뷰 디스코드 알림, 프로젝트 보드 상태 자동 변경 |
