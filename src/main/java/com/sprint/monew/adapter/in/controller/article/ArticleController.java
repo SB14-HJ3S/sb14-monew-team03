@@ -1,7 +1,9 @@
 package com.sprint.monew.adapter.in.controller.article;
 
 import com.sprint.monew.adapter.in.controller.article.dto.response.ArticleDto;
+import com.sprint.monew.adapter.in.controller.article.dto.response.ArticleRestoreResultDto;
 import com.sprint.monew.adapter.in.controller.article.dto.response.ArticleViewDto;
+import com.sprint.monew.application.article.provided.ArticleRestoreUseCase;
 import com.sprint.monew.application.article.provided.ArticleUseCase;
 import com.sprint.monew.application.article.provided.dto.ArticleQuery;
 import com.sprint.monew.application.article.provided.dto.ArticleResult;
@@ -37,6 +39,18 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 public class ArticleController {
 
     private final ArticleUseCase articleUseCase;
+    private final ArticleRestoreUseCase articleRestoreUseCase;
+
+    @GetMapping("/restore")
+    public List<ArticleRestoreResultDto> restoreArticles(
+            @RequestParam(name = "from") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                    LocalDateTime from,
+            @RequestParam(name = "to") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                    LocalDateTime to) {
+        return articleRestoreUseCase.restoreArticles(from, to).stream()
+                .map(ArticleRestoreResultDto::from)
+                .toList();
+    }
 
     @Operation(summary = "출처 목록 조회", description = "출처 목록을 조회합니다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")

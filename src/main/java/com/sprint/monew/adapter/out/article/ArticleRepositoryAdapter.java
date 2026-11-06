@@ -4,6 +4,7 @@ import com.sprint.monew.application.article.provided.dto.ArticleQuery;
 import com.sprint.monew.application.article.required.ArticleRepositoryPort;
 import com.sprint.monew.domain.article.entity.Article;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -89,7 +90,13 @@ public class ArticleRepositoryAdapter implements ArticleRepositoryPort {
     }
 
     @Override
-    public List<Article> findBackupChunk(Instant from, Instant to, UUID afterId, int limit) {
+    public List<Article> findBackupChunk(
+            LocalDateTime from, LocalDateTime to, UUID afterId, int limit) {
         return jpaRepository.findBackupChunk(from, to, afterId, PageRequest.of(0, limit));
+    }
+
+    @Override
+    public List<Article> saveAll(List<Article> articles) {
+        return jpaRepository.saveAll(articles);
     }
 }

@@ -7,6 +7,8 @@ import java.util.UUID;
 
 public interface ArticleInterestRepositoryPort {
 
+    void saveAll(List<ArticleInterest> links);
+
     ArticleInterest save(ArticleInterest articleInterest);
 
     Optional<ArticleInterest> findByArticleIdAndInterestId(UUID articleId, UUID interestId);
