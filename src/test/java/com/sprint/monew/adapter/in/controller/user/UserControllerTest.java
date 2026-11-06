@@ -271,4 +271,33 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.details.userId").exists());
         verifyNoInteractions(userUseCase);
     }
+
+    @Test
+    @DisplayName("회원가입 닉네임이 비어 있으면 details.nickname에 한국어 안내 문구를 응답한다")
+    void givenBlankNickname_whenRegister_thenKoreanMessage() throws Exception {
+        mockMvc.perform(registerRequest("new@monew.com", "", "password1!"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.nickname").value("닉네임을 입력해 주세요"));
+        verifyNoInteractions(userUseCase);
+    }
+
+    @Test
+    @DisplayName("회원가입 비밀번호가 규칙에 안 맞으면 details.password에 비밀번호 규칙 문구를 응답한다")
+    void givenInvalidPassword_whenRegister_thenPasswordRuleMessage() throws Exception {
+        mockMvc.perform(registerRequest("new@monew.com", "새사람", "pw12!"))
+                .andExpect(status().isBadRequest())
+                .andExpect(
+                        jsonPath("$.details.password")
+                                .value("비밀번호는 6~20자이며 영문, 숫자, 특수문자를 모두 포함해야 합니다"));
+        verifyNoInteractions(userUseCase);
+    }
+
+    @Test
+    @DisplayName("닉네임을 21자로 수정하면 details.nickname에 한국어 안내 문구를 응답한다")
+    void givenTooLongNickname_whenUpdateNickname_thenKoreanMessage() throws Exception {
+        mockMvc.perform(updateNicknameRequest("가".repeat(21)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details.nickname").value("닉네임은 20자 이하여야 합니다"));
+        verifyNoInteractions(userUseCase);
+    }
 }
