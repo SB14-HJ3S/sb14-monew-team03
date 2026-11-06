@@ -23,6 +23,11 @@ spring:
           batch_size: 100     # INSERT문을 최대 100건씩 jdbc 배치로 실행하도록 설정
         order_inserts: true   # 같은 엔티티의 INSERT를 모으도록 실행 순서 정렬
 
+  datasource:
+    hikari:
+      data-source-properties:
+        reWriteBatchedInserts: true
+
   jackson:
     time-zone: Asia/Seoul # 응답 날짜의 시간대 (단, Instant 타입은 항상 UTC로 나감)
 

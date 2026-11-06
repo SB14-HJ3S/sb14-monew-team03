@@ -12,9 +12,6 @@ spring:
     username: monew_user
     password: secret
     driver-class-name: org.postgresql.Driver
-    hikari:
-      data-source-properties:
-        reWriteBatchedInserts: true
 
   data:
     mongodb:
