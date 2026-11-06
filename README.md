@@ -1341,7 +1341,8 @@ src/main/java/com/sprint/monew
 │   │   ├── ArticleUseCase                        # 기사 조회 · 뷰 · 출처 · 삭제
 │   │   ├── ArticleCollectionUseCase              # 기사 수집
 │   │   ├── ArticleBackupUseCase                  # 기사 백업
-│   │   └── dto/                                  # ArticleQuery · ArticleResult · ArticleViewStatusResult · CollectedArticle · ArticleBackupFile · ArticleBackupItem · ArticleBackupResult
+│   │   ├── ArticleRestoreUseCase                 # 기사 복구
+│   │   └── dto/                                  # ArticleQuery · ArticleResult · ArticleViewStatusResult · CollectedArticle · ArticleBackupFile · ArticleBackupItem · ArticleBackupResult · ArticleRestoreResult
 │   ├── required/                                 # 밖에 요청 (Port)
 │   │   ├── ArticleRepositoryPort                 # 기사 저장소
 │   │   ├── ArticleInterestRepositoryPort         # 기사-관심사 연결 저장소
@@ -1353,6 +1354,8 @@ src/main/java/com/sprint/monew
 │   ├── ArticleApplication                        # ArticleUseCase 구현
 │   ├── ArticleCollectionApplication              # ArticleCollectionUseCase 구현
 │   ├── ArticleBackupApplication                  # ArticleBackupUseCase 구현
+│   ├── ArticleRestoreApplication                 # ArticleRestoreUseCase 구현 (기간 검증 · 날짜별 백업 파일 읽기)
+│   ├── ArticleRestoreService                     # 유실 기사 저장 · 관심사 재연결 (파일 단위 트랜잭션)
 │   └── ArticleService · ArticleInterestService · ArticleViewStatusService · ArticleBackupStorageService (+ Impl)  # 도메인 서비스
 ├── domain/article/entity/                        # Article · ArticleInterest · ArticleViewStatus
 └── global/                                       # 공통: 설정 · 예외(ArticleErrorType) · 타입(ArticleSourceType) · 페이지네이션 · 요청자 ID · 로깅 · 백업 직렬화/압축
@@ -1365,7 +1368,7 @@ src/main/java/com/sprint/monew
 | :--- | :--- |
 | `user` | 사용자 (이승현) |
 | `interest` | 관심사 · 구독 (박수민) |
-| `article` | 뉴스 기사 수집 · 조회 · 백업 (김민재) |
+| `article` | 뉴스 기사 수집 · 조회 · 백업 · 복구 (김민재) |
 | `article` | 뉴스 기사 출처 목록 · 논리 · 물리 삭제 (이승현) |
 | `comment` | 댓글 · 좋아요 (정수환) |
 | `notification` · `useractivity` | 알림 · 사용자 활동 내역 (이수찬) |
@@ -1638,6 +1641,8 @@ src/main/java/com/sprint/monew/
 │   │   ├── ArticleCollectionApplication
 │   │   ├── ArticleInterestService
 │   │   ├── ArticleInterestServiceImpl
+│   │   ├── ArticleRestoreApplication
+│   │   ├── ArticleRestoreService
 │   │   ├── ArticleService
 │   │   ├── ArticleServiceImpl
 │   │   ├── ArticleViewStatusService
@@ -1650,12 +1655,14 @@ src/main/java/com/sprint/monew/
 │   │   ├── provided/                               # UseCase (밖에서 부르는 기능)
 │   │   │   ├── ArticleBackupUseCase
 │   │   │   ├── ArticleCollectionUseCase
+│   │   │   ├── ArticleRestoreUseCase
 │   │   │   ├── ArticleUseCase
 │   │   │   └── dto/                                # Query · Result DTO
 │   │   │       ├── ArticleBackupFile
 │   │   │       ├── ArticleBackupItem
 │   │   │       ├── ArticleBackupResult
 │   │   │       ├── ArticleQuery
+│   │   │       ├── ArticleRestoreResult
 │   │   │       ├── ArticleResult
 │   │   │       ├── ArticleViewStatusResult
 │   │   │       └── CollectedArticle
