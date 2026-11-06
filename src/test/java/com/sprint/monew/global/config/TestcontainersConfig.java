@@ -15,6 +15,6 @@ public class TestcontainersConfig {
     @ServiceConnection
     PostgreSQLContainer<?> postgresContainer() {
         return new PostgreSQLContainer<>(DockerImageName.parse("postgres:16"))
-                .withUrlParam("rewriteBatchedInserts", "true");
+                .withUrlParam("reWriteBatchedInserts", "true");
     }
 }
