@@ -3,7 +3,6 @@ package com.sprint.monew.application.user;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
@@ -180,13 +179,15 @@ class UserServiceTest {
     @Test
     @DisplayName("없거나 탈퇴한 사용자의 이메일이어도 비밀번호 확인을 거친 뒤 USER_LOGIN_FAILED 예외가 난다")
     void givenNoActiveUser_whenLogin_thenCheckPasswordBeforeThrow() {
+        given(passwordEncoder.encode(any())).willReturn("비교용해시");
+        UserService service = new UserService(repository, passwordEncoder, userEventPublisher);
         given(repository.findUserByEmail("none@monew.com")).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> userService.login("none@monew.com", "password1!"))
+        assertThatThrownBy(() -> service.login("none@monew.com", "password1!"))
                 .isInstanceOf(MonewException.class)
                 .extracting("errorType")
                 .isEqualTo(UserErrorType.USER_LOGIN_FAILED);
-        verify(passwordEncoder).matches(eq("password1!"), any());
+        verify(passwordEncoder).matches("password1!", "비교용해시");
     }
 
     @Test
