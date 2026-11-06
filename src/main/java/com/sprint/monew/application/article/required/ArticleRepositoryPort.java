@@ -41,6 +41,8 @@ public interface ArticleRepositoryPort {
 
     List<Article> findBackupChunk(LocalDateTime from, LocalDateTime to, UUID afterId, int limit);
 
+    int hardDeleteById(UUID articleId);
+
     int increaseViewCount(UUID articleId);
 
     List<Article> saveAll(List<Article> articles);

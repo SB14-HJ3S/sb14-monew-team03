@@ -256,4 +256,40 @@ class ArticleControllerTest {
             verifyNoInteractions(articleUseCase);
         }
     }
+
+    @Nested
+    @DisplayName("DELETE /api/articles/{articleId}/hard 뉴스 기사 물리 삭제")
+    class HardDeleteArticle {
+
+        private final UUID articleId = UUID.randomUUID();
+
+        @Test
+        @DisplayName("뉴스 기사를 물리 삭제하면 204를 응답한다")
+        void givenArticle_whenHardDelete_thenNoContent() throws Exception {
+            mockMvc.perform(delete("/api/articles/{articleId}/hard", articleId))
+                    .andExpect(status().isNoContent());
+            verify(articleUseCase).hardDeleteArticle(articleId);
+        }
+
+        @Test
+        @DisplayName("없는 뉴스 기사를 물리 삭제하면 404와 ARTICLE_NOT_FOUND를 응답한다")
+        void givenNoArticle_whenHardDelete_thenNotFound() throws Exception {
+            willThrow(new MonewException(ArticleErrorType.ARTICLE_NOT_FOUND))
+                    .given(articleUseCase)
+                    .hardDeleteArticle(articleId);
+
+            mockMvc.perform(delete("/api/articles/{articleId}/hard", articleId))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.code").value("ARTICLE_NOT_FOUND"));
+        }
+
+        @Test
+        @DisplayName("뉴스 기사 ID가 UUID 형식이 아니면 400을 응답하고 유스케이스를 부르지 않는다")
+        void givenInvalidArticleId_whenHardDelete_thenBadRequest() throws Exception {
+            mockMvc.perform(delete("/api/articles/{articleId}/hard", "invalid-id"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+            verifyNoInteractions(articleUseCase);
+        }
+    }
 }

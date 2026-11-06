@@ -1,5 +1,8 @@
 package com.sprint.monew.application.comment;
 
+import static org.springframework.util.StringUtils.hasText;
+
+import com.sprint.monew.application.comment.provided.dto.CommentQuery;
 import com.sprint.monew.application.comment.required.CommentLikeRepositoryPort;
 import com.sprint.monew.application.comment.required.CommentRepositoryPort;
 import com.sprint.monew.domain.comment.entity.Comment;
@@ -7,8 +10,14 @@ import com.sprint.monew.domain.comment.entity.CommentLike;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.CommentErrorType;
+import com.sprint.monew.global.exception.errortype.CommonErrorType;
+import com.sprint.monew.global.pagination.PageResult;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -106,6 +115,40 @@ public class CommentServiceImpl implements CommentService {
             throw new MonewException(CommentErrorType.COMMENT_NOT_FOUND);
         }
         return wasActive;
+    }
+
+    @Override
+    public PageResult<Comment> findPageByQuery(CommentQuery query) {
+        Comment cursorComment = findCursorComment(query);
+        // limit + 1개를 받아서 다음 페이지 여부·커서는 PageResult가 계산함
+        List<Comment> fetched = commentRepository.findByQuery(query, cursorComment);
+        long totalElements = commentRepository.countByQuery(query);
+        return PageResult.of(fetched, totalElements, query.orderBy(), query.limit());
+    }
+
+    // 이전 페이지 마지막 댓글을 찾음. 첫 페이지면 null
+    private Comment findCursorComment(CommentQuery query) {
+        if (!hasText(query.cursor()) && Objects.isNull(query.after())) {
+            return null;
+        }
+        if (!hasText(query.cursor()) || Objects.isNull(query.after())) {
+            throw new MonewException(CommonErrorType.PAGINATION_NOT_BOTH_CURSOR_AND_AFTER);
+        }
+        // 위치만 알면 돼서 논리 삭제된 댓글도 커서로 씀. 물리 삭제돼서 없으면 COMMENT_NOT_FOUND
+        return getComment(toCommentId(query.cursor()));
+    }
+
+    private UUID toCommentId(String cursor) {
+        try {
+            return UUID.fromString(cursor);
+        } catch (IllegalArgumentException e) {
+            throw new MonewException(CommonErrorType.INVALID_REQUEST, Map.of("cursor", cursor), e);
+        }
+    }
+
+    @Override
+    public Set<UUID> findLikedCommentIds(UUID userId, Collection<UUID> commentIds) {
+        return commentLikeRepository.findLikedCommentIds(userId, commentIds);
     }
 
     @Override

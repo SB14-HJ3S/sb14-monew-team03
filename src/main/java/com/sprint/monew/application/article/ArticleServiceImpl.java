@@ -92,6 +92,14 @@ public class ArticleServiceImpl implements ArticleService {
         }
     }
 
+    @Override
+    @Transactional
+    public void hardDelete(UUID articleId) {
+        if (repository.hardDeleteById(articleId) == 0) {
+            throw articleNotFound(articleId);
+        }
+    }
+
     private MonewException articleNotFound(UUID articleId) {
         return new MonewException(
                 ArticleErrorType.ARTICLE_NOT_FOUND, Map.of("articleId", articleId));

@@ -11,7 +11,7 @@ import java.util.UUID;
 public interface CommentUseCase {
     CommentResult register(UUID userId, UUID articleId, String content);
 
-    PageResult<Comment> findByQuery(CommentQuery query);
+    PageResult<CommentResult> findByQuery(CommentQuery query);
 
     Comment findById(UUID commentId);
 

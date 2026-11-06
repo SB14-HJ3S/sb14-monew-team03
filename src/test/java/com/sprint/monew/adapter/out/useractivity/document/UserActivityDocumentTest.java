@@ -9,6 +9,7 @@ import com.sprint.monew.support.MongoIntegrationTest;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -108,5 +109,33 @@ class UserActivityDocumentTest {
         assertThat(result.comments()).isEmpty();
         assertThat(result.commentLikes()).isEmpty();
         assertThat(result.articleViews()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("문서에 20건이 있어도 결과로는 최신 10건만 보여준다.")
+    void givenTwentyComments_whenToResult_thenLatestTen() {
+        UUID userId = UUID.randomUUID();
+        List<CommentItem> comments =
+                IntStream.rangeClosed(1, 20)
+                        .mapToObj(
+                                i ->
+                                        new CommentItem(
+                                                UUID.randomUUID(),
+                                                UUID.randomUUID(),
+                                                "기사",
+                                                userId,
+                                                "우디",
+                                                "댓글" + i,
+                                                0L,
+                                                T))
+                        .toList();
+        UserActivityDocument document =
+                new UserActivityDocument(
+                        userId, "w@m.com", "우디", T, List.of(), comments, List.of(), List.of());
+
+        UserActivityResult result = document.toResult();
+
+        assertThat(result.comments()).hasSize(UserActivityDocument.RECENT_LIMIT);
+        assertThat(result.comments().get(0).content()).isEqualTo("댓글1"); // 배열 앞쪽(최신)부터 10개
     }
 }

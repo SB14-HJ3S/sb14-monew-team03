@@ -16,20 +16,18 @@ public class NotificationCleanupJobConfig {
     public Step notificationCleanupStep(
             JobRepository jobRepository,
             PlatformTransactionManager transactionManager,
-            NotificationCleanupTasklet tasklet) {
+            NotificationCleanupTasklet tasklet,
+            NotificationCleanupStepListener listener) {
         return new StepBuilder("notificationCleanupStep", jobRepository)
                 .tasklet(tasklet, transactionManager)
+                .listener(listener)
                 .build();
     }
 
     @Bean
-    public Job notificationCleanupJob(
-            JobRepository jobRepository,
-            Step notificationCleanupStep,
-            NotificationCleanupJobListener listener) {
+    public Job notificationCleanupJob(JobRepository jobRepository, Step notificationCleanupStep) {
         return new JobBuilder("notificationCleanupJob", jobRepository)
                 .start(notificationCleanupStep)
-                .listener(listener)
                 .build();
     }
 }

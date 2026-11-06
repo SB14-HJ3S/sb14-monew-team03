@@ -85,6 +85,11 @@ public class ArticleRepositoryAdapter implements ArticleRepositoryPort {
     }
 
     @Override
+    public int hardDeleteById(UUID articleId) {
+        return jpaRepository.hardDeleteById(articleId);
+    }
+
+    @Override
     public List<Article> findBackupChunk(
             LocalDateTime from, LocalDateTime to, UUID afterId, int limit) {
         return jpaRepository.findBackupChunk(from, to, afterId, PageRequest.of(0, limit));
