@@ -434,7 +434,7 @@
 ### 💡 구현 포인트
 
 - CI: PR마다 빌드 · 테스트를 자동 실행하고, JaCoCo 커버리지를 Codecov 배지로 표시 (결과 대기 시간 초과 시 직전 값 유지) ([#88](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/88), [#205](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/205))
-- 자동 배포: push 시 Docker 이미지 빌드 → Amazon ECR 업로드 → Amazon ECS 배포까지 GitHub Actions로 자동화 ([#90](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/90))
+- 자동 배포: develop 머지 후 CI가 통과하면 Docker 이미지 빌드 → Amazon ECR 업로드 → Amazon ECS 배포까지 GitHub Actions로 자동화 ([#90](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/90))
   <br><img width="600" alt="ECS 배포 워크플로 연속 성공" src="docs/images/screens/deploy-runs.png" />
 - 모니터링 보안: `/actuator/prometheus`는 외부 접근을 막고 내부 Prometheus만 수집 ([#86](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/86))
 - 버전 추적: 모니터링 이미지를 latest 대신 커밋 번호 태그로 배포해, 지금 실행 중인 버전을 바로 확인 ([#251](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/251))
@@ -522,7 +522,7 @@ PostgreSQL 10개 테이블 + MongoDB 1개 · 모든 테이블 공통 컬럼 `id`
 <p align="center"><img width="1000" alt="ERD 전체 관계도" src="docs/images/erd.png" /></p>
 
 <details>
-<summary><b>1. 관심사 구독</b> — <code>interest_keyword · interest · subscription · users</code></summary>
+<summary><b>1. 관심사 구독</b> — <code>interest_keywords · interests · subscriptions · users</code></summary>
 <br>
 
 사용자는 여러 관심사를 구독하고, 관심사는 여러 키워드를 가집니다.
@@ -532,7 +532,7 @@ PostgreSQL 10개 테이블 + MongoDB 1개 · 모든 테이블 공통 컬럼 `id`
 </details>
 
 <details>
-<summary><b>2. 키워드 · 뉴스 기사</b> — <code>article_interest · article</code></summary>
+<summary><b>2. 키워드 · 뉴스 기사</b> — <code>article_interests · articles</code></summary>
 <br>
 
 키워드가 들어간 기사만 저장하고 관심사와 연결합니다. 같은 기사(원본 링크)는 중복 저장하지 않습니다.
@@ -542,7 +542,7 @@ PostgreSQL 10개 테이블 + MongoDB 1개 · 모든 테이블 공통 컬럼 `id`
 </details>
 
 <details>
-<summary><b>3. 기사 조회</b> — <code>article_view_status</code></summary>
+<summary><b>3. 기사 조회</b> — <code>article_view_statuses</code></summary>
 <br>
 
 사용자별 기사 조회 기록입니다. 같은 기사는 한 번만 기록합니다.
@@ -552,7 +552,7 @@ PostgreSQL 10개 테이블 + MongoDB 1개 · 모든 테이블 공통 컬럼 `id`
 </details>
 
 <details>
-<summary><b>4. 댓글 · 좋아요</b> — <code>comments · comment_like</code></summary>
+<summary><b>4. 댓글 · 좋아요</b> — <code>comments · comment_likes</code></summary>
 <br>
 
 댓글과 댓글 좋아요입니다. 좋아요는 댓글당 한 번만 누를 수 있습니다.
@@ -574,7 +574,7 @@ PostgreSQL 10개 테이블 + MongoDB 1개 · 모든 테이블 공통 컬럼 `id`
 <a id="erd-activity"></a>
 
 <details>
-<summary><b>6. 활동 내역</b> — <code>user_activity</code> (MongoDB)</summary>
+<summary><b>6. 활동 내역</b> — <code>user_activities</code> (MongoDB)</summary>
 <br>
 
 사용자 1명당 문서 1건으로, 조인 없이 한 번에 조회하도록 활동 내역을 미리 모아 둔 조회용 문서입니다.
@@ -643,7 +643,7 @@ RequestIdContext 비우기
 <br>
 
 ```text
-매시간 정각 실행 (@Scheduled + ShedLock)
+매시간 정각 Spring Batch 수집 Job 실행 (@Scheduled + ShedLock)
    ↓
 구독 중인 관심사 · 키워드 조회
    ↓
@@ -715,8 +715,8 @@ MongoDB 사용자 활동 문서 갱신
 
 | 도메인 | 물리 삭제 시점 | 함께 삭제되는 관련 데이터 |
 |---|---|---|
-| **사용자** | 논리 삭제 후 1일 지나면 배치가 자동 삭제 | 구독 · 댓글 · 좋아요 · 알림 (구독자 수도 정리) |
-| **뉴스 기사** | 물리 삭제 API (`/hard`) | 댓글 · 기사-관심사 연결 · 조회 기록 |
+| **사용자** | 논리 삭제 후 1일 지나면 배치가 자동 삭제 | 구독 · 댓글 · 좋아요 · 알림 · 기사 조회 기록 (구독자 수도 정리) |
+| **뉴스 기사** | 물리 삭제 API (`/hard`) | 댓글 · 댓글 좋아요 · 좋아요 알림 · 기사-관심사 연결 · 조회 기록 |
 | **댓글** | 물리 삭제 API (`/hard`) | 좋아요 (기사의 댓글 수도 정리) |
 
 - **논리 삭제가 기본**: 관련 정보가 남아 있도록 바로 지우지 않음
@@ -730,7 +730,7 @@ MongoDB 사용자 활동 문서 갱신
 <br>
 
 ```text
-매일 새벽 3시                          매일 배치
+매일 새벽 3시                          매시간 정각
    ↓                                    ↓
 확인 후 7일 지난 알림 조회              논리 삭제 후 1일 지난 사용자 조회
    ↓                                    ↓
@@ -746,13 +746,13 @@ MongoDB 사용자 활동 문서 갱신
 **백업**
 
 ```text
-매일 Spring Batch 실행
+매일 0시 Spring Batch 실행
    ↓
-전날 수집 기사 조회
+전날 저장된 기사 조회 (1,000건씩)
    ↓
-JSON 직렬화
+JSON 직렬화 + gzip 압축
    ↓
-Amazon S3 업로드 (날짜별 파일)
+Amazon S3 업로드 (날짜별 · 파트별 .json.gz 파일)
 ```
 
 **복구**
@@ -926,7 +926,7 @@ flowchart TB
 ### CI
 
 `main` · `develop`으로 가는 Pull Request와 `develop` 머지(push) 때
-GitHub Actions CI가 실행됩니다. (문서만 바뀐 경우는 빌드 생략)
+GitHub Actions CI가 실행됩니다. (문서 · 프론트엔드 정적 파일만 바뀐 경우는 빌드 생략)
 
 ```bash
 ./gradlew build
@@ -934,7 +934,7 @@ GitHub Actions CI가 실행됩니다. (문서만 바뀐 경우는 빌드 생략)
 
 **검증 및 리포트 항목**
 
-- 전체 테스트 실행 (목표 커버리지 80%)
+- 전체 테스트 실행, 줄 커버리지 80% 미만이면 빌드 실패 (DTO · 설정 클래스 등 제외)
 - JaCoCo 커버리지 리포트 생성 → Codecov 업로드 · 결과 확인
 - Checkstyle 코드 스타일 검사 (경고만, PR에서 바뀐 줄 기준)
 - ArchUnit 패키지 규칙 검사 (헥사고날 계층 · 순환 참조, 경고만)
@@ -1047,7 +1047,7 @@ direnv allow   # 프로젝트 폴더에서 한 번만 실행
 
 **3. 로컬 인프라**
 
-앱을 실행하면 `compose.yaml`의 DB 컨테이너가 자동으로 같이 뜹니다. 직접 띄우려면:
+앱을 실행하면 `compose.yaml`의 DB · 모니터링 컨테이너가 자동으로 같이 뜹니다. 직접 띄우려면:
 
 ```bash
 docker compose up -d
@@ -1057,6 +1057,8 @@ docker compose up -d
 | :--- | :--- |
 | PostgreSQL 16 | `localhost:5432` (DB `monew`) |
 | MongoDB 7 | `localhost:27017` (DB `monew`) |
+| Prometheus | `localhost:9090` |
+| Grafana | `localhost:3000` |
 
 **4. 애플리케이션 실행**
 
@@ -1113,14 +1115,14 @@ sb14-monew-team03/
 ├── src/
 │   ├── main/
 │   │   ├── java/com/sprint/monew/   # 백엔드 소스 (헥사고날, 자세한 구성은 아래 2번)
-│   │   │   ├── adapter/             # 바깥 연결: 컨트롤러 · 배치 · 스케줄러 · DB · 네이버/RSS
+│   │   │   ├── adapter/             # 바깥 연결: 컨트롤러 · 배치(스케줄러 포함) · 이벤트 리스너 · DB · 네이버/RSS
 │   │   │   ├── application/         # 도메인별 기능: user · interest · article · comment · notification · useractivity
 │   │   │   ├── domain/              # 엔티티 · enum · 도메인 이벤트
 │   │   │   └── global/              # 공통: 설정 · 예외 · 페이지네이션 · 로깅
 │   │   └── resources/               # 설정 파일 · 프론트엔드 빌드 결과물
 │   └── test/                        # 테스트 코드
 ├── build.gradle      # 의존성 · 빌드 설정
-├── compose.yaml      # 로컬 PostgreSQL · MongoDB 컨테이너
+├── compose.yaml      # 로컬 PostgreSQL · MongoDB · Prometheus · Grafana 컨테이너
 ├── Dockerfile        # 배포 이미지
 ├── .env.example      # 환경 변수 예시
 ├── SETUP.md          # 처음 세팅 안내
