@@ -32,6 +32,8 @@ import org.springframework.transaction.annotation.Transactional;
 @ApplicationService
 public class ArticleRestoreApplication implements ArticleRestoreUseCase {
 
+    private static final int MAX_RESTORE_DAYS = 31;
+
     private final ArticleBackupStorageService articleBackupService;
     private final ArticleRepositoryPort articleService;
     private final InterestService interestService;
@@ -50,10 +52,16 @@ public class ArticleRestoreApplication implements ArticleRestoreUseCase {
 
         LocalDateTime end = to;
         long days = ChronoUnit.DAYS.between(from.toLocalDate(), to.toLocalDate()) + 1;
-        if (days > 31) {
-            log.warn("기사 복구 요청 기간 초과: from={}, to={}, 요청 일수={}, 최대 일수={}", from, to, days, 31);
+        if (days > MAX_RESTORE_DAYS) {
+            log.warn(
+                    "기사 복구 요청 기간 초과: from={}, to={}, 요청 일수={}, 최대 일수={}",
+                    from,
+                    to,
+                    days,
+                    MAX_RESTORE_DAYS);
             throw new MonewException(
-                    CommonErrorType.INVALID_REQUEST, Map.of("maxDays", 31, "requestedDays", days));
+                    CommonErrorType.INVALID_REQUEST,
+                    Map.of("maxDays", MAX_RESTORE_DAYS, "requestedDays", days));
         }
 
         List<ArticleRestoreResult> results = new ArrayList<>();

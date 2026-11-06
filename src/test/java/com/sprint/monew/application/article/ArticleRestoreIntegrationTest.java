@@ -60,7 +60,8 @@ class ArticleRestoreIntegrationTest {
                 .containsExactly(restored.getId());
         assertThat(
                         em.createQuery(
-                                        "select ai.interest.id from ArticleInterest ai where ai.article.id = :id",
+                                        "select ai.interest.id from ArticleInterest ai"
+                                                + " where ai.article.id = :id",
                                         UUID.class)
                                 .setParameter("id", restored.getId())
                                 .getResultList())
