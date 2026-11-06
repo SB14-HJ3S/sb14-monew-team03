@@ -120,7 +120,7 @@ class NotificationControllerTest {
                         null,
                         false,
                         userId,
-                        "[축구]와 관련된 기사가 3건 등록되었습니다.",
+                        "축구와 관련된 기사가 3건 등록되었습니다.",
                         ResourceType.INTEREST,
                         UUID.randomUUID());
         when(notificationUseCase.findByQuery(any(NotificationQuery.class)))
@@ -128,7 +128,7 @@ class NotificationControllerTest {
 
         mockMvc.perform(get("/api/notifications").header(USER_HEADER, userId).param("limit", "10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].content").value("[축구]와 관련된 기사가 3건 등록되었습니다."))
+                .andExpect(jsonPath("$.content[0].content").value("축구와 관련된 기사가 3건 등록되었습니다."))
                 .andExpect(jsonPath("$.hasNext").value(false));
 
         verify(notificationUseCase).findByQuery(any(NotificationQuery.class));
