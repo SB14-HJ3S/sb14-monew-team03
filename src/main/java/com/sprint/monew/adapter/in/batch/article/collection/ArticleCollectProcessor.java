@@ -33,6 +33,7 @@ public class ArticleCollectProcessor
 
     private final MeterRegistry meterRegistry;
     private final ArticleCollectionUseCase useCase;
+    private final ArticleCollectionTiming timing;
     private final Map<ArticleSourceType, List<CollectedArticle>> rssFetched = new HashMap<>();
 
     @Override
@@ -61,7 +62,10 @@ public class ArticleCollectProcessor
         // 네이버 기사는 키워드로 바로 쿼리해오므로 바로 삽입
         for (String keyword : interestKeyword.keywords()) {
             try {
-                List<CollectedArticle> fetched = useCase.collectNaverArticles(keyword);
+                List<CollectedArticle> fetched =
+                        timing.measureFetch(
+                                ArticleSourceType.NAVER,
+                                () -> useCase.collectNaverArticles(keyword));
                 increaseFetchSuccessCount(ArticleSourceType.NAVER);
                 increaseFetchedArticleCount(ArticleSourceType.NAVER, fetched.size());
                 for (CollectedArticle article : fetched) {
@@ -102,7 +106,8 @@ public class ArticleCollectProcessor
         return rssFetched.computeIfAbsent(
                 sourceType,
                 key -> {
-                    List<CollectedArticle> fetched = useCase.collectRssArticles(key);
+                    List<CollectedArticle> fetched =
+                            timing.measureFetch(key, () -> useCase.collectRssArticles(key));
                     increaseFetchedArticleCount(sourceType, fetched.size());
                     increaseFetchSuccessCount(sourceType);
                     return fetched;

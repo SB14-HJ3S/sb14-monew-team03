@@ -17,10 +17,14 @@ public class ArticleCollectWriter implements ItemWriter<InterestCollectedArticle
 
     private final ArticleCollectionUseCase useCase;
     private final ArticleCollectionChunkListener listener;
+    private final ArticleCollectionTiming timing;
 
     @Override
     @Transactional
     public void write(Chunk<? extends InterestCollectedArticles> chunk) {
+        if (!chunk.isEmpty()) {
+            timing.startStorage();
+        }
         for (InterestCollectedArticles collected : chunk) {
             Interest interest = collected.interest();
             int inputCount = collected.articles().size();
