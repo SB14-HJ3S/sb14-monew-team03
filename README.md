@@ -684,7 +684,7 @@ Transaction COMMIT
 </details>
 
 <details>
-<summary><b>5. 사용자 활동 내역 (구현 후 수정 예정)</b></summary>
+<summary><b>5. 사용자 활동 내역</b></summary>
 <br>
 
 ```text
@@ -700,7 +700,7 @@ MongoDB 사용자 활동 문서 갱신
 </details>
 
 <details>
-<summary><b>6. 논리 삭제 → 물리 삭제 (구현 후 수정 예정)</b></summary>
+<summary><b>6. 논리 삭제 → 물리 삭제</b></summary>
 <br>
 
 ```text
@@ -726,7 +726,7 @@ MongoDB 사용자 활동 문서 갱신
 </details>
 
 <details>
-<summary><b>7. 데이터 정리 배치 (구현 후 수정 예정)</b></summary>
+<summary><b>7. 데이터 정리 배치</b></summary>
 <br>
 
 ```text
@@ -740,7 +740,7 @@ MongoDB 사용자 활동 문서 갱신
 </details>
 
 <details>
-<summary><b>8. 기사 백업 · 복구 (구현 후 수정 예정)</b></summary>
+<summary><b>8. 기사 백업 · 복구</b></summary>
 <br>
 
 **백업**
