@@ -41,11 +41,18 @@ public class ArticleController {
     private final ArticleUseCase articleUseCase;
     private final ArticleRestoreUseCase articleRestoreUseCase;
 
+    @Operation(summary = "뉴스 복구", description = "유실된 뉴스 기사를 복구.")
+    @ApiResponse(responseCode = "200", description = "복구 성공")
+    @ApiResponse(responseCode = "400", description = "잘못된 요청 (날짜 누락, 시작 날짜가 끝 날짜보다 늦음, 최대 31일 초과)")
     @GetMapping("/restore")
     public List<ArticleRestoreResultDto> restoreArticles(
-            @RequestParam(name = "from") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            @Parameter(description = "날짜 시작(범위)")
+                    @RequestParam(name = "from")
+                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
                     LocalDateTime from,
-            @RequestParam(name = "to") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            @Parameter(description = "날짜 끝(범위)")
+                    @RequestParam(name = "to")
+                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
                     LocalDateTime to) {
         return articleRestoreUseCase.restoreArticles(from, to).stream()
                 .map(ArticleRestoreResultDto::from)
