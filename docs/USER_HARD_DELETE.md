@@ -26,9 +26,10 @@ UserService.hardDeleteUser(userId) — @Transactional
       │   │   └─ CommentEventListener.onUserHardDeleting(event)
       │   │       └─ cleanupCountsBeforeUserHardDeletion(event.userIds())
       │   │           └─ 누른 댓글 좋아요 수 · 작성한 댓글의 기사 댓글 수 감소
-      │   └─ @TransactionalEventListener(AFTER_COMMIT) — 커밋 뒤 실행
+      │   └─ @TransactionalEventListener(AFTER_COMMIT) + @Async — 커밋 뒤 별도 스레드에서 실행
       │       └─ UserActivityEventListener.on(event)
       │           └─ usersHardDeleted(event.userIds()) — MongoDB 활동 내역 삭제
+      │               └─ 실패하면 오류 로그만 남기고 다시 시도하지 않음 (활동 내역 문서가 남을 수 있음)
       │
       └─ ② repository.deleteById(userId)
           └─ DELETE FROM users → DB의 ON DELETE CASCADE가 연관 행 삭제
@@ -50,7 +51,7 @@ UserService.hardDeleteUser(userId) — @Transactional
 | 관심사 구독자 수 (`interests.subscriber_count`) | 이벤트로 감소 | 관심사 도메인 리스너 (삭제 전, 같은 트랜잭션) |
 | 누른 댓글 좋아요 (`comment_likes`) | 같이 삭제 | DB CASCADE (`CommentLike.user`) |
 | 댓글 좋아요 수 · 기사 댓글 수 | 이벤트로 감소 | 댓글 도메인 리스너 (삭제 전, 같은 트랜잭션) |
-| MongoDB 활동 내역 | 이벤트로 삭제 | 활동 내역 도메인 리스너 (커밋 뒤) |
+| MongoDB 활동 내역 | 이벤트로 삭제 | 활동 내역 도메인 리스너 (커밋 뒤, 실패 시 재시도 없음) |
 
 ## 사용자 물리 삭제
 

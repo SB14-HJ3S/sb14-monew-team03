@@ -139,13 +139,13 @@ class UserApplicationTest {
         List<UUID> targets = List.of(failing, next);
         given(userService.findCleanupTargetIds(any())).willReturn(targets);
         willThrow(new IllegalStateException("DB 오류")).given(userService).hardDeleteUsers(targets);
-        lenient()
-                .doThrow(new MonewException(UserErrorType.USER_EMAIL_DUPLICATED))
-                .when(userService)
+        willThrow(new MonewException(UserErrorType.USER_EMAIL_DUPLICATED))
+                .given(userService)
                 .hardDeleteUser(failing);
 
         int deleted = userApplication.cleanupDeletedUsers();
 
+        verify(userService).hardDeleteUser(failing);
         verify(userService).hardDeleteUser(next);
         assertThat(deleted).isEqualTo(1);
     }
