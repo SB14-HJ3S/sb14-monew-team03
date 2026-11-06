@@ -428,10 +428,11 @@ class ArticleBackupRestartIntegrationTest {
         return new JobParametersBuilder().addLocalDate("targetDate", targetDate).toJobParameters();
     }
 
-    private ArticleBackupResult result(
+    private List<ArticleBackupResult> result(
             LocalDate targetDate, long partNumber, List<ArticleResult> articles) {
-        return new ArticleBackupResult(
-                "articles/" + targetDate + "/" + partNumber, targetDate, articles.size());
+        return List.of(
+                new ArticleBackupResult(
+                        "articles/" + targetDate + "/" + partNumber, targetDate, articles.size()));
     }
 
     private double uploadedArticles() {

@@ -8,6 +8,7 @@ import com.sprint.monew.domain.interest.entity.InterestKeyword;
 import com.sprint.monew.global.pagination.PageResult;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.util.List;
 import java.util.UUID;
@@ -21,11 +22,15 @@ public interface InterestUseCase {
                     List<@NotBlank @Size(min = 1, max = InterestKeyword.MAX_KEYWORD_LENGTH) String>
                             keywords);
 
-    SubscriptionResult subscribe(UUID interestId);
+    SubscriptionResult subscribe(@NotNull UUID interestId);
 
-    void unsubscribe(UUID interestId);
+    void unsubscribe(@NotNull UUID interestId);
 
-    void delete(UUID interestId);
+    void delete(@NotNull UUID interestId);
 
-    InterestResult update(UUID interestId, List<String> keywords);
+    InterestResult update(
+            @NotNull UUID interestId,
+            @NotEmpty
+                    List<@NotBlank @Size(min = 1, max = InterestKeyword.MAX_KEYWORD_LENGTH) String>
+                            keywords);
 }

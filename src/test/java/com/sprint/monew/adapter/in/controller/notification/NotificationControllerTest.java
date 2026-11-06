@@ -1,17 +1,26 @@
 package com.sprint.monew.adapter.in.controller.notification;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.sprint.monew.application.notification.provided.NotificationUseCase;
+import com.sprint.monew.application.notification.provided.dto.NotificationQuery;
+import com.sprint.monew.application.notification.provided.dto.NotificationResult;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.NotificationErrorType;
 import com.sprint.monew.global.exception.errortype.UserErrorType;
+import com.sprint.monew.global.pagination.PageResult;
+import com.sprint.monew.global.type.ResourceType;
+import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -98,5 +107,43 @@ class NotificationControllerTest {
                 .andExpect(jsonPath("$.code").value("USER_NOT_FOUND"));
 
         verify(notificationUseCase).markAllAsRead();
+    }
+
+    @Test
+    @DisplayName("알림 목록 조회에 성공하면 200과 알림 목록을 응답한다.")
+    void givenNotifications_whenFindUnread_thenOk() throws Exception {
+        UUID userId = UUID.randomUUID();
+        NotificationResult notification =
+                new NotificationResult(
+                        UUID.randomUUID(),
+                        Instant.parse("2026-11-06T00:00:00Z"),
+                        null,
+                        false,
+                        userId,
+                        "축구와 관련된 기사가 3건 등록되었습니다.",
+                        ResourceType.INTEREST,
+                        UUID.randomUUID());
+        when(notificationUseCase.findByQuery(any(NotificationQuery.class)))
+                .thenReturn(new PageResult<>(List.of(notification), null, null, 1, 1L, false));
+
+        mockMvc.perform(get("/api/notifications").header(USER_HEADER, userId).param("limit", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].content").value("축구와 관련된 기사가 3건 등록되었습니다."))
+                .andExpect(jsonPath("$.hasNext").value(false));
+
+        verify(notificationUseCase).findByQuery(any(NotificationQuery.class));
+    }
+
+    @Test
+    @DisplayName("limit이 1보다 작으면 400을 응답하고 유스케이스를 호출하지 않는다.")
+    void givenZeroLimit_whenFindUnread_thenBadRequest() throws Exception {
+        mockMvc.perform(
+                        get("/api/notifications")
+                                .header(USER_HEADER, UUID.randomUUID())
+                                .param("limit", "0"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+
+        verifyNoInteractions(notificationUseCase);
     }
 }

@@ -46,10 +46,10 @@ public class ArticleBackupManualController {
             }
 
             // 3. JSON 변환 → GZIP 압축 → S3 저장
-            ArticleBackupResult result =
+            List<ArticleBackupResult> files =
                     articleBackupUseCase.backupChunk(date, partNumber, articles);
 
-            results.add(result);
+            results.addAll(files);
 
             // 4. 저장 성공 후 책갈피와 파일 번호 갱신
             afterId = articles.get(articles.size() - 1).id();

@@ -7,6 +7,8 @@ import com.sprint.monew.application.article.provided.dto.ArticleBackupResult;
 import com.sprint.monew.application.article.provided.dto.ArticleResult;
 import com.sprint.monew.global.annotation.ApplicationService;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -28,7 +30,7 @@ public class ArticleBackupApplication implements ArticleBackupUseCase {
     }
 
     @Override
-    public ArticleBackupResult backupChunk(
+    public List<ArticleBackupResult> backupChunk(
             LocalDate date, long partNumber, List<ArticleResult> articles) {
         List<UUID> articleIds = articles.stream().map(ArticleResult::id).toList();
 
@@ -47,8 +49,22 @@ public class ArticleBackupApplication implements ArticleBackupUseCase {
                                                         article.id(), List.of())))
                         .toList();
 
-        ArticleBackupFile file = ArticleBackupFile.of(date, items);
+        Map<LocalDate, List<ArticleBackupItem>> itemsByDate = new LinkedHashMap<>();
+        for (ArticleBackupItem item : items) {
+            LocalDate publishedDate = item.publishedAt().toLocalDate();
+            List<ArticleBackupItem> group = itemsByDate.get(publishedDate);
+            if (group == null) {
+                group = new ArrayList<>();
+                itemsByDate.put(publishedDate, group);
+            }
+            group.add(item);
+        }
 
-        return articleBackupStorageService.save(partNumber, file);
+        List<ArticleBackupResult> results = new ArrayList<>();
+        for (Map.Entry<LocalDate, List<ArticleBackupItem>> entry : itemsByDate.entrySet()) {
+            ArticleBackupFile file = ArticleBackupFile.of(entry.getKey(), entry.getValue());
+            results.add(articleBackupStorageService.save(file));
+        }
+        return results;
     }
 }

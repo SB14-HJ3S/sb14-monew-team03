@@ -9,7 +9,7 @@ import com.sprint.monew.global.exception.errortype.CommonErrorType;
 import com.sprint.monew.global.pagination.PageResult;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -33,8 +33,10 @@ public class ArticleServiceImpl implements ArticleService {
             throw new MonewException(CommonErrorType.INVALID_REQUEST, Map.of("limit", limit));
         }
 
-        LocalDateTime from = date.atStartOfDay();
-        LocalDateTime to = date.plusDays(1).atStartOfDay();
+        ZoneId zone = ZoneId.of("Asia/Seoul");
+
+        Instant from = date.atStartOfDay(zone).toInstant();
+        Instant to = date.plusDays(1).atStartOfDay(zone).toInstant();
 
         return repository.findBackupChunk(from, to, afterId, limit);
     }

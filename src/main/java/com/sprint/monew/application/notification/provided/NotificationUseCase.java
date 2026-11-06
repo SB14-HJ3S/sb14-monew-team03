@@ -3,19 +3,27 @@ package com.sprint.monew.application.notification.provided;
 import com.sprint.monew.application.notification.provided.dto.NotificationQuery;
 import com.sprint.monew.application.notification.provided.dto.NotificationResult;
 import com.sprint.monew.global.pagination.PageResult;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
 public interface NotificationUseCase {
-    PageResult<NotificationResult> findByQuery(NotificationQuery query);
+    PageResult<NotificationResult> findByQuery(@NotNull @Valid NotificationQuery query);
 
     void markAllAsRead();
 
-    void markAsRead(UUID notificationId);
+    void markAsRead(@NotNull UUID notificationId);
 
-    void createArticleNotifications(UUID interestId, String interestName, int articleCount);
+    void createArticleNotifications(
+            @NotNull UUID interestId, @NotBlank String interestName, @Min(1) int articleCount);
 
     void createCommentLikeNotification(
-            UUID commentId, UUID commentUserId, UUID likedById, String likedByNickname);
+            @NotNull UUID commentId,
+            @NotNull UUID commentUserId,
+            @NotNull UUID likedById,
+            @NotBlank String likedByNickname);
 
     int deleteOldReadNotifications();
 }
