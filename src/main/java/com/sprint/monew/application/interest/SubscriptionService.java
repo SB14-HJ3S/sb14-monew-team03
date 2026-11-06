@@ -1,6 +1,5 @@
 package com.sprint.monew.application.interest;
 
-import com.sprint.monew.application.interest.required.DuplicateSubscriptionException;
 import com.sprint.monew.application.interest.required.SubscriptionRepository;
 import com.sprint.monew.domain.user.entity.Subscription;
 import com.sprint.monew.global.exception.MonewException;
@@ -35,15 +34,8 @@ public class SubscriptionService implements ISubscriptionService {
 
     @Override
     public Subscription create(Subscription creating) {
-        try {
-            validateNotExistsByUserAndInterest(creating.getUserId(), creating.getInterestId());
-            return repository.save(creating);
-        } catch (DuplicateSubscriptionException e) {
-            throw new MonewException(
-                    SubscriptionErrorType.SUBSCRIPTION_ALREADY_EXISTS,
-                    Map.of("userId", e.getUserId(), "interestId", e.getInterestId()),
-                    e);
-        }
+        validateNotExistsByUserAndInterest(creating.getUserId(), creating.getInterestId());
+        return repository.save(creating);
     }
 
     private void validateNotExistsByUserAndInterest(UUID userId, UUID interestId) {
