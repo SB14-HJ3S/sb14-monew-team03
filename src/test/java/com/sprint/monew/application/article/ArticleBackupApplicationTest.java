@@ -3,7 +3,6 @@ package com.sprint.monew.application.article;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -51,15 +50,16 @@ class ArticleBackupApplicationTest {
                                 second.id(),
                                 List.of(secondInterest)));
         ArticleBackupResult expected = new ArticleBackupResult("backup-key", date, 2);
-        when(storageService.save(eq(1L), any(ArticleBackupFile.class))).thenReturn(expected);
+        when(storageService.save(any(ArticleBackupFile.class))).thenReturn(expected);
 
-        ArticleBackupResult result = application.backupChunk(date, 1L, List.of(first, second));
+        List<ArticleBackupResult> result =
+                application.backupChunk(date, 1L, List.of(first, second));
 
         ArgumentCaptor<ArticleBackupFile> captor = ArgumentCaptor.forClass(ArticleBackupFile.class);
-        verify(storageService).save(eq(1L), captor.capture());
+        verify(storageService).save(captor.capture());
         ArticleBackupFile file = captor.getValue();
-        assertThat(result).isEqualTo(expected);
-        assertThat(file.backupDate()).isEqualTo(date);
+        assertThat(result).containsExactly(expected);
+        assertThat(file.backupDate()).isEqualTo(first.publishedAt().toLocalDate());
         assertThat(file.count()).isEqualTo(2);
         assertThat(file.items()).hasSize(2);
         var item = file.items().get(0);
@@ -85,7 +85,7 @@ class ArticleBackupApplicationTest {
         application.backupChunk(LocalDate.of(2026, 11, 3), 2L, List.of(article));
 
         ArgumentCaptor<ArticleBackupFile> captor = ArgumentCaptor.forClass(ArticleBackupFile.class);
-        verify(storageService).save(eq(2L), captor.capture());
+        verify(storageService).save(captor.capture());
         assertThat(captor.getValue().items().get(0).interestIds()).isEmpty();
     }
 
@@ -96,13 +96,57 @@ class ArticleBackupApplicationTest {
         when(articleInterestService.findInterestIdsByArticleIds(List.of(article.id())))
                 .thenReturn(Map.of());
         MonewException failure = new MonewException(ArticleErrorType.ARTICLE_BACKUP_UPLOAD_FAILED);
-        when(storageService.save(eq(1L), any(ArticleBackupFile.class))).thenThrow(failure);
+        when(storageService.save(any(ArticleBackupFile.class))).thenThrow(failure);
 
         assertThatThrownBy(
                         () ->
                                 application.backupChunk(
                                         LocalDate.of(2026, 11, 3), 1L, List.of(article)))
                 .isSameAs(failure);
+    }
+
+    @Test
+    @DisplayName("같은 날 수집한 기사도 발행일별로 나눠 저장한다")
+    void groupsByPublishedDate() {
+        // given
+        LocalDate collectionDate = LocalDate.of(2026, 11, 6);
+        ArticleResult recent = article();
+        ArticleResult old =
+                new ArticleResult(
+                        UUID.randomUUID(),
+                        recent.source(),
+                        "https://example.com/old",
+                        "과거 기사",
+                        LocalDateTime.of(2022, 10, 10, 12, 0),
+                        recent.createdAt(),
+                        "요약",
+                        0,
+                        0,
+                        false);
+        when(articleInterestService.findInterestIdsByArticleIds(List.of(recent.id(), old.id())))
+                .thenReturn(Map.of());
+        when(storageService.save(any(ArticleBackupFile.class)))
+                .thenAnswer(invocation -> ArticleBackupResult.of("key", invocation.getArgument(0)));
+
+        // when
+        List<ArticleBackupResult> results =
+                application.backupChunk(collectionDate, 1L, List.of(recent, old));
+
+        // then
+        ArgumentCaptor<ArticleBackupFile> captor = ArgumentCaptor.forClass(ArticleBackupFile.class);
+        org.mockito.Mockito.verify(storageService, org.mockito.Mockito.times(2))
+                .save(captor.capture());
+        assertThat(captor.getAllValues())
+                .extracting(ArticleBackupFile::backupDate)
+                .containsExactly(
+                        recent.publishedAt().toLocalDate(), old.publishedAt().toLocalDate());
+        assertThat(captor.getAllValues().get(0).items())
+                .extracting(item -> item.id())
+                .containsExactly(recent.id());
+        assertThat(captor.getAllValues().get(1).items())
+                .extracting(item -> item.id())
+                .containsExactly(old.id());
+        assertThat(results).extracting(ArticleBackupResult::count).containsExactly(1, 1);
     }
 
     private ArticleResult article() {
