@@ -10,5 +10,6 @@ public interface ArticleBackupUseCase {
 
     List<ArticleResult> readArticles(LocalDate date, UUID afterId, int limit);
 
-    ArticleBackupResult backupChunk(LocalDate date, long partNumber, List<ArticleResult> articles);
+    List<ArticleBackupResult> backupChunk(
+            LocalDate date, long partNumber, List<ArticleResult> articles);
 }

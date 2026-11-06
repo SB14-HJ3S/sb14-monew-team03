@@ -65,7 +65,7 @@ monew:
 
   article:
     backup:
-      cron: "0 0 1 * * *" # 매일 오전 1시, Asia/Seoul 기준 전날 기사 백업
+      cron: "0 0 1 * * *" # 매일 오전 1시, Asia/Seoul 기준 전날 생성 기사 조회, 발행일별 저장
     limit: 1000
 
   news:

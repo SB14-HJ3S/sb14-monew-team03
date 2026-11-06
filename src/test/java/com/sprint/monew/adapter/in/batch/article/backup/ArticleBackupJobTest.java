@@ -210,7 +210,8 @@ class ArticleBackupJobTest {
         MonewException failure = new MonewException(ArticleErrorType.ARTICLE_BACKUP_UPLOAD_FAILED);
         when(useCase.backupChunk(TARGET_DATE, 1L, page))
                 .thenThrow(failure)
-                .thenReturn(new ArticleBackupResult("backup-key", TARGET_DATE, page.size()));
+                .thenReturn(
+                        List.of(new ArticleBackupResult("backup-key", TARGET_DATE, page.size())));
         openStep(TARGET_DATE);
 
         assertThatThrownBy(() -> writer.write(new Chunk<>(List.of(page)))).isSameAs(failure);
