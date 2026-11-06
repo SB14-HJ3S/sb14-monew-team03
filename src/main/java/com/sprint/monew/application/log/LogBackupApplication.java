@@ -2,12 +2,14 @@ package com.sprint.monew.application.log;
 
 import com.sprint.monew.application.log.provided.LogBackupUseCase;
 import com.sprint.monew.application.log.provided.dto.LogBackupResult;
+import com.sprint.monew.application.log.provided.dto.LogResult;
 import com.sprint.monew.application.log.required.LogStoragePort;
 import com.sprint.monew.global.annotation.ApplicationService;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -26,34 +28,46 @@ public class LogBackupApplication implements LogBackupUseCase {
     }
 
     @Override
-    public LogBackupResult backup(LocalDate targetDate) throws IOException {
-        // 날짜가 바뀐 뒤 첫 로그 기록 시 Logback이 전날 파일을 닫고 롤오버한다.
-        List<Path> files = findLogFiles(targetDate);
-
-        int uploadedFileCount = 0;
-        for (Path file : files) {
-            if (logStoragePort.upload(file)) {
-                uploadedFileCount++;
-            }
-        }
-
-        return new LogBackupResult(files.size(), uploadedFileCount);
+    public LogResult readLogs(LocalDate targetDate, int afterIndex, int limit) throws IOException {
+        return LogResult.from(findLogFiles(targetDate, afterIndex, limit));
     }
 
-    private List<Path> findLogFiles(LocalDate targetDate) throws IOException {
+    @Override
+    public LogBackupResult backup(LocalDate targetDate, long partNumber, List<Path> logPath) {
+        int uploadedFileCount = 0;
+        boolean uploaded = logStoragePort.upload(targetDate, partNumber, logPath);
+        if (uploaded) {
+            uploadedFileCount += logPath.size();
+        }
+
+        return new LogBackupResult(logPath.size(), uploadedFileCount);
+    }
+
+    private List<Path> findLogFiles(LocalDate targetDate, int afterIndex, int limit)
+            throws IOException {
         Pattern fileNamePattern =
                 Pattern.compile(
-                        Pattern.quote(logFile.getFileName() + "." + targetDate) + "\\.\\d+\\.log");
+                        Pattern.quote(logFile.getFileName() + "." + targetDate)
+                                + "\\.(\\d+)\\.log");
 
-        try (Stream<Path> paths = Files.list(logFile.getParent())) {
+        Path logDirectory = logFile.getParent();
+
+        try (Stream<Path> paths = Files.list(logDirectory)) {
             return paths.filter(Files::isRegularFile)
                     .filter(
                             path ->
                                     fileNamePattern
                                             .matcher(path.getFileName().toString())
                                             .matches())
-                    .sorted()
+                    .filter(path -> getIndex(path) > afterIndex)
+                    .sorted(Comparator.comparingInt(this::getIndex))
+                    .limit(limit)
                     .toList();
         }
+    }
+
+    private int getIndex(Path path) {
+        String[] parts = path.getFileName().toString().split("\\.");
+        return Integer.parseInt(parts[parts.length - 2]);
     }
 }
