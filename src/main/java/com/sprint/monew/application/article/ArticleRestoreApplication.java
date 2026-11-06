@@ -14,6 +14,7 @@ import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.CommonErrorType;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -46,11 +47,15 @@ public class ArticleRestoreApplication implements ArticleRestoreUseCase {
             throw new MonewException(
                     CommonErrorType.INVALID_REQUEST, Map.of("from", from, "to", to));
         }
+
         LocalDateTime end = to;
-        // 화면에서 종료일의 마지막 초(23:59:59)를 보내면 그 초의 소수점 이하도 포함한다.
-        if (to.getNano() == 0) {
-            end = end.plusNanos(999_999_999);
+        long days = ChronoUnit.DAYS.between(from.toLocalDate(), to.toLocalDate()) + 1;
+        if (days > 31) {
+            log.warn("기사 복구 요청 기간 초과: from={}, to={}, 요청 일수={}, 최대 일수={}", from, to, days, 31);
+            throw new MonewException(
+                    CommonErrorType.INVALID_REQUEST, Map.of("maxDays", 31, "requestedDays", days));
         }
+
         List<ArticleRestoreResult> results = new ArrayList<>();
         for (LocalDate day = from.toLocalDate();
                 !day.isAfter(to.toLocalDate());
