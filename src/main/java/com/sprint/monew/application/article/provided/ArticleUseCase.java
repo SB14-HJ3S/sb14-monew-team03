@@ -17,9 +17,9 @@ public interface ArticleUseCase {
 
     List<ArticleSourceType> findSourceTypes();
 
-    void softDeleteArticle(UUID articleId);
+    void softDeleteArticle(@NotNull UUID articleId);
 
-    void hardDeleteArticle(UUID articleId);
+    void hardDeleteArticle(@NotNull UUID articleId);
 
     ArticleViewStatusResult register(UUID articleId);
 }
