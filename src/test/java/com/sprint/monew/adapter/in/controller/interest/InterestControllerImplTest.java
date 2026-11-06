@@ -191,12 +191,19 @@ class InterestControllerImplTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"name, ASC, NAME", "subscriberCount, DESC, SUBSCRIBER_COUNT"})
+    @CsvSource({
+        "name, ASC, NAME, 1",
+        "name, ASC, NAME, 10",
+        "subscriberCount, DESC, SUBSCRIBER_COUNT, 10"
+    })
     @DisplayName("정렬 파라미터를 변환하고 선택 조건이 없는 첫 페이지를 조회한다.")
     void givenSortParameters_whenFind_thenReturnEmptyPage(
-            String orderBy, SortDirection direction, InterestQuery.SortOrder expectedOrder)
+            String orderBy,
+            SortDirection direction,
+            InterestQuery.SortOrder expectedOrder,
+            int limit)
             throws Exception {
-        InterestQuery query = new InterestQuery(null, expectedOrder, direction, null, null, 10);
+        InterestQuery query = new InterestQuery(null, expectedOrder, direction, null, null, limit);
         when(interestUseCase.findByQuery(query))
                 .thenReturn(new PageResult<>(List.of(), null, null, 0, 0, false));
 
@@ -205,7 +212,7 @@ class InterestControllerImplTest {
                                 .header(USER_HEADER, USER_ID)
                                 .param("orderBy", orderBy)
                                 .param("direction", direction.name())
-                                .param("limit", "10"))
+                                .param("limit", Integer.toString(limit)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isEmpty())
                 .andExpect(jsonPath("$.nextCursor").isEmpty())
@@ -215,6 +222,23 @@ class InterestControllerImplTest {
                 .andExpect(jsonPath("$.hasNext").value(false));
 
         verify(interestUseCase).findByQuery(query);
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, -1, Integer.MIN_VALUE})
+    @DisplayName("페이지 크기가 1 미만이면 400을 응답하고 조회하지 않는다.")
+    void givenNonPositiveLimit_whenFind_thenBadRequest(int limit) throws Exception {
+        mockMvc.perform(
+                        get("/api/interests")
+                                .header(USER_HEADER, USER_ID)
+                                .param("orderBy", "name")
+                                .param("direction", "ASC")
+                                .param("limit", Integer.toString(limit)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
+                .andExpect(jsonPath("$.details.limit").value("페이지 크기는 1 이상이어야 합니다"));
+
+        verifyNoInteractions(interestUseCase);
     }
 
     @ParameterizedTest

@@ -12,6 +12,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -22,7 +24,7 @@ public interface InterestController {
     @ApiResponse(responseCode = "400", description = "잘못된 요청 (입력값 검증 실패)")
     @ApiResponse(responseCode = "409", description = "유사 관심사 중복")
     @ApiResponse(responseCode = "500", description = "서버 내부 오류")
-    InterestDto registerNewInterest(InterestRegisterRequest request);
+    InterestDto registerNewInterest(@Valid InterestRegisterRequest request);
 
     @Operation(summary = "관심사 목록 조회", description = "조건에 맞는 관심사 목록을 조회합니다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
@@ -44,7 +46,9 @@ public interface InterestController {
                     SortDirection sortDirection,
             @Parameter(description = "커서 값") String cursor,
             @Parameter(description = "보조 커서(createdAt) 값") Instant after,
-            @Parameter(description = "커서 페이지 크기", required = true, example = "50") int limit);
+            @Parameter(description = "커서 페이지 크기", required = true, example = "50")
+                    @Min(value = 1, message = "페이지 크기는 1 이상이어야 합니다")
+                    int limit);
 
     @Operation(summary = "관심사 정보 수정", description = "관심사의 키워드를 수정합니다.")
     @ApiResponse(responseCode = "200", description = "수정 성공")
@@ -52,7 +56,8 @@ public interface InterestController {
     @ApiResponse(responseCode = "404", description = "관심사 정보 없음")
     @ApiResponse(responseCode = "500", description = "서버 내부 오류")
     InterestDto updateKeyword(
-            @Parameter(description = "관심사 ID") UUID interestId, InterestUpdateRequest request);
+            @Parameter(description = "관심사 ID") UUID interestId,
+            @Valid InterestUpdateRequest request);
 
     @Operation(summary = "관심사 물리 삭제", description = "관심사를 물리적으로 삭제합니다.")
     @ApiResponse(responseCode = "204", description = "삭제 성공")
