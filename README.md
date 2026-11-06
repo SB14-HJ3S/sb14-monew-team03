@@ -234,7 +234,7 @@
 
 - **이름 유사도 80% 검사**
     - 이름을 공백 제거 · 소문자 · 한글 자모 분리로 정리한 뒤 레벤슈타인 거리로 유사도를 계산해, 80% 이상 비슷하면 409(`SIMILAR_NAME_CONFLICT`)로 응답 (응답에 비슷한 기존 이름과 유사도 포함)
-    - 동시에 같은 이름이 등록되는 경우는 이름 유니크 제약으로 한 번 더 막고 같은 409로 변환
+    - 동시에 같은 이름이 등록되면 이름 유니크 제약이 막고, 공통 예외 처리가 409(`DUPLICATE_RESOURCE`)로 응답
 - **키워드 규칙**
     - 키워드는 1~10개만 허용(요청 DTO와 엔티티에서 검증)하고, 요청 안의 중복 키워드는 엔티티에서 거절
     - 키워드 수정 시 빠진 키워드만 지우고 새 키워드만 추가
@@ -242,13 +242,15 @@
     - 엔티티 값을 읽어 바꾸지 않고 DB에서 `subscriberCount ± 1`로 직접 증감해, 동시에 구독해도 숫자가 틀어지지 않음
     - 감소는 0보다 클 때만 실행하고, DB `CHECK` 제약으로 0 아래로 내려가지 않게 한 번 더 방어
 - **중복 구독 방지**
-    - 먼저 구독 여부를 확인하고, 동시에 들어온 요청은 (사용자, 관심사) 유니크 제약으로 막아 모두 409(`SUBSCRIPTION_ALREADY_EXISTS`)로 응답
+    - 먼저 구독 여부를 확인해 409(`SUBSCRIPTION_ALREADY_EXISTS`)로 응답하고, 확인을 동시에 통과한 요청은 (사용자, 관심사) 유니크 제약이 막아 공통 409(`DUPLICATE_RESOURCE`)로 응답
 - **QueryDSL 검색 · 커서 페이지네이션**
     - 검색어 하나로 관심사 이름 또는 키워드를 대소문자 구분 없이 부분 일치 검색
     - 이름 · 구독자 수 정렬에 생성 시각 · id를 보조로 써서 커서로 다음 페이지를 이어 가고, 내 구독 여부는 IN 조회 한 번으로 채움
 - **삭제 · 이벤트 · 탈퇴 정리**
     - 구독 · 구독 취소 · 키워드 수정 · 삭제 때 이벤트를 발행해 활동 내역(MongoDB)에 반영
     - 사용자 물리 삭제 직전에 그 사용자들이 구독하던 관심사의 구독자 수를 UPDATE 한 번으로 정리
+- **Swagger 문서화**
+    - 컨트롤러를 Swagger 설명용 인터페이스(`InterestController`)와 구현체(`InterestControllerImpl`)로 나눠, API 문서와 요청 처리 코드를 분리
 
 
 <p align="right"><a href="#feature-2">⬆️ 맨 위로 (제목을 눌러 접기)</a></p>
@@ -1442,7 +1444,6 @@ src/main/java/com/sprint/monew/global/
 │   ├── backup/                                     # 기사 백업 파일 만들기
 │   │   ├── ArticleBackupGzipCompressor             # gzip 압축 (로그 백업도 같이 사용)
 │   │   └── ArticleBackupJsonSerializer             # 기사 목록 → JSON
-│   ├── DatabaseConstraintUtils                     # DB 제약 조건 위반 확인
 │   └── similarity/
 │       └── StringSimilarityUtils                   # 관심사 이름 유사도 계산
 └── web/
@@ -1531,6 +1532,7 @@ src/main/java/com/sprint/monew/
 │   │   │   │           └── CursorPageResponseCommentDto
 │   │   │   ├── interest/                           # 관심사 · 구독 (박수민)
 │   │   │   │   ├── InterestController
+│   │   │   │   ├── InterestControllerImpl
 │   │   │   │   └── dto/                            # 요청 / 응답 DTO
 │   │   │   │       ├── request/                    # 요청 DTO
 │   │   │   │       │   ├── InterestRegisterRequest
@@ -1714,8 +1716,6 @@ src/main/java/com/sprint/monew/
 │   │   │       ├── InterestResult
 │   │   │       └── SubscriptionResult
 │   │   └── required/                               # 저장소 · 이벤트 발행 Port
-│   │       ├── DuplicateInterestNameException
-│   │       ├── DuplicateSubscriptionException
 │   │       ├── InterestEventPublisherPort
 │   │       ├── InterestRepository
 │   │       └── SubscriptionRepository
