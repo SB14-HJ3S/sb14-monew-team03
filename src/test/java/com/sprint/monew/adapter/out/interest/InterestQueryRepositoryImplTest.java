@@ -9,6 +9,7 @@ import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.CommonErrorType;
 import com.sprint.monew.global.exception.errortype.InterestErrorType;
 import com.sprint.monew.global.pagination.SortDirection;
+import com.sprint.monew.support.IntegrationTest;
 import jakarta.persistence.EntityManager;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -30,8 +31,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.auditing.AuditingHandler;
 import org.springframework.data.auditing.CurrentDateTimeProvider;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.transaction.annotation.Transactional;
 
-@InterestJpaTest
+@IntegrationTest
+@Transactional
 class InterestQueryRepositoryImplTest {
 
     private static final Instant CREATED_AT = Instant.parse("2026-11-01T00:00:00Z");

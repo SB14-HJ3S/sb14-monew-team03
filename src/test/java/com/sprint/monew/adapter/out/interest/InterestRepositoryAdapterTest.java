@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.sprint.monew.domain.interest.entity.Interest;
 import com.sprint.monew.domain.user.entity.Subscription;
 import com.sprint.monew.domain.user.entity.User;
+import com.sprint.monew.support.IntegrationTest;
 import jakarta.persistence.EntityManager;
 import java.util.List;
 import java.util.UUID;
@@ -15,8 +16,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.transaction.annotation.Transactional;
 
-@InterestJpaTest
+@IntegrationTest
+@Transactional
 class InterestRepositoryAdapterTest {
 
     @Autowired private InterestRepositoryAdapter repository;
