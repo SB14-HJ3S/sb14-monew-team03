@@ -144,8 +144,9 @@ dependencies {
 tasks.named('test') {
   // 실제 외부 서비스(네이버 API·RSS·S3)를 부르는 테스트는 @Tag("external-api")를 붙여 평소 테스트·CI에서 제외
   // — 외부 장애·호출 한도·CI에 키 없음 같은 외부 사정으로 CI가 실패하지 않게
+  // 대량 적재 성능 테스트도 제외하며, 필요할 때 performanceTest로 실행한다.
   useJUnitPlatform {
-    excludeTags 'external-api', 'architecture'
+    excludeTags 'external-api', 'architecture', 'performance'
   }
   // GitHub Actions 서버는 UTC라, 날짜를 계산하는 테스트가 로컬(한국 시간)과 다르게 동작하지 않도록 고정
   jvmArgs '-Duser.timezone=Asia/Seoul'
@@ -163,6 +164,28 @@ tasks.register('archTest', Test) {
     includeTags 'architecture'
   }
   ignoreFailures = true
+}
+
+// 대량 적재 성능 테스트는 명시적으로 요청할 때만 실행한다.
+tasks.register('performanceTest', Test) {
+  description = '성능 테스트(@Tag("performance"))만 실행합니다.'
+  group = 'verification'
+  testClassesDirs = sourceSets.test.output.classesDirs
+  classpath = sourceSets.test.runtimeClasspath
+  useJUnitPlatform {
+    includeTags 'performance'
+  }
+  systemProperty 'spring.profiles.active', 'test'
+  jvmArgs '-Duser.timezone=Asia/Seoul'
+  maxHeapSize = '1g'
+  maxParallelForks = 1
+  jacoco.enabled = false
+  outputs.upToDateWhen { false }
+  outputs.cacheIf { false }
+  testLogging {
+    events 'passed', 'failed', 'skipped'
+    showStandardStreams = true
+  }
 }
 
 // 외부 호출 테스트(@Tag("external-api"))만 따로 실행: ./gradlew externalTest (로컬 .env에 키 필요)
