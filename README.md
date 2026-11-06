@@ -1100,7 +1100,7 @@ docker compose down
 
 ---
 
-## 📌 프로젝트 패키지 전체 구조 살펴보기 (4번 최종 구현 후 수정 예정)
+## 📌 프로젝트 패키지 전체 구조 살펴보기
 
 ### 1. 전체 구성 (간단.Ver)
 
@@ -1116,7 +1116,7 @@ sb14-monew-team03/
 │   ├── main/
 │   │   ├── java/com/sprint/monew/   # 백엔드 소스 (헥사고날, 자세한 구성은 아래 2번)
 │   │   │   ├── adapter/             # 바깥 연결: 컨트롤러 · 배치(스케줄러 포함) · 이벤트 리스너 · DB · 네이버/RSS
-│   │   │   ├── application/         # 도메인별 기능: user · interest · article · comment · notification · useractivity
+│   │   │   ├── application/         # 도메인별 기능: user · interest · article · comment · notification · useractivity · log
 │   │   │   ├── domain/              # 엔티티 · enum · 도메인 이벤트
 │   │   │   └── global/              # 공통: 설정 · 예외 · 페이지네이션 · 로깅
 │   │   └── resources/               # 설정 파일 · 프론트엔드 빌드 결과물
@@ -1137,12 +1137,11 @@ src/main/java/com/sprint/monew
 │   ├── in/                                       # 들어오는 요청
 │   │   ├── controller/article/
 │   │   │   ├── ArticleController                 # 기사 API
-│   │   │   ├── ArticleCollectionManualController # 기사 수집 수동 실행 API
+│   │   │   ├── ArticleBackupManualController     # 기사 백업 수동 실행 API (local 전용)
 │   │   │   └── dto/response/                     # ArticleDto · ArticleViewDto · ArticleRestoreResultDto
-│   │   ├── scheduler/
-│   │   │   └── ArticleCollectionScheduler        # 정해진 시각에 수집 실행 (@Scheduled)
-│   │   └── batch/
-│   │       └── ArticleCollectionRunner           # 기사 수집 실행기
+│   │   └── batch/article/                        # Spring Batch Job (Job 설정 · 스케줄러 · Reader · Writer · 리스너 · 메트릭)
+│   │       ├── collection/                       # 기사 수집: ArticleCollectionJobConfig · ArticleCollectionScheduler · ArticleCollectReader · ArticleCollectProcessor · ArticleCollectWriter
+│   │       └── backup/                           # 기사 S3 백업: ArticleBackupJobConfig · ArticleBackupScheduler · ArticleBackupReader · ArticleBackupWriter
 │   └── out/article/                              # 나가는 연결 (Port 구현)
 │       ├── ArticleRepositoryAdapter              # ArticleRepositoryPort 구현
 │       ├── ArticleJpaRepository                  # Spring Data JPA
@@ -1150,25 +1149,29 @@ src/main/java/com/sprint/monew
 │       ├── ArticleInterestRepositoryAdapter      # 기사-관심사 연결 저장 (+ JpaRepository)
 │       ├── ArticleViewStatusRepositoryAdapter    # 기사 조회 기록 저장 (+ JpaRepository)
 │       ├── ArticleEventPublisherAdapter          # 이벤트 발행
+│       ├── S3ArticleBackupStorageAdapter         # 백업 파일 S3 업로드 (JSON + gzip)
 │       ├── naver/                                # NaverNewsAdapter · NaverNewsMapper · NaverNewsResponse
 │       └── rss/                                  # RssNewsAdapter · RssNewsMapper
 ├── application/article/                          # 기능 흐름
 │   ├── provided/                                 # 밖에 제공
-│   │   ├── ArticleUseCase                        # 기사 조회 · 뷰 · 출처 · 삭제 · 복구
+│   │   ├── ArticleUseCase                        # 기사 조회 · 뷰 · 출처 · 삭제
 │   │   ├── ArticleCollectionUseCase              # 기사 수집
-│   │   └── dto/                                  # ArticleQuery · ArticleResult · SourceResult · CollectedArticle
+│   │   ├── ArticleBackupUseCase                  # 기사 백업
+│   │   └── dto/                                  # ArticleQuery · ArticleResult · ArticleViewStatusResult · CollectedArticle · ArticleBackupFile · ArticleBackupItem · ArticleBackupResult
 │   ├── required/                                 # 밖에 요청 (Port)
 │   │   ├── ArticleRepositoryPort                 # 기사 저장소
 │   │   ├── ArticleInterestRepositoryPort         # 기사-관심사 연결 저장소
 │   │   ├── ArticleViewStatusRepositoryPort       # 기사 조회 기록 저장소
 │   │   ├── ArticleEventPublisherPort             # 이벤트 발행
+│   │   ├── ArticleBackupStoragePort              # 백업 파일 저장소 (S3)
 │   │   └── NaverNewsPort · RssNewsPort           # 외부 뉴스 수집
-│   ├── event/                                    # ArticlesSavedEvent · ArticleSoftDeletedEvent · ArticleHardDeletingEvent
+│   ├── event/                                    # ArticlesSavedEvent · ArticleViewedEvent · ArticleSoftDeletedEvent · ArticleHardDeletingEvent
 │   ├── ArticleApplication                        # ArticleUseCase 구현
 │   ├── ArticleCollectionApplication              # ArticleCollectionUseCase 구현
-│   └── ArticleService · ArticleInterestService · ArticleViewStatusService (+ Impl)  # 도메인 서비스
+│   ├── ArticleBackupApplication                  # ArticleBackupUseCase 구현
+│   └── ArticleService · ArticleInterestService · ArticleViewStatusService · ArticleBackupStorageService (+ Impl)  # 도메인 서비스
 ├── domain/article/entity/                        # Article · ArticleInterest · ArticleViewStatus
-└── global/                                       # 공통: 설정 · 예외(ArticleErrorType) · 타입(ArticleSourceType) · 페이지네이션 · 요청자 ID · 로깅
+└── global/                                       # 공통: 설정 · 예외(ArticleErrorType) · 타입(ArticleSourceType) · 페이지네이션 · 요청자 ID · 로깅 · 백업 직렬화/압축
 ```
 
 > 요청 흐름: `ArticleController` → `ArticleUseCase`(구현 `ArticleApplication`) → `ArticleService` → `ArticleRepositoryPort`(구현 `ArticleRepositoryAdapter`) → DB
@@ -1203,6 +1206,7 @@ src/main/java/com/sprint/monew/global/
 │   └── RestWebAdapter                              # 컨트롤러 표시 (@RestController)
 ├── config/                                         # 설정
 │   ├── AsyncConfig                                 # @Async 비동기 실행 (MDC 복사 포함)
+│   ├── CloudWatchMetricsConfig                     # 운영(prod)에서 지정한 지표만 CloudWatch로 전송
 │   ├── JpaAuditingConfig                           # 생성 · 수정 시각 자동 기록
 │   ├── PasswordEncoderConfig                       # 비밀번호 암호화
 │   ├── QueryDslConfig                              # QueryDSL (JPAQueryFactory)
@@ -1248,6 +1252,9 @@ src/main/java/com/sprint/monew/global/
 │   ├── ArticleSourceType                           # 기사 출처 (네이버 · 한국경제 · 조선일보 · 연합뉴스)
 │   └── ResourceType                                # 알림 대상 종류 (관심사 · 댓글)
 ├── util/
+│   ├── backup/                                     # 기사 백업 파일 만들기
+│   │   ├── ArticleBackupGzipCompressor             # gzip 압축 (로그 백업도 같이 사용)
+│   │   └── ArticleBackupJsonSerializer             # 기사 목록 → JSON
 │   ├── DatabaseConstraintUtils                     # DB 제약 조건 위반 확인
 │   └── similarity/
 │       └── StringSimilarityUtils                   # 관심사 이름 유사도 계산
@@ -1264,7 +1271,7 @@ src/main/java/com/sprint/monew/global/
 
 <a id="pkg-all"></a>
 
-### 4. 전체 패키지 구성 (상세.Ver) (구현 후 수정 예정)
+### 4. 전체 패키지 구성 (상세.Ver)
 
 <details>
 <summary>[펼쳐보기]</summary>
@@ -1275,19 +1282,50 @@ src/main/java/com/sprint/monew/
 ├── MonewApplication                                # 애플리케이션 시작점
 ├── adapter/                                        # 바깥과 연결하는 계층
 │   ├── in/                                         # 들어오는 요청
-│   │   ├── batch/                                  # 배치 실행기
-│   │   │   ├── ArticleCollectionRunner
-│   │   │   ├── NotificationCleanupRunner
-│   │   │   └── log/                                # 로그 S3 적재 배치 (Spring Batch) (박수민)
-│   │   │       ├── LogBackupFailedException
-│   │   │       ├── LogBackupJobConfig
-│   │   │       ├── LogBackupScheduler
-│   │   │       ├── LogBackupStepListener
-│   │   │       ├── LogBackupTasklet
-│   │   │       └── LogMetrics
+│   │   ├── batch/                                  # Spring Batch Job (박수민)
+│   │   │   ├── article/                            # 뉴스 기사 배치
+│   │   │   │   ├── backup/                         # 기사 S3 백업 Job
+│   │   │   │   │   ├── ArticleBackupJobConfig
+│   │   │   │   │   ├── ArticleBackupListener
+│   │   │   │   │   ├── ArticleBackupMetrics
+│   │   │   │   │   ├── ArticleBackupReader
+│   │   │   │   │   ├── ArticleBackupScheduler
+│   │   │   │   │   └── ArticleBackupWriter
+│   │   │   │   └── collection/                     # 기사 수집 Job
+│   │   │   │       ├── ArticleCollectProcessor
+│   │   │   │       ├── ArticleCollectReader
+│   │   │   │       ├── ArticleCollectWriter
+│   │   │   │       ├── ArticleCollectionChunkListener
+│   │   │   │       ├── ArticleCollectionJobConfig
+│   │   │   │       ├── ArticleCollectionMetrics
+│   │   │   │       ├── ArticleCollectionScheduler
+│   │   │   │       ├── ArticleCollectionStepListener
+│   │   │   │       └── dto/                        # Job 안에서 쓰는 DTO
+│   │   │   │           └── InterestCollectedArticles
+│   │   │   ├── log/                                # 로그 S3 백업 Job
+│   │   │   │   ├── LogBackupFailedException
+│   │   │   │   ├── LogBackupJobConfig
+│   │   │   │   ├── LogBackupListener
+│   │   │   │   ├── LogBackupReader
+│   │   │   │   ├── LogBackupScheduler
+│   │   │   │   ├── LogBackupWriter
+│   │   │   │   └── LogMetrics
+│   │   │   ├── notification/                       # 알림 삭제 Job
+│   │   │   │   ├── NotificationCleanupJobConfig
+│   │   │   │   ├── NotificationCleanupScheduler
+│   │   │   │   ├── NotificationCleanupStepListener
+│   │   │   │   ├── NotificationCleanupTasklet
+│   │   │   │   └── NotificationMetrics
+│   │   │   └── user/                               # 사용자 배치
+│   │   │       └── cleanup/                        # 사용자 완전 삭제 Job
+│   │   │           ├── UserCleanupJobConfig
+│   │   │           ├── UserCleanupMetrics
+│   │   │           ├── UserCleanupScheduler
+│   │   │           ├── UserCleanupStepListener
+│   │   │           └── UserCleanupTasklet
 │   │   ├── controller/                             # API 컨트롤러
 │   │   │   ├── article/                            # 뉴스 기사 (김민재, 이승현)
-│   │   │   │   ├── ArticleCollectionManualController
+│   │   │   │   ├── ArticleBackupManualController
 │   │   │   │   ├── ArticleController
 │   │   │   │   └── dto/                            # 요청 / 응답 DTO
 │   │   │   │       └── response/                   # 응답 DTO
@@ -1338,14 +1376,15 @@ src/main/java/com/sprint/monew/
 │   │   │               ├── CommentLikeActivityDto
 │   │   │               ├── SubscriptionActivityDto
 │   │   │               └── UserActivityDto
-│   │   ├── event/                                  # 이벤트 리스너
-│   │   │   ├── interest/                           # 관심사 · 구독 (박수민)
-│   │   │   │   └── InterestEventListener
-│   │   │   └── notification/                       # 알림 (이수찬)
-│   │   │       └── NotificationEventListener
-│   │   └── scheduler/                              # 정해진 시각에 실행 (@Scheduled)
-│   │       ├── ArticleCollectionScheduler
-│   │       └── NotificationCleanupScheduler
+│   │   └── event/                                  # 이벤트 리스너
+│   │       ├── comment/                            # 댓글 · 좋아요 (정수환)
+│   │       │   └── CommentEventListener
+│   │       ├── interest/                           # 관심사 · 구독 (박수민)
+│   │       │   └── InterestEventListener
+│   │       ├── notification/                       # 알림 (이수찬)
+│   │       │   └── NotificationEventListener
+│   │       └── useractivity/                       # 사용자 활동 내역 (이수찬)
+│   │           └── UserActivityEventListener
 │   └── out/                                        # 나가는 연결 (저장소 · 외부 API · 이벤트 발행)
 │       ├── article/                                # 뉴스 기사 (김민재, 이승현)
 │       │   ├── ArticleEventPublisherAdapter
@@ -1357,6 +1396,7 @@ src/main/java/com/sprint/monew/
 │       │   ├── ArticleRepositoryAdapter
 │       │   ├── ArticleViewStatusJpaRepository
 │       │   ├── ArticleViewStatusRepositoryAdapter
+│       │   ├── S3ArticleBackupStorageAdapter
 │       │   ├── naver/                              # 네이버 뉴스 API 수집
 │       │   │   ├── NaverNewsAdapter
 │       │   │   ├── NaverNewsMapper
@@ -1369,9 +1409,12 @@ src/main/java/com/sprint/monew/
 │       │   ├── CommentJpaRepository
 │       │   ├── CommentLikeJpaRepository
 │       │   ├── CommentLikeRepositoryAdapter
+│       │   ├── CommentQueryRepository
+│       │   ├── CommentQueryRepositoryImpl
 │       │   └── CommentRepositoryAdapter
 │       ├── interest/                               # 관심사 · 구독 (박수민)
 │       │   ├── InterestAnchor
+│       │   ├── InterestEventPublisherAdapter
 │       │   ├── InterestJpaRepository
 │       │   ├── InterestQueryRepository
 │       │   ├── InterestQueryRepositoryImpl
@@ -1390,10 +1433,24 @@ src/main/java/com/sprint/monew/
 │       │   ├── UserJpaRepository
 │       │   └── UserRepositoryAdapter
 │       └── useractivity/                           # 사용자 활동 내역 (이수찬)
-│           └── UserActivityRdbAdapter
+│           ├── ArticleStatRdbAdapter
+│           ├── UserActivityDocumentUpdater
+│           ├── UserActivityMongoReader
+│           ├── UserActivityMongoRepository
+│           ├── UserActivityMongoWriter
+│           ├── UserActivityRdbAdapter
+│           └── document/                           # MongoDB 문서
+│               ├── ArticleViewItem
+│               ├── CommentItem
+│               ├── CommentLikeItem
+│               ├── SubscriptionItem
+│               └── UserActivityDocument
 ├── application/                                    # 기능 흐름 (도메인별 UseCase 구현)
 │   ├── article/                                    # 뉴스 기사 (김민재, 이승현)
 │   │   ├── ArticleApplication
+│   │   ├── ArticleBackupApplication
+│   │   ├── ArticleBackupStorageService
+│   │   ├── ArticleBackupStorageServiceImpl
 │   │   ├── ArticleCollectionApplication
 │   │   ├── ArticleInterestService
 │   │   ├── ArticleInterestServiceImpl
@@ -1404,16 +1461,22 @@ src/main/java/com/sprint/monew/
 │   │   ├── event/                                  # 이벤트
 │   │   │   ├── ArticleHardDeletingEvent
 │   │   │   ├── ArticleSoftDeletedEvent
+│   │   │   ├── ArticleViewedEvent
 │   │   │   └── ArticlesSavedEvent
 │   │   ├── provided/                               # UseCase (밖에서 부르는 기능)
+│   │   │   ├── ArticleBackupUseCase
 │   │   │   ├── ArticleCollectionUseCase
 │   │   │   ├── ArticleUseCase
 │   │   │   └── dto/                                # Query · Result DTO
+│   │   │       ├── ArticleBackupFile
+│   │   │       ├── ArticleBackupItem
+│   │   │       ├── ArticleBackupResult
 │   │   │       ├── ArticleQuery
 │   │   │       ├── ArticleResult
-│   │   │       ├── CollectedArticle
-│   │   │       └── SourceResult
+│   │   │       ├── ArticleViewStatusResult
+│   │   │       └── CollectedArticle
 │   │   └── required/                               # 저장소 · 이벤트 발행 Port
+│   │       ├── ArticleBackupStoragePort
 │   │       ├── ArticleEventPublisherPort
 │   │       ├── ArticleInterestRepositoryPort
 │   │       ├── ArticleRepositoryPort
@@ -1424,6 +1487,12 @@ src/main/java/com/sprint/monew/
 │   │   ├── CommentApplication
 │   │   ├── CommentService
 │   │   ├── CommentServiceImpl
+│   │   ├── event/                                  # 이벤트
+│   │   │   ├── CommentCreatedEvent
+│   │   │   ├── CommentDeletedEvent
+│   │   │   ├── CommentLikeCreatedEvent
+│   │   │   ├── CommentUnlikedEvent
+│   │   │   └── CommentUpdatedEvent
 │   │   ├── provided/                               # UseCase (밖에서 부르는 기능)
 │   │   │   ├── CommentUseCase
 │   │   │   └── dto/                                # Query · Result DTO
@@ -1440,6 +1509,11 @@ src/main/java/com/sprint/monew/
 │   │   ├── InterestService
 │   │   ├── InterestServiceImpl
 │   │   ├── SubscriptionService
+│   │   ├── event/                                  # 이벤트
+│   │   │   ├── InterestDeletedEvent
+│   │   │   ├── InterestKeywordsUpdatedEvent
+│   │   │   ├── InterestSubscribedEvent
+│   │   │   └── InterestUnsubscribedEvent
 │   │   ├── provided/                               # UseCase (밖에서 부르는 기능)
 │   │   │   ├── InterestUseCase
 │   │   │   ├── UserDeletionSubscriptionCleaner
@@ -1451,6 +1525,7 @@ src/main/java/com/sprint/monew/
 │   │   └── required/                               # 저장소 · 이벤트 발행 Port
 │   │       ├── DuplicateInterestNameException
 │   │       ├── DuplicateSubscriptionException
+│   │       ├── InterestEventPublisherPort
 │   │       ├── InterestRepository
 │   │       └── SubscriptionRepository
 │   ├── log/                                        # 로그 S3 적재 (박수민)
@@ -1458,7 +1533,8 @@ src/main/java/com/sprint/monew/
 │   │   ├── provided/                               # UseCase (밖에서 부르는 기능)
 │   │   │   ├── LogBackupUseCase
 │   │   │   └── dto/                                # Query · Result DTO
-│   │   │       └── LogBackupResult
+│   │   │       ├── LogBackupResult
+│   │   │       └── LogResult
 │   │   └── required/                               # 저장소 · 이벤트 발행 Port
 │   │       └── LogStoragePort
 │   ├── notification/                               # 알림 (이수찬)
@@ -1498,7 +1574,10 @@ src/main/java/com/sprint/monew/
 │       │       ├── SubscriptionActivityResult
 │       │       └── UserActivityResult
 │       └── required/                               # 저장소 · 이벤트 발행 Port
-│           └── UserActivityReader
+│           ├── ArticleStatReader
+│           ├── UserActivityReader
+│           ├── UserActivitySourceReader
+│           └── UserActivityWriter
 ├── domain/                                         # 엔티티 · enum · 도메인 이벤트
 │   ├── article/                                    # 뉴스 기사 (김민재, 이승현)
 │   │   └── entity/                                 # 엔티티
