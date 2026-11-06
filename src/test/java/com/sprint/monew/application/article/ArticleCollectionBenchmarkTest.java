@@ -14,6 +14,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -28,11 +30,13 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  */
 @IntegrationTest
 @Tag("performance")
+@Slf4j
 @TestPropertySource(
         properties = {
             "spring.jpa.show-sql=false",
             "logging.level.root=WARN",
             "logging.level.com.sprint.monew=WARN",
+            "logging.level.com.sprint.monew.application.article.ArticleCollectionBenchmarkTest=INFO",
             "logging.level.org.hibernate.SQL=OFF",
             "logging.level.org.hibernate.orm.jdbc.bind=OFF"
         })
@@ -85,16 +89,17 @@ class ArticleCollectionBenchmarkTest {
         assertThat(countArticles()).isZero();
         assertThat(countLinks()).isZero();
 
-        var properties = entityManagerFactory.getProperties();
-        System.out.printf(
-                Locale.ROOT,
-                "BENCHMARK CONFIG: articles=%,d, interests=%d, articlesPerTransaction=%,d,"
-                        + " batch_size=%s, order_inserts=%s%n",
-                TOTAL_ARTICLES,
-                INTEREST_COUNT,
-                ARTICLES_PER_INTEREST,
-                properties.getOrDefault("hibernate.jdbc.batch_size", "default (0)"),
-                properties.getOrDefault("hibernate.order_inserts", "default (false)"));
+        Map<String, Object> properties = entityManagerFactory.getProperties();
+        log.info(
+                String.format(
+                        Locale.ROOT,
+                        "BENCHMARK CONFIG: articles=%,d, interests=%d, articlesPerTransaction=%,d,"
+                                + " batch_size=%s, order_inserts=%s",
+                        TOTAL_ARTICLES,
+                        INTEREST_COUNT,
+                        ARTICLES_PER_INTEREST,
+                        properties.getOrDefault("hibernate.jdbc.batch_size", "default (0)"),
+                        properties.getOrDefault("hibernate.order_inserts", "default (false)")));
 
         long[] chunkNanos = new long[INTEREST_COUNT];
         int saved = 0;
@@ -116,24 +121,26 @@ class ArticleCollectionBenchmarkTest {
 
         double seconds = elapsedNanos / 1_000_000_000.0;
         for (int i = 0; i < INTEREST_COUNT; i++) {
-            System.out.printf(
-                    Locale.ROOT,
-                    "BENCHMARK CHUNK: %02d/%02d, articles=%d, seconds=%.3f%n",
-                    i + 1,
-                    INTEREST_COUNT,
-                    ARTICLES_PER_INTEREST,
-                    chunkNanos[i] / 1_000_000_000.0);
+            log.info(
+                    String.format(
+                            Locale.ROOT,
+                            "BENCHMARK CHUNK: %02d/%02d, articles=%d, seconds=%.3f",
+                            i + 1,
+                            INTEREST_COUNT,
+                            ARTICLES_PER_INTEREST,
+                            chunkNanos[i] / 1_000_000_000.0));
         }
-        System.out.printf(
-                Locale.ROOT,
-                "BENCHMARK RESULT: articles=%d, links=%d, transactions=%d, seconds=%.3f,"
-                        + " articlesPerSecond=%.1f, rowsPerSecond=%.1f%n",
-                articleRows,
-                linkRows,
-                INTEREST_COUNT,
-                seconds,
-                TOTAL_ARTICLES / seconds,
-                (articleRows + linkRows) / seconds);
+        log.info(
+                String.format(
+                        Locale.ROOT,
+                        "BENCHMARK RESULT: articles=%d, links=%d, transactions=%d, seconds=%.3f,"
+                                + " articlesPerSecond=%.1f, rowsPerSecond=%.1f",
+                        articleRows,
+                        linkRows,
+                        INTEREST_COUNT,
+                        seconds,
+                        TOTAL_ARTICLES / seconds,
+                        (articleRows + linkRows) / seconds));
     }
 
     private List<CollectedArticle> createArticles(String prefix, int start, int count) {
