@@ -1,6 +1,7 @@
 package com.sprint.monew.application.article;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.sprint.monew.adapter.out.article.ArticleJpaRepository;
@@ -141,7 +142,9 @@ class ArticleRestoreIntegrationTest {
                         article.getPublishedAt(),
                         article.getCreatedAt(),
                         List.of(interest.getId()));
-        when(storage.readAll(date)).thenReturn(List.of(backup));
+        String key = "articles/" + date + "/articles-" + date + "-000001.json.gz";
+        when(storage.findKeys(date)).thenReturn(List.of(key));
+        when(storage.readFile(key)).thenReturn(List.of(backup));
         return new Fixture(article, interest, link, backup);
     }
 
@@ -152,7 +155,11 @@ class ArticleRestoreIntegrationTest {
     }
 
     private List<ArticleRestoreResult> restore(LocalDate date) {
-        return application.restoreArticles(date.atStartOfDay(), date.atTime(23, 59, 59));
+        List<ArticleRestoreResult> results =
+                application.restoreArticles(date.atStartOfDay(), date.atTime(23, 59, 59));
+        String key = "articles/" + date + "/articles-" + date + "-000001.json.gz";
+        verify(storage).readFile(key);
+        return results;
     }
 
     private record Fixture(
