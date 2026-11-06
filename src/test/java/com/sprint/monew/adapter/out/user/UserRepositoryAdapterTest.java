@@ -231,4 +231,58 @@ class UserRepositoryAdapterTest {
 
         assertThat(result).containsExactly(oldDeleted.getId());
     }
+
+    @Test
+    @DisplayName("ID 목록 중 탈퇴한 사용자만 잠그고 찾는다 — 정상 사용자와 없는 ID는 빠진다")
+    void givenMixedIds_whenFindDeletedUsersForUpdate_thenLockOnlyDeletedUsers() {
+        User deleted =
+                userRepository.save(User.create("lock-gone@monew.com", "잠금탈퇴", "password1!"));
+        deleted.softDelete();
+        User active = userRepository.save(User.create("lock-stay@monew.com", "잠금정상", "password1!"));
+        entityManager.flush();
+        entityManager.clear();
+
+        List<User> result =
+                userRepository.findDeletedUsersForUpdate(
+                        List.of(deleted.getId(), active.getId(), UUID.randomUUID()));
+
+        assertThat(result).extracting(User::getId).containsExactly(deleted.getId());
+        assertThat(entityManager.getLockMode(result.get(0)))
+                .isEqualTo(LockModeType.PESSIMISTIC_WRITE);
+    }
+
+    @Test
+    @DisplayName("ID 목록의 사용자를 한 번에 지우고 지운 수를 돌려주며, 그 사용자의 알림도 DB에서 같이 지워진다")
+    void givenUsers_whenDeleteUsers_thenDeleteAllAndCascadeNotifications() {
+        User first = userRepository.save(User.create("bulk1@monew.com", "일괄삭제1", "password1!"));
+        User second = userRepository.save(User.create("bulk2@monew.com", "일괄삭제2", "password1!"));
+        User stay = userRepository.save(User.create("bulk-stay@monew.com", "남는사람", "password1!"));
+        Notification notification =
+                Notification.create(first, ResourceType.INTEREST, UUID.randomUUID(), "알림");
+        entityManager.persist(notification);
+        entityManager.flush();
+        entityManager.clear();
+
+        int deleted = userRepository.deleteUsers(List.of(first.getId(), second.getId()));
+
+        assertThat(deleted).isEqualTo(2);
+        assertThat(entityManager.find(User.class, first.getId())).isNull();
+        assertThat(entityManager.find(User.class, second.getId())).isNull();
+        assertThat(entityManager.find(User.class, stay.getId())).isNotNull();
+        assertThat(entityManager.find(Notification.class, notification.getId())).isNull();
+    }
+
+    @Test
+    @DisplayName("탈퇴 시각이 기준 시각과 정확히 같은 사용자는 이번 실행에서 빠진다 — 다음 실행에서 지워진다")
+    void givenDeletedAtEqualsThreshold_whenFindDeletedUserIdsBefore_thenExcluded() {
+        Instant threshold = Instant.parse("2026-11-03T00:00:00Z");
+        User user = userRepository.save(User.create("edge@monew.com", "경계탈퇴", "password1!"));
+        ReflectionTestUtils.setField(user, "deletedAt", threshold);
+        entityManager.flush();
+        entityManager.clear();
+
+        List<UUID> result = userRepository.findDeletedUserIdsBefore(threshold);
+
+        assertThat(result).doesNotContain(user.getId());
+    }
 }
