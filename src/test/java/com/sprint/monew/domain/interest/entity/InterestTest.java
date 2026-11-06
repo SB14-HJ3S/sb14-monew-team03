@@ -40,6 +40,40 @@ class InterestTest {
     }
 
     @Test
+    @DisplayName("관심사 생성 시 중복된 키워드가 있으면 예외가 발생한다")
+    void givenDuplicateKeywords_whenCreate_thenThrow() {
+        // given
+        List<String> keywords = List.of("중복", "다른 키워드", "중복");
+
+        // when
+        MonewException thrown =
+                Assertions.catchThrowableOfType(
+                        MonewException.class, () -> Interest.create("관심사", keywords));
+
+        // then
+        assertThat(thrown.getErrorType()).isEqualTo(InterestErrorType.INVALID_INTEREST_KEYWORD);
+    }
+
+    @Test
+    @DisplayName("키워드 수정 시 중복된 키워드가 있으면 예외가 발생하고 기존 키워드를 유지한다")
+    void givenDuplicateKeywords_whenUpdateKeywords_thenThrowAndKeepExistingKeywords() {
+        // given
+        Interest interest = Interest.create("관심사", List.of("기존", "유지"));
+        List<InterestKeyword> existingKeywords = List.copyOf(interest.getKeywords());
+        List<String> newKeywords = List.of("유지", "추가", "추가");
+
+        // when
+        MonewException thrown =
+                Assertions.catchThrowableOfType(
+                        MonewException.class, () -> interest.updateKeywords(newKeywords));
+
+        // then
+        assertThat(thrown.getErrorType()).isEqualTo(InterestErrorType.INVALID_INTEREST_KEYWORD);
+        assertThat(interest.getKeywords()).containsExactlyElementsOf(existingKeywords);
+        assertThat(interest.getKeywordNames()).containsExactly("기존", "유지");
+    }
+
+    @Test
     @DisplayName("키워드 수정 시 삭제된 키워드를 제거하고 새로운 키워드를 추가한다")
     void givenNewKeywords_whenUpdateKeywords_thenReflectChanges() {
         Interest interest = Interest.create("관심사", List.of("기존", "유지"));

@@ -49,8 +49,4 @@ public class InterestKeyword extends BaseEntity {
     public static InterestKeyword create(Interest interest, String keyword) {
         return new InterestKeyword(interest, keyword);
     }
-
-    public void changeKeyword(String keyword) {
-        this.keyword = keyword;
-    }
 }
