@@ -29,6 +29,7 @@ public class ArticleRestoreApplication implements ArticleRestoreUseCase {
 
     @Override
     public List<ArticleRestoreResult> restoreArticles(LocalDateTime from, LocalDateTime to) {
+        log.info("뉴스 기사 복구 요청: from={}, to={}", from, to);
         if (Objects.isNull(from) || (Objects.isNull(to))) {
             throw new MonewException(CommonErrorType.INVALID_REQUEST);
         }
@@ -68,6 +69,11 @@ public class ArticleRestoreApplication implements ArticleRestoreUseCase {
             }
             results.add(new ArticleRestoreResult(day, ids, ids.size()));
         }
+        long restoredCount = 0;
+        for (ArticleRestoreResult result : results) {
+            restoredCount += result.restoredArticleCount();
+        }
+        log.info("뉴스 기사 복구 완료: from={}, to={}, count={}", from, to, restoredCount);
         return results;
     }
 }

@@ -47,17 +47,9 @@ public class ArticleController {
                     LocalDateTime from,
             @RequestParam(name = "to") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
                     LocalDateTime to) {
-        log.info("뉴스 기사 복구 요청: from={}, to={}", from, to);
-        List<ArticleRestoreResultDto> results =
-                articleRestoreUseCase.restoreArticles(from, to).stream()
-                        .map(ArticleRestoreResultDto::from)
-                        .toList();
-        long restoredCount = 0;
-        for (ArticleRestoreResultDto result : results) {
-            restoredCount += result.restoredArticleCount();
-        }
-        log.info("뉴스 기사 복구 완료: from={}, to={}, count={}", from, to, restoredCount);
-        return results;
+        return articleRestoreUseCase.restoreArticles(from, to).stream()
+                .map(ArticleRestoreResultDto::from)
+                .toList();
     }
 
     @Operation(summary = "출처 목록 조회", description = "출처 목록을 조회합니다.")
