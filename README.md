@@ -265,9 +265,9 @@
 ### 💡 구현 포인트
 
 - 기사 논리 삭제 · 물리 삭제 이벤트를 먼저 정의해, 연관 도메인 담당자가 구독 처리를 병렬로 구현할 수 있게 함 ([#277](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/277), [#280](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/280))
-- 출처 목록 조회: 등록된 기사 출처를 중복 없이 반환해 기사 목록의 출처 필터 선택지로 사용 ([#35](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/35))
-- 논리 삭제: 댓글 등 연관 정보는 유지한 채 삭제 표시만 하고, 삭제 후 이벤트로 활동 내역에서 해당 기사 제외 ([#37](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/37))
-- 물리 삭제: 댓글 · 댓글 좋아요 · 기사 조회 기록 · 기사-관심사 연결까지 함께 삭제하고, 테스트 코드로 검증 ([#38](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/38))
+- 출처 목록 조회: 수집 출처(`ArticleSourceType`: NAVER · HANKYUNG · CHOSUN · YEONHAP) 전체를 반환해 기사 목록의 출처 필터 선택지로 사용 ([#291](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/291))
+- 논리 삭제: 기사 데이터는 남기고 `deletedAt`만 기록. 삭제되지 않은 기사만 지우는 조건부 UPDATE로, 없거나 이미 삭제된 기사면 404로 응답하고, 커밋 뒤 이벤트로 활동 내역(MongoDB)에서 해당 기사 제외 ([#298](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/298))
+- 물리 삭제: 기사 행만 지우면 댓글 · 댓글 좋아요 · 기사 조회 기록 · 기사-관심사 연결은 DB의 `ON DELETE CASCADE`로 함께 삭제되고, FK가 없는 댓글 좋아요 알림과 활동 내역은 삭제 직전 이벤트로 정리. 통합 테스트로 검증 ([#312](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/312))
 - 서비스 · 컨트롤러 모두 테스트 먼저 작성(Red) → 구현(Green) → 정리(Refactor) 순서로 개발
 
 
@@ -282,14 +282,40 @@
 
 ### ✨ 기능
 
-- Spring Batch 기반 배치 작업 공통 구조(Job · Step 템플릿) 설계
-- `@Scheduled` 기반 배치 스케줄링 공통 설정
-- 배치 실행 결과 로그 · 재시도 정책 관리
-- 배치 커스텀 메트릭(수집 성공 · 실패 건수 등) Actuator 모니터링
+- 배치 작업 5종을 Spring Batch Job으로 관리: 뉴스 기사 수집 · 뉴스 기사 S3 백업 · 알림 삭제 · 사용자 완전 삭제 · 로그 S3 백업
+- `@Scheduled` 스케줄러가 날짜 파라미터를 넣어 Job 실행 (서버 기동 시 자동 실행은 끔)
+- 날짜별 로그 파일을 tar.gz로 묶어 AWS S3에 적재
+- 배치 커스텀 메트릭(수집 · 저장 · 삭제 · 업로드 건수) Actuator 수집
 
 ### 💡 구현 포인트
 
-- (프로젝트 진행 후 작성 예정 : 구현 스크린샷 또는 PR/이슈 번호 링크 기재)
+- **배치 5종 Spring Batch 전환** ([#260](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/260), [#317](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/317))
+
+    | 배치 | 처리 방식 | 실행 주기 | 이슈 |
+    | --- | --- | --- | --- |
+    | 뉴스 기사 수집 | Chunk (관심사 1개씩) | 매시 정각 | [#329](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/329) |
+    | 알림 삭제 | Tasklet | 매일 03시 | [#330](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/330) |
+    | 사용자 완전 삭제 | Tasklet | 매시 정각 | [#331](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/331) |
+    | 뉴스 기사 S3 백업 | Chunk (기사 1,000건씩 파일 1개) | 매일 자정 | [#332](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/332) |
+    | 로그 S3 백업 | Chunk (로그 파일 10개씩 tar.gz 1개) | 매일 03시 | [#333](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/333) |
+
+    - Job마다 `JobConfig` · `Scheduler` · `Listener` · `Metrics`로 나눠 같은 구조로 구성
+- **커밋된 건수만 메트릭에 반영**
+    - 성공 건수는 청크 커밋 뒤(`afterChunk`)나 Step 완료(`COMPLETED`) 때만 올려, 롤백된 작업이 숫자에 섞이지 않게 함
+    - 메트릭: `batch.article.collection.*` · `batch.article.backup.uploaded.articles` · `batch.notification.cleanup.deleted` · `batch.user.cleanup.deleted` · `batch.log.backup.*`
+- **뉴스 기사 수집: 일부 출처가 실패해도 끝까지 수집** ([#260](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/260))
+    - RSS 3곳은 Step마다 한 번만 받아 관심사별로 재사용하고, Naver는 키워드마다 호출
+    - 외부 API 실패는 출처별 실패 메트릭만 올리고 나머지 관심사 수집 · 저장을 마친 뒤, Job을 `FAILED`로 표시
+- **S3 백업 재시작** ([#317](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/317))
+    - 기사 · 로그 백업은 마지막 커서와 파일 번호를 `ExecutionContext`에 저장해, 실패 후 같은 날짜로 다시 실행하면 실패한 파일부터 이어서 업로드
+    - 이미 완료된 날짜는 다시 실행되지 않아 같은 파일이 중복 업로드되지 않음
+- **로그 백업** ([#266](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/266), [#317](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/317))
+    - 전날 로그 파일을 10개씩 묶어 tar.gz로 압축한 뒤 `logs/{날짜}/` 아래에 업로드
+    - 전체 파일 수 · 업로드된 파일 수를 메트릭으로 남겨 누락 여부 확인
+- **사용자 완전 삭제: 이미 지운 사용자는 유지** ([#317](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/317))
+    - Step 전체를 한 트랜잭션으로 묶지 않아(`ResourcelessTransactionManager`), 100명 단위로 커밋한 삭제가 뒤의 실패로 함께 롤백되지 않게 함
+- **테스트**
+    - Job 통합 테스트로 실패 → 재시작 → 이어서 처리, 커밋 실패 시 집계 제외 같은 시나리오 검증
 
 
 <p align="right"><a href="#feature-5">⬆️ 맨 위로 (제목을 눌러 접기)</a></p>
