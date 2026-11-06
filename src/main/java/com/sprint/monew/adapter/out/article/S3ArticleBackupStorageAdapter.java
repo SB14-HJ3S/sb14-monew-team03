@@ -37,11 +37,12 @@ public class S3ArticleBackupStorageAdapter implements ArticleBackupStoragePort {
     private final ArticleBackupGzipCompressor gzipCompressor;
 
     @Override
-    public ArticleBackupResult save(long partNumber, ArticleBackupFile backupFile) {
-        String key = generateKey(backupFile.backupDate(), partNumber);
+    public ArticleBackupResult save(ArticleBackupFile backupFile) {
         byte[] json = serializer.serialize(backupFile);
         byte[] content = gzipCompressor.compress(json);
 
+        long partNumber = nextPartNumber(backupFile.backupDate());
+        String key = generateKey(backupFile.backupDate(), partNumber);
         upload(key, content);
 
         return ArticleBackupResult.of(key, backupFile);
@@ -90,6 +91,22 @@ public class S3ArticleBackupStorageAdapter implements ArticleBackupStoragePort {
             articles.addAll(readFile(key));
         }
         return articles;
+    }
+
+    private long nextPartNumber(LocalDate date) { // 다음 파일 번호 반환
+        String prefix = "articles/" + date + "/articles-" + date + "-";
+        String suffix = ".json.gz";
+        long maxNumber = 0;
+
+        for (String key : findKeys(date)) {
+            String number = key.substring(prefix.length(), key.length() - suffix.length());
+
+            if (number.matches("[0-9]{6,18}")) {
+                maxNumber = Math.max(maxNumber, Long.parseLong(number));
+            }
+        }
+
+        return maxNumber + 1;
     }
 
     private void upload(String key, byte[] content) {

@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface ArticleBackupStoragePort {
 
-    ArticleBackupResult save(long partNumber, ArticleBackupFile backupFile);
+    ArticleBackupResult save(ArticleBackupFile backupFile);
 
     List<String> findKeys(LocalDate date);
 

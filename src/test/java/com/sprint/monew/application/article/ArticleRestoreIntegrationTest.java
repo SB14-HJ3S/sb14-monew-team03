@@ -34,8 +34,8 @@ class ArticleRestoreIntegrationTest {
     @MockitoBean private ArticleBackupStorageService storage;
 
     @Test
-    @DisplayName("과거 발행 기사를 물리 삭제 후 복구하면 복구 당일 백업 대상에서 제외한다")
-    void restoredArticleIsNotBackedUpToday() {
+    @DisplayName("과거 발행 기사를 복구하면 발행일은 유지하고 생성일 기준 백업 대상으로 조회된다")
+    void restoredArticleIsSelectedByCreationDate() {
         // given
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
         LocalDate publishedDate = today.minusDays(3);
@@ -55,10 +55,10 @@ class ArticleRestoreIntegrationTest {
         assertThat(restored.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDate())
                 .isEqualTo(today);
         assertThat(restored.getPublishedAt()).isEqualTo(fixture.backup().publishedAt());
-        assertThat(articleService.getArticlesForBackup(today, null, 100)).isEmpty();
-        assertThat(articleService.getArticlesForBackup(publishedDate, null, 100))
+        assertThat(articleService.getArticlesForBackup(today, null, 100))
                 .extracting(Article::getId)
                 .containsExactly(restored.getId());
+        assertThat(articleService.getArticlesForBackup(publishedDate, null, 100)).isEmpty();
         assertThat(
                         em.createQuery(
                                         "select ai.interest.id from ArticleInterest ai"

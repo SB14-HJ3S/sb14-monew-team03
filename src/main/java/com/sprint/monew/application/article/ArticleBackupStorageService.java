@@ -7,7 +7,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface ArticleBackupStorageService {
-    ArticleBackupResult save(long partNumber, ArticleBackupFile file);
+    ArticleBackupResult save(ArticleBackupFile file);
 
     List<String> findKeys(LocalDate date);
 

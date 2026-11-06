@@ -3,7 +3,6 @@ package com.sprint.monew.application.article.required;
 import com.sprint.monew.application.article.provided.dto.ArticleQuery;
 import com.sprint.monew.domain.article.entity.Article;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -39,7 +38,7 @@ public interface ArticleRepositoryPort {
 
     int softDeleteIfActive(UUID articleId, Instant deletedAt);
 
-    List<Article> findBackupChunk(LocalDateTime from, LocalDateTime to, UUID afterId, int limit);
+    List<Article> findBackupChunk(Instant from, Instant to, UUID afterId, int limit);
 
     int hardDeleteById(UUID articleId);
 
