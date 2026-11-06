@@ -9,7 +9,7 @@ import com.sprint.monew.global.exception.errortype.CommonErrorType;
 import com.sprint.monew.global.pagination.PageResult;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -24,8 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ArticleServiceImpl implements ArticleService {
 
-    public static final ZoneId BACKUP_ZONE = ZoneId.of("Asia/Seoul");
-
     private final ArticleRepositoryPort repository;
 
     @Override
@@ -35,8 +33,8 @@ public class ArticleServiceImpl implements ArticleService {
             throw new MonewException(CommonErrorType.INVALID_REQUEST, Map.of("limit", limit));
         }
 
-        Instant from = date.atStartOfDay(BACKUP_ZONE).toInstant();
-        Instant to = date.plusDays(1).atStartOfDay(BACKUP_ZONE).toInstant();
+        LocalDateTime from = date.atStartOfDay();
+        LocalDateTime to = date.plusDays(1).atStartOfDay();
 
         return repository.findBackupChunk(from, to, afterId, limit);
     }

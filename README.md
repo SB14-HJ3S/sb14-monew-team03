@@ -1,9 +1,5 @@
 <a name="top"></a>
 
-> [!NOTE]
-> *해당 문서는 초안으로 확정된 것이 아닙니다! README 문서 틀만 잡아 놓은 것으로,*<br>
-> *정확한 내용(담당, 패키지 구조 내용 등)은 프로젝트 완성 후 최종 수정 예정입니다.*
-
 <div align="center">
 
 [![CI](https://raw.githubusercontent.com/SB14-HJ3S/sb14-monew-team03/codecov-badge/ci.svg)](https://github.com/SB14-HJ3S/sb14-monew-team03/actions/workflows/ci.yml?query=branch%3Adevelop)
@@ -24,7 +20,7 @@
 </tr>
 <tr>
   <td align="left" valign="top"><b>핵심 목표</b></td>
-  <td align="left">· 관심사 기반 뉴스 큐레이션 및 자동 수집<br>· 사용자 활동(댓글, 좋아요, 알림) 통합 관리<br>· 스케줄러 기반 기사 동기화 및 S3 백업 · 복구 기능<br>· Actuator 기반 모니터링으로 운영 관찰성 확보</td>
+  <td align="left">· 관심사 기반 뉴스 큐레이션 및 자동 수집<br>· 사용자 활동(댓글, 좋아요, 알림) 통합 관리<br>· 스케줄러 기반 기사 동기화 및 S3 백업 · 복구 기능<br>· Prometheus · Grafana · CloudWatch 기반 모니터링으로 운영 관찰성 확보</td>
 </tr>
 <tr>
   <td align="left"><b>관련 링크</b></td>
@@ -76,9 +72,9 @@
 </tr>
 <tr>
   <td align="center" valign="top"><b>김민재</b><br/>기술팀장<br/><br/><sub><kbd><b>뉴스&nbsp;기사&nbsp;도메인</b></kbd>&nbsp;⭐<br/>·&nbsp;네이버&nbsp;API&nbsp;·&nbsp;RSS&nbsp;수집<br/>·&nbsp;기사&nbsp;검색&nbsp;·&nbsp;조회수<br/>·&nbsp;기사&nbsp;S3&nbsp;백업&nbsp;·&nbsp;복구<br/><kbd><b>공통</b></kbd><br/>·&nbsp;헥사고날&nbsp;패키지&nbsp;설계<br/>·&nbsp;도메인별&nbsp;엔티티&nbsp;설계</sub></td>
-  <td align="center" valign="top"><b>박수민</b><br/>기술부팀장<br/><br/><sub><kbd><b>관심사&nbsp;도메인</b></kbd><br/>·&nbsp;관심사&nbsp;등록&nbsp;·&nbsp;수정&nbsp;·&nbsp;삭제<br/>·&nbsp;관심사&nbsp;이름&nbsp;유사도&nbsp;검사<br/>·&nbsp;관심사&nbsp;구독&nbsp;·&nbsp;취소<br/><kbd><b>Spring&nbsp;Batch&nbsp;적용</b></kbd>&nbsp;🚀<br/>·&nbsp;배치&nbsp;로그&nbsp;S3&nbsp;적재<br/>·&nbsp;배치&nbsp;메트릭&nbsp;모니터링<br/><kbd><b>공통</b></kbd><br/>·&nbsp;도메인별&nbsp;UseCase&nbsp;·&nbsp;Port&nbsp;정의<br/>·&nbsp;커서&nbsp;페이지네이션<br/>·&nbsp;요청자&nbsp;ID&nbsp;처리</sub></td>
+  <td align="center" valign="top"><b>박수민</b><br/>기술부팀장<br/><br/><sub><kbd><b>관심사&nbsp;도메인</b></kbd><br/>·&nbsp;관심사&nbsp;등록&nbsp;·&nbsp;수정&nbsp;·&nbsp;삭제<br/>·&nbsp;관심사&nbsp;이름&nbsp;유사도&nbsp;검사<br/>·&nbsp;관심사&nbsp;구독&nbsp;·&nbsp;취소<br/><kbd><b>Spring&nbsp;Batch&nbsp;적용</b></kbd>&nbsp;🚀<br/>·&nbsp;배치&nbsp;5종&nbsp;Spring&nbsp;Batch&nbsp;전환<br/>(기사&nbsp;수집&nbsp;·&nbsp;기사&nbsp;S3&nbsp;백업&nbsp;·<br/>알림&nbsp;삭제&nbsp;·&nbsp;사용자&nbsp;삭제&nbsp;·<br/>로그&nbsp;백업)<br/>·&nbsp;배치&nbsp;로그&nbsp;S3&nbsp;적재<br/>·&nbsp;배치&nbsp;메트릭&nbsp;모니터링<br/><kbd><b>공통</b></kbd><br/>·&nbsp;도메인별&nbsp;UseCase&nbsp;·&nbsp;Port&nbsp;정의<br/>·&nbsp;커서&nbsp;페이지네이션<br/>·&nbsp;요청자&nbsp;ID&nbsp;처리<br/>·&nbsp;Bean&nbsp;Validation&nbsp;적용</sub></td>
   <td align="center" valign="top"><b>이수찬</b><br/>팀원<br/><br/><sub><kbd><b>알림&nbsp;도메인</b></kbd><br/>·&nbsp;기사&nbsp;·&nbsp;좋아요&nbsp;알림&nbsp;생성<br/>·&nbsp;알림&nbsp;조회&nbsp;·&nbsp;확인&nbsp;처리<br/>·&nbsp;오래된&nbsp;알림&nbsp;삭제&nbsp;배치<br/><kbd><b>활동&nbsp;내역&nbsp;도메인</b></kbd>&nbsp;🚀<br/>·&nbsp;활동&nbsp;내역&nbsp;조회<br/>·&nbsp;MongoDB&nbsp;조회&nbsp;최적화</sub></td>
-  <td align="center" valign="top"><b>이승현</b><br/>행정팀장<br/><br/><sub><kbd><b>사용자&nbsp;도메인</b></kbd><br/>·&nbsp;회원가입&nbsp;·&nbsp;로그인<br/>·&nbsp;닉네임&nbsp;수정<br/>·&nbsp;논리&nbsp;·&nbsp;물리&nbsp;삭제<br/>·&nbsp;탈퇴&nbsp;사용자&nbsp;삭제&nbsp;배치<br/><kbd><b>뉴스&nbsp;기사&nbsp;도메인</b></kbd><br/>·&nbsp;출처&nbsp;목록&nbsp;조회<br/>·&nbsp;기사&nbsp;논리&nbsp;·&nbsp;물리&nbsp;삭제<br/><kbd><b>AWS&nbsp;무중단&nbsp;자동&nbsp;배포</b></kbd><br/>·&nbsp;모니터링&nbsp;환경&nbsp;구축<br/><kbd><b>공통</b></kbd><br/>·&nbsp;공통&nbsp;코드&nbsp;·&nbsp;예외<br/>·&nbsp;Swagger&nbsp;설정<br/>·&nbsp;CI&nbsp;·&nbsp;협업&nbsp;자동화</sub></td>
+  <td align="center" valign="top"><b>이승현</b><br/>행정팀장<br/><br/><sub><kbd><b>사용자&nbsp;도메인</b></kbd><br/>·&nbsp;회원가입&nbsp;·&nbsp;로그인<br/>·&nbsp;닉네임&nbsp;수정<br/>·&nbsp;논리&nbsp;·&nbsp;물리&nbsp;삭제<br/>·&nbsp;탈퇴&nbsp;사용자&nbsp;삭제&nbsp;배치<br/><kbd><b>뉴스&nbsp;기사&nbsp;도메인</b></kbd><br/>·&nbsp;출처&nbsp;목록&nbsp;조회<br/>·&nbsp;기사&nbsp;논리&nbsp;·&nbsp;물리&nbsp;삭제<br/><kbd><b>배포&nbsp;·&nbsp;모니터링</b></kbd><br/>·&nbsp;AWS&nbsp;무중단&nbsp;자동&nbsp;배포<br/>·&nbsp;모니터링&nbsp;환경&nbsp;구축<br/><kbd><b>공통</b></kbd><br/>·&nbsp;공통&nbsp;코드&nbsp;·&nbsp;예외<br/>·&nbsp;Swagger&nbsp;설정<br/>·&nbsp;CI&nbsp;·&nbsp;협업&nbsp;자동화<br/>·&nbsp;배치&nbsp;중복&nbsp;실행&nbsp;방지<br/><kbd><b>발표&nbsp;·&nbsp;문서</b></kbd><br/>·&nbsp;최종&nbsp;발표&nbsp;PPT&nbsp;·&nbsp;영상<br/>·&nbsp;README&nbsp;작성</sub></td>
   <td align="center" valign="top"><b>정수환</b><br/>팀원<br/><br/><sub><kbd><b>댓글&nbsp;도메인</b></kbd><br/>·&nbsp;댓글&nbsp;등록&nbsp;·&nbsp;수정<br/>·&nbsp;댓글&nbsp;논리&nbsp;·&nbsp;물리&nbsp;삭제<br/>·&nbsp;기사별&nbsp;댓글&nbsp;목록&nbsp;조회<br/>·&nbsp;댓글&nbsp;좋아요&nbsp;·&nbsp;취소</sub></td>
 </tr>
 </table>
@@ -95,7 +91,7 @@
 | **공통 설계** | `10.12 ~ 10.21` | 요구사항 분석, 팀 ERD, 팀 컨벤션, 패키지 · 엔티티 · 인터페이스 설계<br>프로젝트 초기 세팅, 공통 예외 · 응답 포맷, CI 구성 |
 | **1차 개발** | `10.21 ~ 10.27` | 1차 스프린트: 도메인별 핵심 기능 구현 (사용자 · 관심사 · 뉴스 · 댓글 · 알림) |
 | **중간 발표** | `10.28` | 중간 발표 |
-| **2차 개발** | `10.29 ~ 11.05` | 2차 스프린트: 남은 도메인별 핵심 기능 구현 (사용자 · 관심사 · 뉴스 · 댓글 · 알림)<br>배치 · 백업 · 모니터링 등 심화 기능, 리팩토링 |
+| **2차 개발** | `10.29 ~ 11.06` | 2차 스프린트: 남은 도메인별 핵심 기능 구현 (사용자 · 관심사 · 뉴스 · 댓글 · 알림)<br>배치 · 백업 · 모니터링 등 심화 기능, 리팩토링 |
 | **최종 발표 준비** | `11.06 ~ 11.08` | 최종 발표자료 준비 및 배포 검토 |
 | **마무리 · 발표** | `11.09` | 최종 발표 |
 | **배포** | `10.21 ~ 11.17` | AWS 배포 및 배포 자동화 |
@@ -113,14 +109,14 @@
   </td>
   <td align="center" width="50%">
     <img src="docs/images/screens/news.gif" width="100%"/><br/>
-    <b>뉴스 기사 목록</b> <sub>(구현 후 수정 예정)</sub><br/>
+    <b>뉴스 기사 목록</b><br/>
     <sub>검색 · 정렬 (게시일 · 조회수 · 댓글수) · 필터</sub>
   </td>
 </tr>
 <tr>
   <td align="center" width="50%">
     <img src="docs/images/screens/detail.gif" width="100%"/><br/>
-    <b>기사 상세 · 댓글</b> <sub>(구현 후 수정 예정)</sub><br/>
+    <b>기사 상세 · 댓글</b><br/>
     <sub>기사 요약 · 댓글 목록 · 좋아요 수</sub>
   </td>
   <td align="center" width="50%">
@@ -132,12 +128,12 @@
 <tr>
   <td align="center" width="50%">
     <img src="docs/images/screens/activities.gif" width="100%"/><br/>
-    <b>사용자 활동 내역</b> <sub>(구현 후 수정 예정)</sub><br/>
+    <b>사용자 활동 내역</b><br/>
     <sub>작성한 댓글 · 좋아요한 댓글 · 최근 본 기사</sub>
   </td>
   <td align="center" width="50%">
     <img src="docs/images/screens/notification.gif" width="100%"/><br/>
-    <b>알림</b> <sub>(구현 후 수정 예정)</sub><br/>
+    <b>알림</b><br/>
     <sub>구독 관심사 새 기사 · 댓글 좋아요 알림</sub>
   </td>
 </tr>
@@ -150,19 +146,19 @@
 | 구분 | 기술 |
 | :--- | :--- |
 | **Language** | ![Java](https://img.shields.io/badge/Java-17-3A6E8F?logo=openjdk&logoColor=white&style=flat-square&labelColor=475569) |
-| **Backend** | ![QueryDSL](https://img.shields.io/badge/QueryDSL-4A6A8F?style=flat-square) ![Lombok](https://img.shields.io/badge/Lombok-8F6A3F?style=flat-square)<br>![Spring](https://img.shields.io/badge/Spring-Boot%203.5.16%20%7C%20Data%20JPA%20%7C%20Batch%20%7C%20Actuator-5A8F4A?logo=spring&logoColor=white&style=flat-square&labelColor=475569) |
-| **Database** | ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-3B5F9E?logo=postgresql&logoColor=white&style=flat-square) ![MongoDB](https://img.shields.io/badge/MongoDB-3F7F4A?logo=mongodb&logoColor=white&style=flat-square) |
-| **Cloud & Infra** | ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white&style=flat-square) ![AWS](https://img.shields.io/badge/AWS-ECS%20%7C%20ECR%20%7C%20RDS%20%7C%20S3-232F3E?style=flat-square&labelColor=475569) |
-| **Monitoring** | ![Prometheus](https://img.shields.io/badge/Prometheus-A8573A?logo=prometheus&logoColor=white&style=flat-square) ![Grafana](https://img.shields.io/badge/Grafana-A8743A?logo=grafana&logoColor=white&style=flat-square) ![CloudWatch](https://img.shields.io/badge/AWS-CloudWatch-232F3E?style=flat-square&labelColor=475569) |
+| **Backend** | ![QueryDSL](https://img.shields.io/badge/QueryDSL-6.10.1-4A6A8F?style=flat-square&labelColor=475569) ![ShedLock](https://img.shields.io/badge/ShedLock-6.10.0-5E6A8F?style=flat-square&labelColor=475569) ![Lombok](https://img.shields.io/badge/Lombok-8F6A3F?style=flat-square)<br>![Spring](https://img.shields.io/badge/Spring-Boot%203.5.16%20%7C%20Data%20JPA%20%7C%20Batch%20%7C%20Actuator-5A8F4A?logo=spring&logoColor=white&style=flat-square&labelColor=475569) |
+| **Database** | ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-3B5F9E?logo=postgresql&logoColor=white&style=flat-square&labelColor=475569) ![MongoDB](https://img.shields.io/badge/MongoDB-7-3F7F4A?logo=mongodb&logoColor=white&style=flat-square&labelColor=475569) |
+| **Cloud & Infra** | ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white&style=flat-square) ![AWS](https://img.shields.io/badge/AWS-ECS%20%28EC2%29%20%7C%20ECR%20%7C%20ALB%20%7C%20RDS%20%7C%20S3%20%7C%20SSM-232F3E?style=flat-square&labelColor=475569) |
+| **Monitoring** | ![Prometheus](https://img.shields.io/badge/Prometheus-A8573A?logo=prometheus&logoColor=white&style=flat-square) ![Grafana](https://img.shields.io/badge/Grafana-A8743A?logo=grafana&logoColor=white&style=flat-square) ![CloudWatch](https://img.shields.io/badge/AWS-CloudWatch-232F3E?style=flat-square&labelColor=475569) ![Micrometer](https://img.shields.io/badge/Micrometer-3F6E7F?style=flat-square) |
 | **CI/CD** | ![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-3B6FA8?logo=githubactions&logoColor=white&style=flat-square) ![Gradle](https://img.shields.io/badge/Gradle-02303A?logo=gradle&logoColor=white&style=flat-square) |
-| **Test & Quality** | ![JUnit5](https://img.shields.io/badge/JUnit5-3F7F5E?logo=junit5&logoColor=white&style=flat-square) ![Mockito](https://img.shields.io/badge/Mockito-6A4F8F?style=flat-square) ![JaCoCo](https://img.shields.io/badge/JaCoCo-3F7F7F?style=flat-square) ![Codecov](https://img.shields.io/badge/Codecov-A8476F?logo=codecov&logoColor=white&style=flat-square)<br>![Testcontainers](https://img.shields.io/badge/Testcontainers-3A6E8F?logo=testcontainers&logoColor=white&style=flat-square) ![ArchUnit](https://img.shields.io/badge/ArchUnit-5E6A8F?style=flat-square) |
+| **Test & Quality** | ![JUnit5](https://img.shields.io/badge/JUnit5-3F7F5E?logo=junit5&logoColor=white&style=flat-square) ![Mockito](https://img.shields.io/badge/Mockito-6A4F8F?style=flat-square) ![JaCoCo](https://img.shields.io/badge/JaCoCo-3F7F7F?style=flat-square) ![Codecov](https://img.shields.io/badge/Codecov-A8476F?logo=codecov&logoColor=white&style=flat-square)<br>![Testcontainers](https://img.shields.io/badge/Testcontainers-3A6E8F?logo=testcontainers&logoColor=white&style=flat-square) ![ArchUnit](https://img.shields.io/badge/ArchUnit-5E6A8F?style=flat-square) ![Checkstyle](https://img.shields.io/badge/Checkstyle-6A7F3F?style=flat-square) ![Spotless](https://img.shields.io/badge/Spotless-3F5E8F?style=flat-square) |
 | **Docs** | ![Swagger](https://img.shields.io/badge/Swagger-5E8F3A?logo=swagger&logoColor=white&style=flat-square) |
 | **Review** | ![CodeRabbit](https://img.shields.io/badge/CodeRabbit-A8743A?logo=coderabbit&logoColor=white&style=flat-square) ![Claude Code](https://img.shields.io/badge/Claude%20Code-9E5A4A?logo=claude&logoColor=white&style=flat-square) |
 | **Collaboration** | ![GitHub](https://img.shields.io/badge/GitHub-181717?logo=github&logoColor=white&style=flat-square) ![Notion](https://img.shields.io/badge/Notion-787774?logo=notion&logoColor=white&style=flat-square) ![Discord](https://img.shields.io/badge/Discord-5865F2?logo=discord&logoColor=white&style=flat-square) |
 
 ---
 
-## 📌 주요 기능 (담당자 추후 작성 예정)
+## 📌 주요 기능
 
 <a id="feature-1"></a>
 
@@ -178,18 +174,38 @@
 - 이메일 중복 검사 및 입력값 검증
 - 사용자 논리 삭제(탈퇴)
 - 논리 삭제 후 일정 기간 경과 시 연관 데이터와 함께 물리 삭제
-- 요청 헤더 기반 사용자 식별
 
 ### 💡 구현 포인트
 
-- 활성 사용자 조회: 탈퇴(논리 삭제)한 사용자는 로그인 · 조회 대상에서 빠지도록 사용자 조회를 활성 사용자 기준으로 통일하고, 여러 명을 한 번에 조회하는 메서드도 제공 ([#128](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/128), [#179](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/179), [#181](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/181))
-- 이벤트 발행: 가입 · 닉네임 수정 · 물리 삭제 시 이벤트를 발행해, 활동 내역 등 다른 도메인이 사용자 코드에 직접 의존하지 않고 후속 처리 ([#185](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/185), [#200](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/200))
-- 회원가입: 입력값을 검증하고, 이미 가입된 이메일이면 409(`USER_EMAIL_DUPLICATED`)로 응답 ([#159](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/159))
-  <br><img width="600" alt="회원가입 이메일 중복 409 응답" src="docs/images/screens/user-signup-409.png" />
-- 로그인 · 닉네임 수정: 이메일 · 비밀번호 중 무엇이 틀려도 같은 에러로 응답해 가입 여부를 노출하지 않고, 탈퇴한 사용자는 로그인 · 수정 대상에서 제외 ([#187](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/187), [#211](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/211))
-- 논리 · 물리 삭제: 탈퇴 시 삭제 표시만 하고, 물리 삭제는 이미 논리 삭제된 사용자만 대상으로 연관 데이터까지 함께 삭제 ([#252](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/252), [#271](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/271))
-- Swagger: 사용자 API별 설명과 에러 응답 예시 추가 ([#265](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/265))
-- 서비스 · 컨트롤러 모두 테스트 먼저 작성(Red) → 구현(Green) → 정리(Refactor) 순서로 개발
+> 관련 이슈: [#3](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/3) (하위 이슈 · PR은 부모 이슈에서 확인)
+
+- **활성 사용자 조회 기준 통일**
+    - 다른 도메인은 `UserUseCase`로만 사용자를 꺼내고, 탈퇴한 사용자는 자동으로 404
+    - 여러 명을 한 번에 조회할 때는 탈퇴자를 예외 없이 빼서, 한 명 때문에 알림 전체가 실패하지 않게 함
+- **회원가입 검증과 이메일 중복 409**
+    - 비밀번호는 BCrypt로 저장하고, 응답 모델에는 비밀번호 칸을 두지 않음
+    - 중복 검사에 탈퇴자(1일 보관)도 포함해, DB 유니크 위반 전에 `USER_EMAIL_DUPLICATED`(409)로 응답
+    <br><img width="600" alt="회원가입 이메일 중복 409 응답" src="docs/images/screens/user-signup-409.png" />
+- **로그인 실패 응답 통일**
+    - 없는 이메일 · 틀린 비밀번호 · 탈퇴자 모두 같은 401 `USER_LOGIN_FAILED`로 응답해 가입 여부를 노출하지 않음
+    - 없는 이메일도 같은 비밀번호 비교 과정을 거친 뒤 실패해, 응답 시간으로도 구분하기 어렵게 함
+    <br><img width="700" alt="없는 이메일과 틀린 비밀번호 로그인이 같은 401 응답" src="docs/images/screens/user-login-401.png" />
+- **탈퇴(논리 삭제)는 시각만 기록**
+    - 다시 요청해도 처음 탈퇴 시각을 덮어쓰지 않아, 1일 보관 기준이 밀리지 않음
+    - 추가 코드 없이 기존 조회 조건만으로 로그인 · 수정 · 알림 대상에서 제외
+- **물리 삭제: 비관적 잠금으로 중복 차감 방지**
+    - 같은 사용자를 동시에 두 번 지우면 구독자 수가 두 번 줄어드는 문제를 재현하고, `SELECT ... FOR UPDATE`로 해결해 동시성 통합 테스트로 확인
+    - 연관 데이터는 DB `ON DELETE CASCADE`에 맡겨, 사용자 코드가 다른 도메인 Repository에 의존하지 않음
+- **이벤트로 도메인 분리**
+    - 구독자 수 · 댓글 수 차감은 삭제 직전 같은 트랜잭션에서, MongoDB 활동 내역은 커밋 뒤 비동기(`AFTER_COMMIT` · `@Async`)로 처리
+    - 이벤트 클래스를 먼저 develop에 올려, 리스너 담당자가 병렬로 개발할 수 있게 함
+- **탈퇴 1일 지난 사용자 완전 삭제 배치**
+    - 매시 정각 Spring Batch Job(Tasklet)으로 실행, 100명씩 묶어 잠금 → 이벤트 1번 → `DELETE ... IN` 1번으로 처리하고 묶음마다 따로 커밋
+    - 묶음이 실패하면 그 묶음만 한 명씩 다시 시도하고(이미 지워진 사용자는 건너뜀), 남은 사용자는 다음 실행에서 처리
+    - Spring Batch 전환은 배치 담당(박수민)
+- **TDD와 문서화**
+    - 기능마다 시그니처 → 테스트(Red) → 구현(Green) → 정리(Refactor) 순서로 커밋
+    - Swagger 설명을 코드잇 API 명세와 대조해 맞추고, 삭제 흐름은 `docs/USER_HARD_DELETE.md`로 정리
 
 
 <p align="right"><a href="#feature-1">⬆️ 맨 위로 (제목을 눌러 접기)</a></p>
@@ -214,7 +230,25 @@
 
 ### 💡 구현 포인트
 
-- (프로젝트 진행 후 작성 예정 : 구현 스크린샷 또는 PR/이슈 번호 링크 기재)
+> 관련 이슈: [#4](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/4) (하위 이슈 · PR은 부모 이슈에서 확인)
+
+- **이름 유사도 80% 검사**
+    - 이름을 공백 제거 · 소문자 · 한글 자모 분리로 정리한 뒤 레벤슈타인 거리로 유사도를 계산해, 80% 이상 비슷하면 409(`SIMILAR_NAME_CONFLICT`)로 응답 (응답에 비슷한 기존 이름과 유사도 포함)
+    - 동시에 같은 이름이 등록되는 경우는 이름 유니크 제약으로 한 번 더 막고 같은 409로 변환
+- **키워드 규칙**
+    - 키워드는 1~10개만 허용(요청 DTO와 엔티티에서 검증)하고, 요청 안의 중복 키워드는 엔티티에서 거절
+    - 키워드 수정 시 빠진 키워드만 지우고 새 키워드만 추가
+- **구독자 수 원자적 갱신**
+    - 엔티티 값을 읽어 바꾸지 않고 DB에서 `subscriberCount ± 1`로 직접 증감해, 동시에 구독해도 숫자가 틀어지지 않음
+    - 감소는 0보다 클 때만 실행하고, DB `CHECK` 제약으로 0 아래로 내려가지 않게 한 번 더 방어
+- **중복 구독 방지**
+    - 먼저 구독 여부를 확인하고, 동시에 들어온 요청은 (사용자, 관심사) 유니크 제약으로 막아 모두 409(`SUBSCRIPTION_ALREADY_EXISTS`)로 응답
+- **QueryDSL 검색 · 커서 페이지네이션**
+    - 검색어 하나로 관심사 이름 또는 키워드를 대소문자 구분 없이 부분 일치 검색
+    - 이름 · 구독자 수 정렬에 생성 시각 · id를 보조로 써서 커서로 다음 페이지를 이어 가고, 내 구독 여부는 IN 조회 한 번으로 채움
+- **삭제 · 이벤트 · 탈퇴 정리**
+    - 구독 · 구독 취소 · 키워드 수정 · 삭제 때 이벤트를 발행해 활동 내역(MongoDB)에 반영
+    - 사용자 물리 삭제 직전에 그 사용자들이 구독하던 관심사의 구독자 수를 UPDATE 한 번으로 정리
 
 
 <p align="right"><a href="#feature-2">⬆️ 맨 위로 (제목을 눌러 접기)</a></p>
@@ -231,9 +265,9 @@
 
 ### ✨ 기능
 
-- `@Scheduled` 기반 주기적 뉴스 수집
+- `@Scheduled`가 Spring Batch Job을 실행해 매시 정각 뉴스 수집
 - Naver 검색 API · 언론사 RSS 기사 수집
-- 관심사 키워드가 포함된 기사만 저장, 원본 URL 기준 중복 제거
+- 관심사 키워드로 네이버 검색, RSS는 제목 · 요약에 키워드가 있는 기사만 저장, 원본 URL 기준 중복 제거
 - 제목 · 요약 키워드 검색, 관심사 · 출처 · 날짜 범위 필터
 - 날짜 · 댓글 수 · 조회 수 기준 정렬 및 Cursor Pagination
 - 기사 뷰 등록(사용자별 중복 조회 방지)
@@ -241,7 +275,27 @@
 
 ### 💡 구현 포인트
 
-- (프로젝트 진행 후 작성 예정 : 구현 스크린샷 또는 PR/이슈 번호 링크 기재)
+> 관련 이슈: [#5](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/5) (하위 이슈 · PR은 부모 이슈에서 확인)
+
+- **QueryDSL 목록 필터 · 커서 페이지네이션**
+    - 제목 · 요약 검색어(부분 일치), 관심사, 출처, 게시일 범위로 필터링하고 논리 삭제된 기사는 항상 제외
+    - 게시일 · 댓글 수 · 조회 수 정렬에 커서(`cursor` · `after`)로 다음 페이지를 이어 가고, 둘 중 하나만 오면 400
+- **조회 수는 사용자당 한 번**
+    - `INSERT ... ON CONFLICT DO NOTHING`으로 처음 본 경우에만 조회 기록을 남기고, 그때만 조회 수를 1 올림
+    - 다시 보면 마지막 조회 시각만 더 최근 값으로 갱신
+- **네이버 뉴스 · 언론사 RSS 수집**
+    - 네이버 뉴스 API는 키워드마다 100건씩 최대 10번(1,000건)까지 최신순으로 조회하고, 제목 · 요약의 HTML 태그는 제거
+    - 한국경제 · 조선일보 · 연합뉴스 RSS를 파싱해, 제목 · 요약에 관심사 키워드가 들어간 기사만 그 관심사의 기사로 연결
+    - 외부 호출에 연결 3초 · 응답 10초 타임아웃을 두고, 변환에 실패한 기사 한 건만 건너뜀
+- **중복 없는 저장과 관심사 연결**
+    - 수집 결과 안에서 원본 URL 중복을 없애고, DB `source_url` 유니크 제약으로 한 번 더 막음
+    - 이미 있는 기사는 다시 저장하지 않고 관심사 연결만 추가하며, 논리 삭제된 기사는 되살리지 않음
+- **S3 백업 (JSON + gzip)**
+    - 전날 발행된 기사(논리 삭제 제외)를 1,000건씩 읽어, 연결된 관심사 ID와 함께 JSON으로 만들고 gzip으로 압축해 날짜별 · 파트별 파일로 업로드
+    - Spring Batch Job 구성 · 재시작 지원은 배치 담당(박수민)이 진행
+- **백업 복구 API**
+    - 최대 31일 범위를 받아 날짜별 백업 파일을 읽고, DB에 같은 원본 URL이 없는 유실 기사만 골라냄
+    - 그중 백업 당시 연결된 관심사가 지금도 하나 이상 남아 있는 기사만 다시 저장해 그 관심사에만 연결하고, 날짜별 복구된 기사 ID · 건수로 응답
 
 
 <p align="right"><a href="#feature-3">⬆️ 맨 위로 (제목을 눌러 접기)</a></p>
@@ -264,10 +318,21 @@
 
 ### 💡 구현 포인트
 
-- 기사 논리 삭제 · 물리 삭제 이벤트를 먼저 정의해, 연관 도메인 담당자가 구독 처리를 병렬로 구현할 수 있게 함 ([#277](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/277), [#280](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/280))
-- 출처 목록 조회: 등록된 기사 출처를 중복 없이 반환해 기사 목록의 출처 필터 선택지로 사용 ([#35](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/35))
-- 논리 삭제: 댓글 등 연관 정보는 유지한 채 삭제 표시만 하고, 삭제 후 이벤트로 활동 내역에서 해당 기사 제외 ([#37](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/37))
-- 물리 삭제: 댓글 · 댓글 좋아요 · 기사 조회 기록 · 기사-관심사 연결까지 함께 삭제하고, 테스트 코드로 검증 ([#38](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/38))
+> 관련 이슈: [#35](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/35) · [#37](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/37) · [#38](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/38)
+
+- **삭제 이벤트를 먼저 정의해 병렬 개발**
+    - 발행 시점을 이름의 시제로 구분: 물리 삭제는 지우기 직전(`ArticleHardDeletingEvent`), 논리 삭제는 표시한 뒤(`ArticleSoftDeletedEvent`)
+    - 이벤트 클래스를 먼저 올려, 활동 내역 · 댓글 담당자가 받는 쪽을 동시에 구현
+- **출처 목록 조회**
+    - 수집 출처(`ArticleSourceType`: NAVER · HANKYUNG · CHOSUN · YEONHAP) 전체를 반환해 기사 목록의 출처 필터 선택지로 사용
+    <br><img width="700" alt="출처 목록 API 응답과 뉴스 화면 출처 필터" src="docs/images/screens/article-sources.png" />
+- **조건부 UPDATE 한 번으로 논리 삭제**
+    - `WHERE deletedAt IS NULL` 조건으로 바뀐 줄이 0이면 404 — 조회 후 수정하는 두 단계가 없어 처음 삭제 시각이 유지됨
+    - 커밋 뒤 이벤트로 활동 내역(MongoDB)에서 해당 기사 제외
+- **물리 삭제는 DB CASCADE + FK 없는 데이터만 이벤트로**
+    - 댓글 · 댓글 좋아요 · 기사 조회 기록 · 기사-관심사 연결은 DB `ON DELETE CASCADE`로 함께 삭제
+    - FK가 없는 댓글 좋아요 알림은 같은 트랜잭션의 리스너가, 활동 내역은 커밋 뒤 비동기로 정리
+    - 화면에 없는 API라 통합 테스트로 연관 데이터 5종이 모두 지워지는지 확인
 - 서비스 · 컨트롤러 모두 테스트 먼저 작성(Red) → 구현(Green) → 정리(Refactor) 순서로 개발
 
 
@@ -278,18 +343,44 @@
 <a id="feature-5"></a>
 
 <details>
-<summary><b>배치</b> — 박수민</summary>
+<summary><b>사용자 · 뉴스 기사 · 알림 · S3 · 로그 백업 배치 작업 (5개)</b> — 박수민</summary>
 
 ### ✨ 기능
 
-- Spring Batch 기반 배치 작업 공통 구조(Job · Step 템플릿) 설계
-- `@Scheduled` 기반 배치 스케줄링 공통 설정
-- 배치 실행 결과 로그 · 재시도 정책 관리
-- 배치 커스텀 메트릭(수집 성공 · 실패 건수 등) Actuator 모니터링
+- 배치 작업 5종을 Spring Batch Job으로 관리: 뉴스 기사 수집 · 뉴스 기사 S3 백업 · 알림 삭제 · 사용자 완전 삭제 · 로그 S3 백업
+- `@Scheduled` 스케줄러가 날짜 파라미터를 넣어 Job 실행 (서버 기동 시 자동 실행은 끔)
+- 날짜별 로그 파일을 tar.gz로 묶어 AWS S3에 적재
+- 배치 커스텀 메트릭(수집 · 저장 · 삭제 · 업로드 건수) Actuator 수집
 
 ### 💡 구현 포인트
 
-- (프로젝트 진행 후 작성 예정 : 구현 스크린샷 또는 PR/이슈 번호 링크 기재)
+- **배치 5종 Spring Batch 전환** ([#260](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/260), [#317](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/317))
+
+    | 배치 | 처리 방식 | 실행 주기 | 이슈 |
+    | --- | --- | --- | --- |
+    | 뉴스 기사 수집 | Chunk (관심사 1개씩) | 매시 정각 | [#329](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/329) |
+    | 알림 삭제 | Tasklet | 매일 03시 | [#330](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/330) |
+    | 사용자 완전 삭제 | Tasklet | 매시 정각 | [#331](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/331) |
+    | 뉴스 기사 S3 백업 | Chunk (기사 1,000건씩 파일 1개) | 매일 오전 1시 | [#332](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/332) |
+    | 로그 S3 백업 | Chunk (로그 파일 10개씩 tar.gz 1개) | 매일 03시 | [#333](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/333) |
+
+    - Job마다 `JobConfig` · `Scheduler` · `Listener` · `Metrics`로 나눠 같은 구조로 구성
+- **커밋된 건수만 메트릭에 반영**
+    - 성공 건수는 청크 커밋 뒤(`afterChunk`)나 Step 완료(`COMPLETED`) 때만 올려, 롤백된 작업이 숫자에 섞이지 않게 함
+    - 메트릭: `batch.article.collection.*` · `batch.article.backup.uploaded.articles` · `batch.notification.cleanup.deleted` · `batch.user.cleanup.deleted` · `batch.log.backup.*`
+- **뉴스 기사 수집: 일부 출처가 실패해도 끝까지 수집** ([#260](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/260))
+    - RSS 3곳은 Step마다 한 번만 받아 관심사별로 재사용하고, Naver는 키워드마다 호출
+    - 외부 API 실패는 출처별 실패 메트릭만 올리고 나머지 관심사 수집 · 저장을 마친 뒤, Job을 `FAILED`로 표시
+- **S3 백업 재시작** ([#317](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/317))
+    - 기사 · 로그 백업은 마지막 커서와 파일 번호를 `ExecutionContext`에 저장해, 실패 후 같은 날짜로 다시 실행하면 실패한 파일부터 이어서 업로드
+    - 이미 완료된 날짜는 다시 실행되지 않음 (업로드 뒤 커밋이 실패한 파일은 같은 이름으로 다시 올려 덮어씀)
+- **로그 백업** ([#266](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/266), [#317](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/317))
+    - 전날 로그 파일을 10개씩 묶어 tar.gz로 압축한 뒤 `logs/{날짜}/` 아래에 업로드
+    - 전체 파일 수 · 업로드된 파일 수를 메트릭으로 남겨 누락 여부 확인
+- **사용자 완전 삭제: 이미 지운 사용자는 유지** ([#317](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/317))
+    - Step 전체를 한 트랜잭션으로 묶지 않아(`ResourcelessTransactionManager`), 100명 단위로 커밋한 삭제가 뒤의 실패로 함께 롤백되지 않게 함
+- **테스트**
+    - Job 통합 테스트로 실패 → 재시작 → 이어서 처리, 커밋 실패 시 집계 제외 같은 시나리오 검증
 
 
 <p align="right"><a href="#feature-5">⬆️ 맨 위로 (제목을 눌러 접기)</a></p>
@@ -356,7 +447,21 @@
 
 ### 💡 구현 포인트
 
-- (프로젝트 진행 후 작성 예정 : 구현 스크린샷 또는 PR/이슈 번호 링크 기재)
+> 관련 이슈: [#7](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/7) (하위 이슈 · PR은 부모 이슈에서 확인)
+
+- **새 기사 알림은 커밋 뒤 비동기로 생성**
+    - 기사 저장이 커밋된 뒤에만 `ArticlesSavedEvent`를 받아 별도 스레드에서 알림을 만들어, 알림이 실패해도 기사 저장에는 영향이 없음
+    - 구독자 ID 조회 1번 + 탈퇴하지 않은 사용자 IN 조회 1번으로 모아(구독자마다 반복 조회하지 않음) 알림을 한꺼번에 저장
+- **댓글 좋아요 알림**
+    - `CommentLikedEvent`도 같은 방식(`AFTER_COMMIT` · `@Async`)으로 처리하고, 내 댓글에 내가 누른 좋아요는 알림을 만들지 않음
+- **미확인 알림 커서 페이지네이션**
+    - 생성 시각 → id 순으로 정렬하고 두 값을 커서로 써서, 같은 시각에 만들어진 알림도 빠짐없이 다음 페이지로 넘김
+    - `limit`보다 1개 더 조회해 다음 페이지 여부를 판단하고, 커서 값이 잘못되면 400
+- **확인 처리**
+    - 전체 확인은 알림을 하나씩 불러오지 않고 UPDATE 한 번으로 처리
+    - 다른 사람의 알림 ID로 요청하면 403이 아닌 404로 응답해, 그 알림이 있는지조차 알려 주지 않음
+- **확인 후 7일 지난 알림 자동 삭제**
+    - 매일 새벽 3시에 확인 후 7일이 지난 알림을 DELETE 한 번으로 정리 (Spring Batch Job 전환은 배치 담당 박수민)
 
 
 <p align="right"><a href="#feature-7">⬆️ 맨 위로 (제목을 눌러 접기)</a></p>
@@ -377,11 +482,28 @@
 - 최근 작성한 댓글 · 최근 좋아요 누른 댓글 조회
 - 최근 본 뉴스 기사 조회
 - 댓글 · 좋아요 · 기사 열람 · 구독 내역 통합 응답
-- MongoDB 기반 활동 내역 조회 성능 개선(심화)
+- MongoDB 역정규화 문서로 활동 내역 단일 조회(심화)
 
 ### 💡 구현 포인트
 
-- (프로젝트 진행 후 작성 예정 : 구현 스크린샷 또는 PR/이슈 번호 링크 기재)
+> 관련 이슈: [#8](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/8) (하위 이슈 · PR은 부모 이슈에서 확인)
+
+- **사용자당 MongoDB 문서 하나로 역정규화**
+    - `user_activities` 컬렉션에 사용자마다 문서 하나를 두고, 구독 · 작성한 댓글 · 좋아요한 댓글 · 본 기사를 모두 담아 조회 한 번(RDB 조인 없음)으로 응답
+    - 기본 버전은 RDB 조인으로 먼저 만들고, MongoDB 조회 모델로 교체
+- **최근 목록은 20개 저장, 10개 표시**
+    - 새 항목은 맨 앞에 넣고 20개로 잘라 저장하고, 화면에는 10개만 보여 줌 — 일부가 삭제 · 취소돼도 10개를 채우기 위함
+    - 이미 본 기사를 다시 보면 기존 항목을 빼고 맨 앞에 다시 넣음
+- **이벤트로 문서 부분 갱신**
+    - 사용자 · 구독 · 관심사 · 댓글 · 좋아요 · 기사 이벤트 15종을 커밋 뒤(`AFTER_COMMIT`) 활동 내역 전용 스레드에서 처리해, PostgreSQL이 롤백되면 MongoDB는 건드리지 않음
+    - 삭제는 `$pull`, 댓글 내용 · 좋아요 수 변경은 `arrayFilters`로 관련된 모든 사용자 문서를 한 번에 수정
+- **사용자 정보 변경 반영**
+    - 가입 시 빈 문서를 만들고(이벤트가 두 번 와도 덮어쓰지 않음), 닉네임 변경 · 물리 삭제는 팀에서 정한 방식대로 반영 (ADR [#164](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/164))
+- **문서가 없으면 RDB에서 다시 만들기 (안전망)**
+    - MongoDB 도입 전 가입자처럼 문서가 없는 사용자는 RDB 조인으로 활동 내역을 다시 만들어 저장한 뒤 응답
+    - 조회 수 · 댓글 수처럼 자주 바뀌는 숫자는 조회할 때 RDB의 현재 값으로 덮어씀
+- **Testcontainers로 MongoDB 테스트**
+    - 팀 공통 Testcontainers(MongoDB 7)에서 문서 저장 · 조회 · 부분 갱신을 통합 테스트하고, 리스너는 단위 테스트로 검증
 
 
 <p align="right"><a href="#feature-8">⬆️ 맨 위로 (제목을 눌러 접기)</a></p>
@@ -407,12 +529,31 @@
 
 ### 💡 구현 포인트
 
-- CI: PR마다 빌드 · 테스트를 자동 실행하고, JaCoCo 커버리지를 Codecov 배지로 표시 (결과 대기 시간 초과 시 직전 값 유지) ([#88](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/88), [#205](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/205))
-- 자동 배포: push 시 Docker 이미지 빌드 → Amazon ECR 업로드 → Amazon ECS 배포까지 GitHub Actions로 자동화 ([#90](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/90))
-  <br><img width="600" alt="ECS 배포 워크플로 연속 성공" src="docs/images/screens/deploy-runs.png" />
-- 모니터링 보안: `/actuator/prometheus`는 외부 접근을 막고 내부 Prometheus만 수집 ([#86](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/86))
-- 버전 추적: 모니터링 이미지를 latest 대신 커밋 번호 태그로 배포해, 지금 실행 중인 버전을 바로 확인 ([#251](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/251))
-- 트러블슈팅: Prometheus · Grafana 연동이 끊긴 문제 복구 ([#186](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/186)), 운영 컨테이너의 로그 폴더 쓰기 권한 오류 해결 ([#269](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/269))
+> 관련 이슈: [#2](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/2) (하위 이슈 · PR은 부모 이슈에서 확인)
+
+- **CI 파이프라인**
+    - PR마다 빌드 · 테스트를 실행하고, 문서 · 프론트엔드 정적 파일만 바뀐 PR은 빌드를 건너뛰되 필수 체크는 통과로 처리
+    - 테스트 실패 · 커버리지 · Checkstyle 위반(이 PR에서 바뀐 줄 기준)을 PR마다 종류별 댓글 1개로 알림
+- **커버리지 관리**
+    - JaCoCo 줄 커버리지 80% 미만이면 빌드 실패 (DTO · 설정 클래스 등 제외)
+    - Codecov 배지는 전용 브랜치에 갱신하고, 결과 대기가 5분을 넘기면 직전 값을 유지
+- **자동 배포 (ECR → ECS)**
+    - develop 머지 후 CI가 성공하면 OIDC로 AWS 역할을 받아(장기 키 없음) 커밋 번호 태그 이미지 빌드 → ECR 업로드 → ECS 배포 · 안정화 대기
+    - 이미 있는 태그는 다시 빌드하지 않아 재실행해도 안전하고, ECR 이미지는 최신 2개만 보관
+    <br><img width="600" alt="ECS 배포 워크플로 연속 성공" src="docs/images/screens/deploy-runs.png" />
+- **배포 순서 꼬임 방지**
+    - 배포 전과 배포 직전 두 번 develop 최신 커밋인지 확인하고, 더 최신 커밋이 있으면 실패가 아닌 "양보"로 정상 종료
+    - 먼저 올린 커밋의 CI가 늦게 끝나 옛 코드로 덮어쓰는 일을 막음
+- **배포 실패 진단**
+    - 실패하면 ECS 이벤트 · 멈춘 태스크 사유 · 최근 앱 로그를 Actions 로그에 출력하고, 실행마다 배포 요약표를 남김
+    - 비root 컨테이너의 로그 폴더 쓰기 권한 문제를 로그 백업 배치가 돌기 전에 해결
+- **Actuator 보안**
+    - `/actuator/health`만 공개하고, `/actuator/prometheus`는 내부 IP가 아니면 404로 응답해 경로 자체를 숨김 (인코딩 우회 주소도 정리 후 판단)
+- **Prometheus · Grafana · CloudWatch**
+    - EC2 전환 뒤 끊긴 연동을 Cloud Map SRV 조회와 provisioning 파일로 복구하고, 모니터링 설정 · 이미지를 저장소에서 커밋 번호 태그로 관리
+    - 배치 5종의 실행 · 실패 · 처리량을 보여 주는 "Monew 배치 현황" 대시보드 구성 (Job 이름 한글 표시)
+    <br><img width="700" alt="Grafana Monew 배치 현황 대시보드" src="docs/images/screens/grafana-batch-dashboard.png" />
+    - 배치 지표 일부는 허용 목록 방식으로 CloudWatch에도 보내고, Grafana에서 CloudWatch 지표 · 로그를 함께 조회
 
 
 <p align="right"><a href="#feature-9">⬆️ 맨 위로 (제목을 눌러 접기)</a></p>
@@ -431,7 +572,21 @@
 
 ### 💡 구현 포인트
 
-- (프로젝트 진행 후 작성 예정 : 구현 스크린샷 또는 PR/이슈 번호 링크 기재)
+> 관련 이슈: [#73](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/73) (부모 이슈 [#1](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/1))
+
+- **헥사고날 패키지 구조**
+    - `adapter`(in: 컨트롤러 · 배치 · 이벤트 리스너 / out: DB · 외부 API) · `application`(UseCase · Port) · `domain`(엔티티) · `global`(공통)으로 나눠, 바깥 기술이 바뀌어도 핵심 로직은 그대로 두는 구조
+    - 요청 · 응답 DTO는 `adapter/in/controller`에 두어, 엔티티가 API 형식에 끌려가지 않게 함
+    - 모든 도메인이 같은 패키지 모양을 따라, 한 도메인을 알면 나머지도 바로 읽힘
+- **ERD 기반 엔티티 10개 설계**
+    - ERD Cloud에서 팀이 함께 정한 테이블 10개(사용자 · 관심사 · 키워드 · 구독 · 기사 · 기사-관심사 · 기사 조회 기록 · 댓글 · 댓글 좋아요 · 알림)를 엔티티로 작성
+    - 논리 삭제가 필요한 사용자 · 기사 · 댓글은 삭제 시각을 가진 공통 부모(`BaseSoftDeletableEntity`)를 상속하도록 설계
+- **중복은 DB 유니크 제약으로 차단**
+    - 이메일 · 기사 원본 URL · 관심사 이름, 그리고 (기사, 관심사) · (사용자, 기사 조회) · (사용자, 댓글 좋아요) · (사용자, 관심사 구독) 조합에 유니크 제약
+    - 동시에 같은 요청이 들어와도 애플리케이션 검사만으로 놓치는 중복을 DB에서 한 번 더 막음
+- **연관관계 · 생성 규칙 통일**
+    - `@ManyToOne` 연관관계는 모두 지연 로딩(`LAZY`)으로 통일해 필요할 때만 조회
+    - 기본 생성자는 `protected`로 막고, 엔티티는 `create()` 정적 팩토리로만 생성
 
 
 <p align="right"><a href="#feature-10">⬆️ 맨 위로 (제목을 눌러 접기)</a></p>
@@ -441,17 +596,35 @@
 <a id="feature-11"></a>
 
 <details>
-<summary><b>공통 (UseCase · 페이지네이션 · 요청자 ID)</b> — 박수민</summary>
+<summary><b>공통 (UseCase · 페이지네이션 · 요청자 ID · Bean Validation)</b> — 박수민</summary>
 
 ### ✨ 기능
 
 - 도메인별 UseCase · Port 정의
 - 커서 페이지네이션
 - 요청자 ID 처리
+- Bean Validation 공통 적용
 
 ### 💡 구현 포인트
 
-- (프로젝트 진행 후 작성 예정 : 구현 스크린샷 또는 PR/이슈 번호 링크 기재)
+> 관련 이슈: [#95](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/95) · [#139](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/139) (부모 이슈 [#1](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/1) · [#10](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/10))
+
+- **도메인별 UseCase · Port 먼저 정의**
+    - 기능 구현 전에 사용자를 뺀 5개 도메인(기사 · 댓글 · 관심사 · 알림 · 활동 내역)마다 "무엇을 제공하는지"를 `provided/{Domain}UseCase` 인터페이스 하나로 정의해, 담당자들이 같은 계약 위에서 병렬로 구현
+    - 저장소는 `required` Port와 `adapter/out` Adapter로 나누고, 기사 도메인에 예시를 만들어 다른 담당자가 같은 방식으로 따라 만들게 함
+- **공통 커서 페이지네이션**
+    - 목록 조회 조건은 도메인별 Query가 공통 계약 `PageQuery`(cursor · after · limit) · `SortedPageQuery`(+ 정렬 기준 · 방향)를 구현
+    - `limit`보다 1개 더 조회해 다음 페이지 여부를 판단하고, 마지막 요소의 커서(도메인에 따라 정렬 값 또는 id)와 생성 시각(보조 커서)으로 `PageResult`를 한 곳에서 조합
+    - 공통 `SortOrder` 인터페이스를 도메인별 정렬 enum이 구현해 다음 커서 값을 직접 뽑아, 도메인마다 커서 계산 코드를 반복하지 않음
+- **정렬 파라미터 자동 변환**
+    - `orderBy=publishDate` 같은 쿼리 문자열을 각 도메인의 정렬 enum(`SortOrder` 구현)으로 바꾸는 공통 변환기를 등록해, 잘못된 정렬 값은 컨트롤러에 닿기 전에 거부
+- **요청자 ID 처리**
+    - `@RequestId`가 붙은 API만 인터셉터가 `Monew-Request-User-ID` 헤더를 UUID로 바꿔 `RequestIdContext`(ThreadLocal)에 저장하고, 요청이 끝나면 비움
+    - 헤더가 없거나 UUID 형식이 아니면 400(`INVALID_REQUEST`)으로 응답
+    - `@RequestHeader`로 받는 방식과 비교한 뒤 인터셉터 방식으로 팀 결정(ADR [#103](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/103))
+- **Bean Validation 공통 적용**
+    - Application 계층 표시 어노테이션 `@ApplicationService`에 `@Validated`를 넣어, UseCase 인터페이스 파라미터에 붙인 `@Valid` · `@NotNull` · `@Min` 등이 메서드 실행 전에 자동으로 검사됨
+    - 도메인마다 서비스 안에 직접 쓰던 입력값 검사(`if (limit <= 0) throw …` 등)를 어노테이션으로 옮기는 기준이 됨 (도메인별 적용 [#239](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/239))
 
 
 <p align="right"><a href="#feature-11">⬆️ 맨 위로 (제목을 눌러 접기)</a></p>
@@ -474,13 +647,31 @@
 
 ### 💡 구현 포인트
 
-- 초기 세팅: 클론 후 프로젝트만 열면 Spotless · Checkstyle · IntelliJ 코드 스타일, 깃 훅, 테스트 환경이 자동 적용 ([#81](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/81), [#82](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/82))
-- 공통 코드 · 예외: `BaseEntity` 등 공통 코드와 `MonewException` · `GlobalExceptionHandler` 기반 공통 에러 응답 구성 ([#83](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/83))
-- 요청자 ID: `@RequestId`만 붙이면 Swagger에 요청자 ID 헤더가 자동으로 추가되고, 컨트롤러에서 받는 방식도 하나로 통일 ([#147](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/147))
-- 로그 추적: 요청별 ID · IP를 MDC로 남기고 비동기 스레드까지 이어 붙여, 한 요청의 로그를 끝까지 추적 ([#192](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/192))
-  <br><img width="700" alt="요청 ID가 붙은 콘솔 로그" src="docs/images/screens/mdc-log.png" />
-- Swagger 에러 응답: 공통 에러 응답 설정과 `ErrorResponse` 예시값으로 API마다 에러 형식 표시 ([#259](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/259))
-- 배치 중복 방지: ShedLock으로 같은 배치가 동시에 두 번 실행되지 않도록 공통 설정 ([#255](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/255))
+> 관련 이슈: [#1](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/1) · [#10](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/10) · Swagger [#232](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/232) (하위 이슈 · PR은 부모 이슈에서 확인)
+
+- **클론만 하면 끝나는 초기 세팅**
+    - 프로젝트를 열면(Gradle sync) 깃 훅 · 커밋 템플릿 · IntelliJ 코드 스타일이 자동 설치
+    - IntelliJ · Spotless · Checkstyle의 import 규칙을 맞춰, develop의 Checkstyle 위반 18건 → 0건
+- **깃 훅으로 커밋 규칙 자동화**
+    - `t1;` → `test(red) :` 같은 단축키 변환, 브랜치 이름의 이슈 번호 자동 삽입, 영어 Merge · Revert 제목 한글 변환
+    - 커밋 전 Spotless 자동 정리, push 전 포맷 검사 · 컴파일 (테스트는 CI에서)
+- **테스트 환경 · 구조 검사**
+    - Testcontainers로 실제 PostgreSQL 16 · MongoDB 7에서 통합 테스트 (`@IntegrationTest` · `@MongoIntegrationTest` 하나로 설정)
+    - ArchUnit으로 헥사고날 패키지 규칙 9개를 PR마다 검사 (경고만)
+- **공통 예외 · 에러 응답**
+    - `MonewException` + 도메인별 `ErrorType`으로 통일하고, 스프링 기본 에러도 같은 `ErrorResponse` 형식으로 응답
+    - 예상 못 한 500은 내부 예외 이름을 숨기고, 동시 수정 충돌은 500 대신 409로 응답
+- **요청 단위 로그 추적 (MDC)**
+    - 요청 ID · IP · 사용자 ID · 메서드 · URL을 모든 로그에 남기고(요청 ID · IP는 응답 헤더로도 반환), `@Async` 스레드까지 이어 붙여 한 요청의 로그를 끝까지 추적
+    <br><img width="700" alt="요청 ID가 붙은 콘솔 로그" src="docs/images/screens/mdc-log.png" />
+- **Swagger 공통 설정**
+    - `@RequestId`만 붙이면 요청자 ID 헤더(`Monew-Request-User-ID`) 입력칸이 자동으로 생김
+    - 모든 API에 500을 추가하고, 4xx · 5xx 응답 본문을 `ErrorResponse` 형식으로 자동 표시
+    <br><img width="700" alt="Swagger 요청자 ID 헤더 입력칸과 ErrorResponse 응답 형식" src="docs/images/screens/swagger-common.png" />
+- **배치 중복 실행 방지 (ShedLock)**
+    - 공통 Aspect로 모든 `@Scheduled`에 잠금을 걸어, 배포 중 앱 2개가 겹쳐도 한 회차에 한 번만 실행 (배치 코드는 수정 없음)
+- **SPA 라우팅**
+    - 프론트 화면 주소로 새로고침해도 404가 나지 않게 `index.html`로 연결하고, 없는 `/api/**` 주소는 원래의 404 · 405 응답을 그대로 반환
 
 
 <p align="right"><a href="#feature-12">⬆️ 맨 위로 (제목을 눌러 접기)</a></p>
@@ -491,12 +682,12 @@
 
 ## 📌 ERD
 
-PostgreSQL 10개 테이블 + MongoDB 1개 · 모든 테이블 공통 컬럼 `id`(uuid) · `created_at`
+PostgreSQL 도메인 테이블 10개 (ShedLock · Spring Batch 메타 테이블 제외) + MongoDB 1개 · 모든 테이블 공통 컬럼 `id`(uuid) · `created_at`
 
 <p align="center"><img width="1000" alt="ERD 전체 관계도" src="docs/images/erd.png" /></p>
 
 <details>
-<summary><b>1. 관심사 구독</b> — <code>interest_keyword · interest · subscription · users</code></summary>
+<summary><b>1. 관심사 구독</b> — <code>interest_keywords · interests · subscriptions · users</code></summary>
 <br>
 
 사용자는 여러 관심사를 구독하고, 관심사는 여러 키워드를 가집니다.
@@ -506,7 +697,7 @@ PostgreSQL 10개 테이블 + MongoDB 1개 · 모든 테이블 공통 컬럼 `id`
 </details>
 
 <details>
-<summary><b>2. 키워드 · 뉴스 기사</b> — <code>article_interest · article</code></summary>
+<summary><b>2. 키워드 · 뉴스 기사</b> — <code>article_interests · articles</code></summary>
 <br>
 
 키워드가 들어간 기사만 저장하고 관심사와 연결합니다. 같은 기사(원본 링크)는 중복 저장하지 않습니다.
@@ -516,7 +707,7 @@ PostgreSQL 10개 테이블 + MongoDB 1개 · 모든 테이블 공통 컬럼 `id`
 </details>
 
 <details>
-<summary><b>3. 기사 조회</b> — <code>article_view_status</code></summary>
+<summary><b>3. 기사 조회</b> — <code>article_view_statuses</code></summary>
 <br>
 
 사용자별 기사 조회 기록입니다. 같은 기사는 한 번만 기록합니다.
@@ -526,7 +717,7 @@ PostgreSQL 10개 테이블 + MongoDB 1개 · 모든 테이블 공통 컬럼 `id`
 </details>
 
 <details>
-<summary><b>4. 댓글 · 좋아요</b> — <code>comments · comment_like</code></summary>
+<summary><b>4. 댓글 · 좋아요</b> — <code>comments · comment_likes</code></summary>
 <br>
 
 댓글과 댓글 좋아요입니다. 좋아요는 댓글당 한 번만 누를 수 있습니다.
@@ -548,7 +739,7 @@ PostgreSQL 10개 테이블 + MongoDB 1개 · 모든 테이블 공통 컬럼 `id`
 <a id="erd-activity"></a>
 
 <details>
-<summary><b>6. 활동 내역</b> — <code>user_activity</code> (MongoDB)</summary>
+<summary><b>6. 활동 내역</b> — <code>user_activities</code> (MongoDB)</summary>
 <br>
 
 사용자 1명당 문서 1건으로, 조인 없이 한 번에 조회하도록 활동 내역을 미리 모아 둔 조회용 문서입니다.
@@ -564,7 +755,7 @@ PostgreSQL 10개 테이블 + MongoDB 1개 · 모든 테이블 공통 컬럼 `id`
 
 ---
 
-## 📌 주요 처리 흐름 (최종 구현 후 수정 예정)
+## 📌 주요 처리 흐름
 
 <details>
 <summary><b>1. 요청자 확인</b></summary>
@@ -617,24 +808,24 @@ RequestIdContext 비우기
 <br>
 
 ```text
-매시간 정각 실행 (@Scheduled + ShedLock)
+매시간 정각 Spring Batch 수집 Job 실행 (@Scheduled + ShedLock)
    ↓
-구독 중인 관심사 · 키워드 조회
+구독자 · 키워드가 있는 관심사 조회 (관심사 1개 = chunk 1개)
    ↓
-네이버 뉴스 API · 언론사 RSS 기사 수집
-   ↓
-키워드가 들어간 기사만 선별
+언론사 RSS (키워드 포함 기사만) · 네이버 뉴스 API (키워드 검색) 수집
    ↓
 원본 URL 기준 중복 제거
    ↓
-관심사별 기사 저장
-   ↓   새 기사가 있으면
+기사 저장 · 관심사와 연결 (관심사마다 커밋)
+   ↓   관심사에 새로 연결된 기사가 있으면
 구독자에게 알림 생성
 ```
 
 - **ShedLock**: 배포 중 앱이 2개 떠 있어도 한 번만 실행
 - **언론사 RSS**: 한국경제 · 조선일보 · 연합뉴스
-- **관심사별 저장**: 한 관심사가 실패해도 다음 관심사는 계속 수집
+- **수집 실패 처리**: RSS 출처 하나나 네이버 키워드 하나가 실패해도 건너뛰고 나머지로 계속 수집
+- **관심사마다 커밋**: 중간에 Job이 멈춰도 앞 관심사의 기사는 저장된 상태로 남음
+- **삭제된 기사**: 같은 URL로 다시 수집돼도 되살리지 않음
 - **알림 생성**: `ArticlesSavedEvent` 발행 → 커밋 후 비동기로 생성
 
 </details>
@@ -655,10 +846,12 @@ Transaction COMMIT
 댓글 작성자에게 Notification 생성
 ```
 
+- **본인 좋아요 제외**: 내 댓글에 내가 누른 좋아요는 알림을 만들지 않음
+
 </details>
 
 <details>
-<summary><b>5. 사용자 활동 내역 (구현 후 수정 예정)</b></summary>
+<summary><b>5. 사용자 활동 내역</b></summary>
 <br>
 
 ```text
@@ -671,10 +864,14 @@ MongoDB 사용자 활동 문서 갱신
 활동 내역 조회 시 문서 1건으로 응답
 ```
 
+- **커밋 후 비동기 갱신**: 원래 작업이 성공한 뒤에만 반영하고, 실패해도 원래 작업에는 영향 없음
+- **문서가 없으면**: RDB에서 다시 만들어 저장한 뒤 응답
+- **최근 내역**: 댓글 · 좋아요 · 열람한 기사는 최근 10건, 구독은 전부
+
 </details>
 
 <details>
-<summary><b>6. 논리 삭제 → 물리 삭제 (구현 후 수정 예정)</b></summary>
+<summary><b>6. 논리 삭제 → 물리 삭제</b></summary>
 <br>
 
 ```text
@@ -689,22 +886,22 @@ MongoDB 사용자 활동 문서 갱신
 
 | 도메인 | 물리 삭제 시점 | 함께 삭제되는 관련 데이터 |
 |---|---|---|
-| **사용자** | 논리 삭제 후 1일 지나면 배치가 자동 삭제 | 구독 · 댓글 · 좋아요 · 알림 (구독자 수도 정리) |
-| **뉴스 기사** | 물리 삭제 API (`/hard`) | 댓글 · 기사-관심사 연결 · 조회 기록 |
-| **댓글** | 물리 삭제 API (`/hard`) | 좋아요 (기사의 댓글 수도 정리) |
+| **사용자** | 논리 삭제 후 1일 지나면 배치가 자동 삭제 (물리 삭제 API `/hard`도 있음) | 구독 · 댓글 · 좋아요 · 알림 · 기사 조회 기록 · 활동 내역 문서 (구독자 수 · 댓글 좋아요 수 · 기사 댓글 수도 정리) |
+| **뉴스 기사** | 물리 삭제 API (`/hard`) | 댓글 · 댓글 좋아요 · 좋아요 알림 · 기사-관심사 연결 · 조회 기록 |
+| **댓글** | 물리 삭제 API (`/hard`) | 좋아요 · 좋아요 알림 (기사의 댓글 수도 정리) |
 
 - **논리 삭제가 기본**: 관련 정보가 남아 있도록 바로 지우지 않음
 - **사용자 물리 삭제**: `UserHardDeletingEvent`를 발행해서, 사용자 도메인이 다른 도메인 코드를 직접 부르지 않고 이벤트로 정리를 맡김
-- **기사 · 댓글 물리 삭제**: 화면(UI)에는 없고 API와 테스트 코드로 검증
+- **물리 삭제 API**: 사용자 배치 외의 물리 삭제 API는 화면(UI)에 없고 API와 테스트 코드로 검증
 
 </details>
 
 <details>
-<summary><b>7. 데이터 정리 배치 (구현 후 수정 예정)</b></summary>
+<summary><b>7. 데이터 정리 배치</b></summary>
 <br>
 
 ```text
-매일 새벽 3시                          매일 배치
+매일 새벽 3시                          매시간 정각
    ↓                                    ↓
 확인 후 7일 지난 알림 조회              논리 삭제 후 1일 지난 사용자 조회
    ↓                                    ↓
@@ -714,32 +911,43 @@ MongoDB 사용자 활동 문서 갱신
 </details>
 
 <details>
-<summary><b>8. 기사 백업 · 복구 (구현 후 수정 예정)</b></summary>
+<summary><b>8. 기사 백업 · 복구</b></summary>
 <br>
 
 **백업**
 
 ```text
-매일 Spring Batch 실행
+매일 오전 1시 Spring Batch 실행
    ↓
-전날 수집 기사 조회
+전날 발행된 기사 조회 (1,000건씩, 논리 삭제된 기사 제외)
    ↓
-JSON 직렬화
+기사 + 연결된 관심사 ID를 JSON 직렬화 + gzip 압축
    ↓
-Amazon S3 업로드 (날짜별 파일)
+Amazon S3 업로드 (articles/날짜/articles-날짜-000001.json.gz)
 ```
 
 **복구**
 
 ```text
-복구 요청 (날짜 범위)
+복구 요청 (GET /api/articles/restore?from=...&to=...)
    ↓
-S3 백업 파일 조회
+기간 검증 (from ≤ to, 최대 31일)
    ↓
-DB에 없는 기사 선별
+날짜별 S3 백업 파일 읽기
    ↓
-유실 기사만 복원
+발행일시가 요청 범위 안인 기사만 선별
+   ↓
+DB에 같은 원본 URL이 없는 기사만 복원
+   ↓
+남아 있는 관심사와 다시 연결
+   ↓
+날짜별 복구 결과 응답 (복구된 기사 ID · 건수)
 ```
+
+- **유실 기사만 복원**: 원본 URL이 DB에 있으면 건너뜀 (논리 삭제된 기사도 되살리지 않음)
+- **관심사 재연결**: 백업 당시 연결된 관심사 중 지금도 있는 관심사에만 연결하고, 하나도 없으면 복원하지 않음
+- **복원 범위**: 기사 정보만 복원 (새 ID, 댓글 · 조회수는 복원 안 됨)
+- **잘못된 요청**: 기간이 없거나 거꾸로이거나 31일을 넘으면 400
 
 </details>
 
@@ -764,7 +972,8 @@ Amazon ECS 무중단 배포
 - **CI 검사 (GitHub Actions)**: 빌드 · 테스트, Checkstyle · ArchUnit 패키지 규칙, JaCoCo 커버리지 → Codecov
 - **자동 리뷰**: CodeRabbit · Claude Code
 - **OIDC 인증**: GitHub Actions에 AWS 키를 저장하지 않고, 배포할 때만 잠깐 쓰는 권한을 받음
-- **무중단 배포**: 새 버전이 정상으로 뜬 뒤에 옛 버전 종료
+- **무중단 배포**: ECS 롤링 배포로 새 버전이 정상으로 뜬 뒤 옛 버전 종료, 워크플로는 서비스가 안정될 때까지 대기
+- **최신 커밋만 배포**: CI가 늦게 끝난 옛 커밋은 배포를 건너뜀
 
 </details>
 
@@ -818,10 +1027,10 @@ flowchart TB
   subgraph CD["🚀 자동 배포"]
     direction TB
     gha["⚙️ GitHub Actions<br/>develop 머지 시"]
-    ecr["📦 ECR<br/>앱 이미지"]
+    ecr["📦 ECR<br/>앱 · 모니터링 이미지"]
   end
   ssm["🔐 SSM<br/>비밀번호 · API 키"]
-  cw["📜 CloudWatch Logs<br/>컨테이너 로그"]
+  cw["📜 CloudWatch<br/>컨테이너 로그 · 배치 지표"]
 
   subgraph EC2["🖥️ EC2 1대 · 4GB · 컨테이너 3개"]
     direction LR
@@ -858,7 +1067,8 @@ flowchart TB
   gha -- "OIDC로 AWS 인증 후 업로드" --> ecr
   ecr -. "새 버전 배포" .-> app
   ssm -. "시작할 때 주입" .-> app
-  app -. "로그" .-> cw
+  app -. "로그 · 배치 지표" .-> cw
+  graf -. "지표 · 로그 조회" .-> cw
 
   classDef client fill:#F8FAFC,stroke:#94A3B8,stroke-width:1.5px,color:#0F172A
   classDef net fill:#F5F3FF,stroke:#8B5CF6,stroke-width:2px,color:#4C1D95
@@ -900,7 +1110,7 @@ flowchart TB
 ### CI
 
 `main` · `develop`으로 가는 Pull Request와 `develop` 머지(push) 때
-GitHub Actions CI가 실행됩니다. (문서만 바뀐 경우는 빌드 생략)
+GitHub Actions CI가 실행됩니다. (PR은 문서 · 프론트엔드 정적 파일만, develop 머지는 문서만 바뀐 경우 빌드 생략)
 
 ```bash
 ./gradlew build
@@ -908,7 +1118,7 @@ GitHub Actions CI가 실행됩니다. (문서만 바뀐 경우는 빌드 생략)
 
 **검증 및 리포트 항목**
 
-- 전체 테스트 실행 (목표 커버리지 80%)
+- 전체 테스트 실행, 줄 커버리지 80% 미만이면 빌드 실패 (DTO · 설정 클래스 등 제외)
 - JaCoCo 커버리지 리포트 생성 → Codecov 업로드 · 결과 확인
 - Checkstyle 코드 스타일 검사 (경고만, PR에서 바뀐 줄 기준)
 - ArchUnit 패키지 규칙 검사 (헥사고날 계층 · 순환 참조, 경고만)
@@ -956,7 +1166,7 @@ GitHub Actions CI가 실행됩니다. (문서만 바뀐 경우는 빌드 생략)
 | 구분 | 규칙 |
 | :--- | :--- |
 | 브랜치 전략 | `{타입}/{이슈번호}-{작업명}` → `develop` → `main` (예: `feat/12-interest-subscribe`) — 이슈의 Branch Keyword 칸에 작업명을 적으면 브랜치가 자동으로 생성됨 |
-| 커밋 컨벤션 | `타입 : 작업 내용 [#이슈번호]` (예: `feat : 관심사 구독 API 추가 [#12]`) — 이슈 번호는 브랜치 이름에서 자동으로 붙음, TDD 단계는 `test(red)` · `feat(green)` · `refactor(blue)` (단축키 `t1` · `f1` · `r1`), 리뷰 반영 커밋은 제목 끝에 `;c` · `;r` |
+| 커밋 컨벤션 | `타입 : 작업 내용 [#이슈번호]` (예: `feat : 관심사 구독 API 추가 [#12]`) — 이슈 번호는 브랜치 이름에서 자동으로 붙음, TDD 단계는 `test(red)` · `feat(green)`/`fix(green)` · `refactor(blue)` (단축키 `t1` · `f1`/`x1` · `r1`), 리뷰 반영 커밋은 제목 끝에 `;c`(클로드) · `;r`(코드래빗) · `;t`(팀원) |
 | PR 규칙 | 이슈 연결(`close #이슈번호`) · 리뷰 승인 1명 이상 후 **일반 머지가 기본**(TDD 단계 커밋을 develop에 그대로 남김) |
 | 코드 스타일 | Spotless(google-java-format `aosp()`, 들여쓰기 4칸) — 커밋 시 Git Hook으로 자동 적용, **최종 포맷 기준**. push 전에는 포맷 검사 · 컴파일을 한 번 더 확인 |
 | 협업 자동화 | PR 제목 · 라벨 자동 정리, 이슈 · PR · 리뷰 디스코드 알림, 프로젝트 보드 상태 자동 변경 |
@@ -1021,7 +1231,7 @@ direnv allow   # 프로젝트 폴더에서 한 번만 실행
 
 **3. 로컬 인프라**
 
-앱을 실행하면 `compose.yaml`의 DB 컨테이너가 자동으로 같이 뜹니다. 직접 띄우려면:
+앱을 실행하면 `compose.yaml`의 DB · 모니터링 컨테이너가 자동으로 같이 뜹니다. 직접 띄우려면:
 
 ```bash
 docker compose up -d
@@ -1031,6 +1241,8 @@ docker compose up -d
 | :--- | :--- |
 | PostgreSQL 16 | `localhost:5432` (DB `monew`) |
 | MongoDB 7 | `localhost:27017` (DB `monew`) |
+| Prometheus | `localhost:9090` |
+| Grafana | `localhost:3000` |
 
 **4. 애플리케이션 실행**
 
@@ -1072,7 +1284,7 @@ docker compose down
 
 ---
 
-## 📌 프로젝트 패키지 전체 구조 살펴보기 (4번 최종 구현 후 수정 예정)
+## 📌 프로젝트 패키지 전체 구조 살펴보기
 
 ### 1. 전체 구성 (간단.Ver)
 
@@ -1087,14 +1299,14 @@ sb14-monew-team03/
 ├── src/
 │   ├── main/
 │   │   ├── java/com/sprint/monew/   # 백엔드 소스 (헥사고날, 자세한 구성은 아래 2번)
-│   │   │   ├── adapter/             # 바깥 연결: 컨트롤러 · 배치 · 스케줄러 · DB · 네이버/RSS
-│   │   │   ├── application/         # 도메인별 기능: user · interest · article · comment · notification · useractivity
+│   │   │   ├── adapter/             # 바깥 연결: 컨트롤러 · 배치(스케줄러 포함) · 이벤트 리스너 · DB · 네이버/RSS
+│   │   │   ├── application/         # 도메인별 기능: user · interest · article · comment · notification · useractivity · log
 │   │   │   ├── domain/              # 엔티티 · enum · 도메인 이벤트
 │   │   │   └── global/              # 공통: 설정 · 예외 · 페이지네이션 · 로깅
 │   │   └── resources/               # 설정 파일 · 프론트엔드 빌드 결과물
 │   └── test/                        # 테스트 코드
 ├── build.gradle      # 의존성 · 빌드 설정
-├── compose.yaml      # 로컬 PostgreSQL · MongoDB 컨테이너
+├── compose.yaml      # 로컬 PostgreSQL · MongoDB · Prometheus · Grafana 컨테이너
 ├── Dockerfile        # 배포 이미지
 ├── .env.example      # 환경 변수 예시
 ├── SETUP.md          # 처음 세팅 안내
@@ -1109,12 +1321,11 @@ src/main/java/com/sprint/monew
 │   ├── in/                                       # 들어오는 요청
 │   │   ├── controller/article/
 │   │   │   ├── ArticleController                 # 기사 API
-│   │   │   ├── ArticleCollectionManualController # 기사 수집 수동 실행 API
+│   │   │   ├── ArticleBackupManualController     # 기사 백업 수동 실행 API (local 전용)
 │   │   │   └── dto/response/                     # ArticleDto · ArticleViewDto · ArticleRestoreResultDto
-│   │   ├── scheduler/
-│   │   │   └── ArticleCollectionScheduler        # 정해진 시각에 수집 실행 (@Scheduled)
-│   │   └── batch/
-│   │       └── ArticleCollectionRunner           # 기사 수집 실행기
+│   │   └── batch/article/                        # Spring Batch Job (Job 설정 · 스케줄러 · Reader · Writer · 리스너 · 메트릭)
+│   │       ├── collection/                       # 기사 수집: ArticleCollectionJobConfig · ArticleCollectionScheduler · ArticleCollectReader · ArticleCollectProcessor · ArticleCollectWriter
+│   │       └── backup/                           # 기사 S3 백업: ArticleBackupJobConfig · ArticleBackupScheduler · ArticleBackupReader · ArticleBackupWriter
 │   └── out/article/                              # 나가는 연결 (Port 구현)
 │       ├── ArticleRepositoryAdapter              # ArticleRepositoryPort 구현
 │       ├── ArticleJpaRepository                  # Spring Data JPA
@@ -1122,25 +1333,32 @@ src/main/java/com/sprint/monew
 │       ├── ArticleInterestRepositoryAdapter      # 기사-관심사 연결 저장 (+ JpaRepository)
 │       ├── ArticleViewStatusRepositoryAdapter    # 기사 조회 기록 저장 (+ JpaRepository)
 │       ├── ArticleEventPublisherAdapter          # 이벤트 발행
+│       ├── S3ArticleBackupStorageAdapter         # 백업 파일 S3 업로드 (JSON + gzip)
 │       ├── naver/                                # NaverNewsAdapter · NaverNewsMapper · NaverNewsResponse
 │       └── rss/                                  # RssNewsAdapter · RssNewsMapper
 ├── application/article/                          # 기능 흐름
 │   ├── provided/                                 # 밖에 제공
-│   │   ├── ArticleUseCase                        # 기사 조회 · 뷰 · 출처 · 삭제 · 복구
+│   │   ├── ArticleUseCase                        # 기사 조회 · 뷰 · 출처 · 삭제
 │   │   ├── ArticleCollectionUseCase              # 기사 수집
-│   │   └── dto/                                  # ArticleQuery · ArticleResult · SourceResult · CollectedArticle
+│   │   ├── ArticleBackupUseCase                  # 기사 백업
+│   │   ├── ArticleRestoreUseCase                 # 기사 복구
+│   │   └── dto/                                  # ArticleQuery · ArticleResult · ArticleViewStatusResult · CollectedArticle · ArticleBackupFile · ArticleBackupItem · ArticleBackupResult · ArticleRestoreResult
 │   ├── required/                                 # 밖에 요청 (Port)
 │   │   ├── ArticleRepositoryPort                 # 기사 저장소
 │   │   ├── ArticleInterestRepositoryPort         # 기사-관심사 연결 저장소
 │   │   ├── ArticleViewStatusRepositoryPort       # 기사 조회 기록 저장소
 │   │   ├── ArticleEventPublisherPort             # 이벤트 발행
+│   │   ├── ArticleBackupStoragePort              # 백업 파일 저장소 (S3)
 │   │   └── NaverNewsPort · RssNewsPort           # 외부 뉴스 수집
-│   ├── event/                                    # ArticlesSavedEvent · ArticleSoftDeletedEvent · ArticleHardDeletingEvent
+│   ├── event/                                    # ArticlesSavedEvent · ArticleViewedEvent · ArticleSoftDeletedEvent · ArticleHardDeletingEvent
 │   ├── ArticleApplication                        # ArticleUseCase 구현
 │   ├── ArticleCollectionApplication              # ArticleCollectionUseCase 구현
-│   └── ArticleService · ArticleInterestService · ArticleViewStatusService (+ Impl)  # 도메인 서비스
+│   ├── ArticleBackupApplication                  # ArticleBackupUseCase 구현
+│   ├── ArticleRestoreApplication                 # ArticleRestoreUseCase 구현 (기간 검증 · 날짜별 백업 파일 읽기)
+│   ├── ArticleRestoreService                     # 유실 기사 저장 · 관심사 재연결 (파일 단위 트랜잭션)
+│   └── ArticleService · ArticleInterestService · ArticleViewStatusService · ArticleBackupStorageService (+ Impl)  # 도메인 서비스
 ├── domain/article/entity/                        # Article · ArticleInterest · ArticleViewStatus
-└── global/                                       # 공통: 설정 · 예외(ArticleErrorType) · 타입(ArticleSourceType) · 페이지네이션 · 요청자 ID · 로깅
+└── global/                                       # 공통: 설정 · 예외(ArticleErrorType) · 타입(ArticleSourceType) · 페이지네이션 · 요청자 ID · 로깅 · 백업 직렬화/압축
 ```
 
 > 요청 흐름: `ArticleController` → `ArticleUseCase`(구현 `ArticleApplication`) → `ArticleService` → `ArticleRepositoryPort`(구현 `ArticleRepositoryAdapter`) → DB
@@ -1150,7 +1368,7 @@ src/main/java/com/sprint/monew
 | :--- | :--- |
 | `user` | 사용자 (이승현) |
 | `interest` | 관심사 · 구독 (박수민) |
-| `article` | 뉴스 기사 수집 · 조회 · 백업 (김민재) |
+| `article` | 뉴스 기사 수집 · 조회 · 백업 · 복구 (김민재) |
 | `article` | 뉴스 기사 출처 목록 · 논리 · 물리 삭제 (이승현) |
 | `comment` | 댓글 · 좋아요 (정수환) |
 | `notification` · `useractivity` | 알림 · 사용자 활동 내역 (이수찬) |
@@ -1175,6 +1393,7 @@ src/main/java/com/sprint/monew/global/
 │   └── RestWebAdapter                              # 컨트롤러 표시 (@RestController)
 ├── config/                                         # 설정
 │   ├── AsyncConfig                                 # @Async 비동기 실행 (MDC 복사 포함)
+│   ├── CloudWatchMetricsConfig                     # 운영(prod)에서 지정한 지표만 CloudWatch로 전송
 │   ├── JpaAuditingConfig                           # 생성 · 수정 시각 자동 기록
 │   ├── PasswordEncoderConfig                       # 비밀번호 암호화
 │   ├── QueryDslConfig                              # QueryDSL (JPAQueryFactory)
@@ -1220,6 +1439,9 @@ src/main/java/com/sprint/monew/global/
 │   ├── ArticleSourceType                           # 기사 출처 (네이버 · 한국경제 · 조선일보 · 연합뉴스)
 │   └── ResourceType                                # 알림 대상 종류 (관심사 · 댓글)
 ├── util/
+│   ├── backup/                                     # 기사 백업 파일 만들기
+│   │   ├── ArticleBackupGzipCompressor             # gzip 압축 (로그 백업도 같이 사용)
+│   │   └── ArticleBackupJsonSerializer             # 기사 목록 → JSON
 │   ├── DatabaseConstraintUtils                     # DB 제약 조건 위반 확인
 │   └── similarity/
 │       └── StringSimilarityUtils                   # 관심사 이름 유사도 계산
@@ -1236,7 +1458,7 @@ src/main/java/com/sprint/monew/global/
 
 <a id="pkg-all"></a>
 
-### 4. 전체 패키지 구성 (상세.Ver) (구현 후 수정 예정)
+### 4. 전체 패키지 구성 (상세.Ver)
 
 <details>
 <summary>[펼쳐보기]</summary>
@@ -1247,19 +1469,50 @@ src/main/java/com/sprint/monew/
 ├── MonewApplication                                # 애플리케이션 시작점
 ├── adapter/                                        # 바깥과 연결하는 계층
 │   ├── in/                                         # 들어오는 요청
-│   │   ├── batch/                                  # 배치 실행기
-│   │   │   ├── ArticleCollectionRunner
-│   │   │   ├── NotificationCleanupRunner
-│   │   │   └── log/                                # 로그 S3 적재 배치 (Spring Batch) (박수민)
-│   │   │       ├── LogBackupFailedException
-│   │   │       ├── LogBackupJobConfig
-│   │   │       ├── LogBackupScheduler
-│   │   │       ├── LogBackupStepListener
-│   │   │       ├── LogBackupTasklet
-│   │   │       └── LogMetrics
+│   │   ├── batch/                                  # Spring Batch Job (박수민)
+│   │   │   ├── article/                            # 뉴스 기사 배치
+│   │   │   │   ├── backup/                         # 기사 S3 백업 Job
+│   │   │   │   │   ├── ArticleBackupJobConfig
+│   │   │   │   │   ├── ArticleBackupListener
+│   │   │   │   │   ├── ArticleBackupMetrics
+│   │   │   │   │   ├── ArticleBackupReader
+│   │   │   │   │   ├── ArticleBackupScheduler
+│   │   │   │   │   └── ArticleBackupWriter
+│   │   │   │   └── collection/                     # 기사 수집 Job
+│   │   │   │       ├── ArticleCollectProcessor
+│   │   │   │       ├── ArticleCollectReader
+│   │   │   │       ├── ArticleCollectWriter
+│   │   │   │       ├── ArticleCollectionChunkListener
+│   │   │   │       ├── ArticleCollectionJobConfig
+│   │   │   │       ├── ArticleCollectionMetrics
+│   │   │   │       ├── ArticleCollectionScheduler
+│   │   │   │       ├── ArticleCollectionStepListener
+│   │   │   │       └── dto/                        # Job 안에서 쓰는 DTO
+│   │   │   │           └── InterestCollectedArticles
+│   │   │   ├── log/                                # 로그 S3 백업 Job
+│   │   │   │   ├── LogBackupFailedException
+│   │   │   │   ├── LogBackupJobConfig
+│   │   │   │   ├── LogBackupListener
+│   │   │   │   ├── LogBackupReader
+│   │   │   │   ├── LogBackupScheduler
+│   │   │   │   ├── LogBackupWriter
+│   │   │   │   └── LogMetrics
+│   │   │   ├── notification/                       # 알림 삭제 Job
+│   │   │   │   ├── NotificationCleanupJobConfig
+│   │   │   │   ├── NotificationCleanupScheduler
+│   │   │   │   ├── NotificationCleanupStepListener
+│   │   │   │   ├── NotificationCleanupTasklet
+│   │   │   │   └── NotificationMetrics
+│   │   │   └── user/                               # 사용자 배치
+│   │   │       └── cleanup/                        # 사용자 완전 삭제 Job
+│   │   │           ├── UserCleanupJobConfig
+│   │   │           ├── UserCleanupMetrics
+│   │   │           ├── UserCleanupScheduler
+│   │   │           ├── UserCleanupStepListener
+│   │   │           └── UserCleanupTasklet
 │   │   ├── controller/                             # API 컨트롤러
 │   │   │   ├── article/                            # 뉴스 기사 (김민재, 이승현)
-│   │   │   │   ├── ArticleCollectionManualController
+│   │   │   │   ├── ArticleBackupManualController
 │   │   │   │   ├── ArticleController
 │   │   │   │   └── dto/                            # 요청 / 응답 DTO
 │   │   │   │       └── response/                   # 응답 DTO
@@ -1310,14 +1563,15 @@ src/main/java/com/sprint/monew/
 │   │   │               ├── CommentLikeActivityDto
 │   │   │               ├── SubscriptionActivityDto
 │   │   │               └── UserActivityDto
-│   │   ├── event/                                  # 이벤트 리스너
-│   │   │   ├── interest/                           # 관심사 · 구독 (박수민)
-│   │   │   │   └── InterestEventListener
-│   │   │   └── notification/                       # 알림 (이수찬)
-│   │   │       └── NotificationEventListener
-│   │   └── scheduler/                              # 정해진 시각에 실행 (@Scheduled)
-│   │       ├── ArticleCollectionScheduler
-│   │       └── NotificationCleanupScheduler
+│   │   └── event/                                  # 이벤트 리스너
+│   │       ├── comment/                            # 댓글 · 좋아요 (정수환)
+│   │       │   └── CommentEventListener
+│   │       ├── interest/                           # 관심사 · 구독 (박수민)
+│   │       │   └── InterestEventListener
+│   │       ├── notification/                       # 알림 (이수찬)
+│   │       │   └── NotificationEventListener
+│   │       └── useractivity/                       # 사용자 활동 내역 (이수찬)
+│   │           └── UserActivityEventListener
 │   └── out/                                        # 나가는 연결 (저장소 · 외부 API · 이벤트 발행)
 │       ├── article/                                # 뉴스 기사 (김민재, 이승현)
 │       │   ├── ArticleEventPublisherAdapter
@@ -1329,6 +1583,7 @@ src/main/java/com/sprint/monew/
 │       │   ├── ArticleRepositoryAdapter
 │       │   ├── ArticleViewStatusJpaRepository
 │       │   ├── ArticleViewStatusRepositoryAdapter
+│       │   ├── S3ArticleBackupStorageAdapter
 │       │   ├── naver/                              # 네이버 뉴스 API 수집
 │       │   │   ├── NaverNewsAdapter
 │       │   │   ├── NaverNewsMapper
@@ -1341,9 +1596,12 @@ src/main/java/com/sprint/monew/
 │       │   ├── CommentJpaRepository
 │       │   ├── CommentLikeJpaRepository
 │       │   ├── CommentLikeRepositoryAdapter
+│       │   ├── CommentQueryRepository
+│       │   ├── CommentQueryRepositoryImpl
 │       │   └── CommentRepositoryAdapter
 │       ├── interest/                               # 관심사 · 구독 (박수민)
 │       │   ├── InterestAnchor
+│       │   ├── InterestEventPublisherAdapter
 │       │   ├── InterestJpaRepository
 │       │   ├── InterestQueryRepository
 │       │   ├── InterestQueryRepositoryImpl
@@ -1362,13 +1620,29 @@ src/main/java/com/sprint/monew/
 │       │   ├── UserJpaRepository
 │       │   └── UserRepositoryAdapter
 │       └── useractivity/                           # 사용자 활동 내역 (이수찬)
-│           └── UserActivityRdbAdapter
+│           ├── ArticleStatRdbAdapter
+│           ├── UserActivityDocumentUpdater
+│           ├── UserActivityMongoReader
+│           ├── UserActivityMongoRepository
+│           ├── UserActivityMongoWriter
+│           ├── UserActivityRdbAdapter
+│           └── document/                           # MongoDB 문서
+│               ├── ArticleViewItem
+│               ├── CommentItem
+│               ├── CommentLikeItem
+│               ├── SubscriptionItem
+│               └── UserActivityDocument
 ├── application/                                    # 기능 흐름 (도메인별 UseCase 구현)
 │   ├── article/                                    # 뉴스 기사 (김민재, 이승현)
 │   │   ├── ArticleApplication
+│   │   ├── ArticleBackupApplication
+│   │   ├── ArticleBackupStorageService
+│   │   ├── ArticleBackupStorageServiceImpl
 │   │   ├── ArticleCollectionApplication
 │   │   ├── ArticleInterestService
 │   │   ├── ArticleInterestServiceImpl
+│   │   ├── ArticleRestoreApplication
+│   │   ├── ArticleRestoreService
 │   │   ├── ArticleService
 │   │   ├── ArticleServiceImpl
 │   │   ├── ArticleViewStatusService
@@ -1376,16 +1650,24 @@ src/main/java/com/sprint/monew/
 │   │   ├── event/                                  # 이벤트
 │   │   │   ├── ArticleHardDeletingEvent
 │   │   │   ├── ArticleSoftDeletedEvent
+│   │   │   ├── ArticleViewedEvent
 │   │   │   └── ArticlesSavedEvent
 │   │   ├── provided/                               # UseCase (밖에서 부르는 기능)
+│   │   │   ├── ArticleBackupUseCase
 │   │   │   ├── ArticleCollectionUseCase
+│   │   │   ├── ArticleRestoreUseCase
 │   │   │   ├── ArticleUseCase
 │   │   │   └── dto/                                # Query · Result DTO
+│   │   │       ├── ArticleBackupFile
+│   │   │       ├── ArticleBackupItem
+│   │   │       ├── ArticleBackupResult
 │   │   │       ├── ArticleQuery
+│   │   │       ├── ArticleRestoreResult
 │   │   │       ├── ArticleResult
-│   │   │       ├── CollectedArticle
-│   │   │       └── SourceResult
+│   │   │       ├── ArticleViewStatusResult
+│   │   │       └── CollectedArticle
 │   │   └── required/                               # 저장소 · 이벤트 발행 Port
+│   │       ├── ArticleBackupStoragePort
 │   │       ├── ArticleEventPublisherPort
 │   │       ├── ArticleInterestRepositoryPort
 │   │       ├── ArticleRepositoryPort
@@ -1396,6 +1678,12 @@ src/main/java/com/sprint/monew/
 │   │   ├── CommentApplication
 │   │   ├── CommentService
 │   │   ├── CommentServiceImpl
+│   │   ├── event/                                  # 이벤트
+│   │   │   ├── CommentCreatedEvent
+│   │   │   ├── CommentDeletedEvent
+│   │   │   ├── CommentLikeCreatedEvent
+│   │   │   ├── CommentUnlikedEvent
+│   │   │   └── CommentUpdatedEvent
 │   │   ├── provided/                               # UseCase (밖에서 부르는 기능)
 │   │   │   ├── CommentUseCase
 │   │   │   └── dto/                                # Query · Result DTO
@@ -1412,6 +1700,11 @@ src/main/java/com/sprint/monew/
 │   │   ├── InterestService
 │   │   ├── InterestServiceImpl
 │   │   ├── SubscriptionService
+│   │   ├── event/                                  # 이벤트
+│   │   │   ├── InterestDeletedEvent
+│   │   │   ├── InterestKeywordsUpdatedEvent
+│   │   │   ├── InterestSubscribedEvent
+│   │   │   └── InterestUnsubscribedEvent
 │   │   ├── provided/                               # UseCase (밖에서 부르는 기능)
 │   │   │   ├── InterestUseCase
 │   │   │   ├── UserDeletionSubscriptionCleaner
@@ -1423,6 +1716,7 @@ src/main/java/com/sprint/monew/
 │   │   └── required/                               # 저장소 · 이벤트 발행 Port
 │   │       ├── DuplicateInterestNameException
 │   │       ├── DuplicateSubscriptionException
+│   │       ├── InterestEventPublisherPort
 │   │       ├── InterestRepository
 │   │       └── SubscriptionRepository
 │   ├── log/                                        # 로그 S3 적재 (박수민)
@@ -1430,7 +1724,8 @@ src/main/java/com/sprint/monew/
 │   │   ├── provided/                               # UseCase (밖에서 부르는 기능)
 │   │   │   ├── LogBackupUseCase
 │   │   │   └── dto/                                # Query · Result DTO
-│   │   │       └── LogBackupResult
+│   │   │       ├── LogBackupResult
+│   │   │       └── LogResult
 │   │   └── required/                               # 저장소 · 이벤트 발행 Port
 │   │       └── LogStoragePort
 │   ├── notification/                               # 알림 (이수찬)
@@ -1470,7 +1765,10 @@ src/main/java/com/sprint/monew/
 │       │       ├── SubscriptionActivityResult
 │       │       └── UserActivityResult
 │       └── required/                               # 저장소 · 이벤트 발행 Port
-│           └── UserActivityReader
+│           ├── ArticleStatReader
+│           ├── UserActivityReader
+│           ├── UserActivitySourceReader
+│           └── UserActivityWriter
 ├── domain/                                         # 엔티티 · enum · 도메인 이벤트
 │   ├── article/                                    # 뉴스 기사 (김민재, 이승현)
 │   │   └── entity/                                 # 엔티티

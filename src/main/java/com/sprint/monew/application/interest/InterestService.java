@@ -4,9 +4,12 @@ import com.sprint.monew.application.interest.provided.dto.InterestQuery;
 import com.sprint.monew.domain.interest.entity.Interest;
 import com.sprint.monew.global.pagination.PageResult;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public interface InterestService {
+    List<Interest> findAllById(Set<UUID> ids);
+
     Interest create(String name, List<String> keywords);
 
     PageResult<Interest> findPageByQuery(InterestQuery query);
