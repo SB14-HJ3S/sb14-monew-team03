@@ -174,18 +174,38 @@
 - 이메일 중복 검사 및 입력값 검증
 - 사용자 논리 삭제(탈퇴)
 - 논리 삭제 후 일정 기간 경과 시 연관 데이터와 함께 물리 삭제
-- 요청 헤더 기반 사용자 식별
 
 ### 💡 구현 포인트
 
-- 활성 사용자 조회: 탈퇴(논리 삭제)한 사용자는 로그인 · 조회 대상에서 빠지도록 사용자 조회를 활성 사용자 기준으로 통일하고, 여러 명을 한 번에 조회하는 메서드도 제공 ([#128](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/128), [#179](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/179), [#181](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/181))
-- 이벤트 발행: 가입 · 닉네임 수정 · 물리 삭제 시 이벤트를 발행해, 활동 내역 등 다른 도메인이 사용자 코드에 직접 의존하지 않고 후속 처리 ([#185](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/185), [#200](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/200))
-- 회원가입: 입력값을 검증하고, 이미 가입된 이메일이면 409(`USER_EMAIL_DUPLICATED`)로 응답 ([#159](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/159))
-  <br><img width="600" alt="회원가입 이메일 중복 409 응답" src="docs/images/screens/user-signup-409.png" />
-- 로그인 · 닉네임 수정: 이메일 · 비밀번호 중 무엇이 틀려도 같은 에러로 응답해 가입 여부를 노출하지 않고, 탈퇴한 사용자는 로그인 · 수정 대상에서 제외 ([#187](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/187), [#211](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/211))
-- 논리 · 물리 삭제: 탈퇴 시 삭제 표시만 하고, 물리 삭제는 이미 논리 삭제된 사용자만 대상으로 연관 데이터까지 함께 삭제 ([#252](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/252), [#271](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/271))
-- Swagger: 사용자 API별 설명과 에러 응답 예시 추가 ([#265](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/265))
-- 서비스 · 컨트롤러 모두 테스트 먼저 작성(Red) → 구현(Green) → 정리(Refactor) 순서로 개발
+> 관련 이슈: [#3](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/3) (하위 이슈 · PR은 부모 이슈에서 확인)
+
+- **활성 사용자 조회 기준 통일**
+    - 다른 도메인은 `UserUseCase`로만 사용자를 꺼내고, 탈퇴한 사용자는 자동으로 404
+    - 여러 명을 한 번에 조회할 때는 탈퇴자를 예외 없이 빼서, 한 명 때문에 알림 전체가 실패하지 않게 함
+- **회원가입 검증과 이메일 중복 409**
+    - 비밀번호는 BCrypt로 저장하고, 응답 모델에는 비밀번호 칸을 두지 않음
+    - 중복 검사에 탈퇴자(1일 보관)도 포함해, DB 유니크 위반 전에 `USER_EMAIL_DUPLICATED`(409)로 응답
+    <br><img width="600" alt="회원가입 이메일 중복 409 응답" src="docs/images/screens/user-signup-409.png" />
+- **로그인 실패 응답 통일**
+    - 없는 이메일 · 틀린 비밀번호 · 탈퇴자 모두 같은 401 `USER_LOGIN_FAILED`로 응답해 가입 여부를 노출하지 않음
+    - 없는 이메일도 같은 비밀번호 비교 과정을 거친 뒤 실패해, 응답 시간으로도 구분하기 어렵게 함
+    <br><img width="700" alt="없는 이메일과 틀린 비밀번호 로그인이 같은 401 응답" src="docs/images/screens/user-login-401.png" />
+- **탈퇴(논리 삭제)는 시각만 기록**
+    - 다시 요청해도 처음 탈퇴 시각을 덮어쓰지 않아, 1일 보관 기준이 밀리지 않음
+    - 추가 코드 없이 기존 조회 조건만으로 로그인 · 수정 · 알림 대상에서 제외
+- **물리 삭제: 비관적 잠금으로 중복 차감 방지**
+    - 같은 사용자를 동시에 두 번 지우면 구독자 수가 두 번 줄어드는 문제를 재현하고, `SELECT ... FOR UPDATE`로 해결해 동시성 통합 테스트로 확인
+    - 연관 데이터는 DB `ON DELETE CASCADE`에 맡겨, 사용자 코드가 다른 도메인 Repository에 의존하지 않음
+- **이벤트로 도메인 분리**
+    - 구독자 수 · 댓글 수 차감은 삭제 직전 같은 트랜잭션에서, MongoDB 활동 내역은 커밋 뒤 비동기(`AFTER_COMMIT` · `@Async`)로 처리
+    - 이벤트 클래스를 먼저 develop에 올려, 리스너 담당자가 병렬로 개발할 수 있게 함
+- **탈퇴 1일 지난 사용자 완전 삭제 배치**
+    - 매시 정각 실행, 100명씩 묶어 잠금 → 이벤트 1번 → `DELETE ... IN` 1번으로 처리하고 묶음마다 따로 커밋
+    - 묶음이 실패하면 그 묶음만 한 명씩 다시 시도하고(이미 지워진 사용자는 건너뜀), 남은 사용자는 다음 실행에서 처리
+    - Spring Batch Job 전환은 배치 담당(박수민)이 진행
+- **TDD와 문서화**
+    - 기능마다 시그니처 → 테스트(Red) → 구현(Green) → 정리(Refactor) 순서로 커밋
+    - Swagger 설명을 코드잇 API 명세와 대조해 맞추고, 삭제 흐름은 `docs/USER_HARD_DELETE.md`로 정리
 
 
 <p align="right"><a href="#feature-1">⬆️ 맨 위로 (제목을 눌러 접기)</a></p>
@@ -252,10 +272,21 @@
 
 ### 💡 구현 포인트
 
-- 기사 논리 삭제 · 물리 삭제 이벤트를 먼저 정의해, 연관 도메인 담당자가 구독 처리를 병렬로 구현할 수 있게 함 ([#277](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/277), [#280](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/280))
-- 출처 목록 조회: 수집 출처(`ArticleSourceType`: NAVER · HANKYUNG · CHOSUN · YEONHAP) 전체를 반환해 기사 목록의 출처 필터 선택지로 사용 ([#291](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/291))
-- 논리 삭제: 기사 데이터는 남기고 `deletedAt`만 기록. 삭제되지 않은 기사만 지우는 조건부 UPDATE로, 없거나 이미 삭제된 기사면 404로 응답하고, 커밋 뒤 이벤트로 활동 내역(MongoDB)에서 해당 기사 제외 ([#298](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/298))
-- 물리 삭제: 기사 행만 지우면 댓글 · 댓글 좋아요 · 기사 조회 기록 · 기사-관심사 연결은 DB의 `ON DELETE CASCADE`로 함께 삭제되고, FK가 없는 댓글 좋아요 알림과 활동 내역은 삭제 직전 이벤트로 정리. 통합 테스트로 검증 ([#312](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/312))
+> 관련 이슈: [#35](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/35) · [#37](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/37) · [#38](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/38)
+
+- **삭제 이벤트를 먼저 정의해 병렬 개발**
+    - 발행 시점을 이름의 시제로 구분: 물리 삭제는 지우기 직전(`ArticleHardDeletingEvent`), 논리 삭제는 표시한 뒤(`ArticleSoftDeletedEvent`)
+    - 이벤트 클래스를 먼저 올려, 활동 내역 · 댓글 담당자가 받는 쪽을 동시에 구현
+- **출처 목록 조회**
+    - 수집 출처(`ArticleSourceType`: NAVER · HANKYUNG · CHOSUN · YEONHAP) 전체를 반환해 기사 목록의 출처 필터 선택지로 사용
+    <br><img width="700" alt="출처 목록 API 응답과 뉴스 화면 출처 필터" src="docs/images/screens/article-sources.png" />
+- **조건부 UPDATE 한 번으로 논리 삭제**
+    - `WHERE deletedAt IS NULL` 조건으로 바뀐 줄이 0이면 404 — 조회 후 수정하는 두 단계가 없어 처음 삭제 시각이 유지됨
+    - 커밋 뒤 이벤트로 활동 내역(MongoDB)에서 해당 기사 제외
+- **물리 삭제는 DB CASCADE + FK 없는 데이터만 이벤트로**
+    - 댓글 · 댓글 좋아요 · 기사 조회 기록 · 기사-관심사 연결은 DB `ON DELETE CASCADE`로 함께 삭제
+    - FK가 없는 댓글 좋아요 알림은 같은 트랜잭션의 리스너가, 활동 내역은 커밋 뒤 비동기로 정리
+    - 화면에 없는 API라 통합 테스트로 연관 데이터 5종이 모두 지워지는지 확인
 - 서비스 · 컨트롤러 모두 테스트 먼저 작성(Red) → 구현(Green) → 정리(Refactor) 순서로 개발
 
 
@@ -413,12 +444,31 @@
 
 ### 💡 구현 포인트
 
-- CI: PR마다 빌드 · 테스트를 자동 실행하고, JaCoCo 커버리지를 Codecov 배지로 표시 (결과 대기 시간 초과 시 직전 값 유지) ([#88](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/88), [#205](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/205))
-- 자동 배포: develop 머지 후 CI가 통과하면 Docker 이미지 빌드 → Amazon ECR 업로드 → Amazon ECS 배포까지 GitHub Actions로 자동화 ([#90](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/90))
-  <br><img width="600" alt="ECS 배포 워크플로 연속 성공" src="docs/images/screens/deploy-runs.png" />
-- 모니터링 보안: `/actuator/prometheus`는 외부 접근을 막고 내부 Prometheus만 수집 ([#86](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/86))
-- 버전 추적: 모니터링 이미지를 latest 대신 커밋 번호 태그로 배포해, 지금 실행 중인 버전을 바로 확인 ([#251](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/251))
-- 트러블슈팅: Prometheus · Grafana 연동이 끊긴 문제 복구 ([#186](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/186)), 운영 컨테이너의 로그 폴더 쓰기 권한 오류 해결 ([#269](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/269))
+> 관련 이슈: [#2](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/2) (하위 이슈 · PR은 부모 이슈에서 확인)
+
+- **CI 파이프라인**
+    - PR마다 빌드 · 테스트를 실행하고, 문서 · 프론트엔드 정적 파일만 바뀐 PR은 빌드를 건너뛰되 필수 체크는 통과로 처리
+    - 테스트 실패 · 커버리지 · Checkstyle 위반(이 PR에서 바뀐 줄 기준)을 PR마다 종류별 댓글 1개로 알림
+- **커버리지 관리**
+    - JaCoCo 줄 커버리지 80% 미만이면 빌드 실패 (DTO · 설정 클래스 등 제외)
+    - Codecov 배지는 전용 브랜치에 갱신하고, 결과 대기가 5분을 넘기면 직전 값을 유지
+- **자동 배포 (ECR → ECS)**
+    - develop 머지 후 CI가 성공하면 OIDC로 AWS 역할을 받아(장기 키 없음) 커밋 번호 태그 이미지 빌드 → ECR 업로드 → ECS 배포 · 안정화 대기
+    - 이미 있는 태그는 다시 빌드하지 않아 재실행해도 안전하고, ECR 이미지는 최신 2개만 보관
+    <br><img width="600" alt="ECS 배포 워크플로 연속 성공" src="docs/images/screens/deploy-runs.png" />
+- **배포 순서 꼬임 방지**
+    - 배포 전과 배포 직전 두 번 develop 최신 커밋인지 확인하고, 더 최신 커밋이 있으면 실패가 아닌 "양보"로 정상 종료
+    - 먼저 올린 커밋의 CI가 늦게 끝나 옛 코드로 덮어쓰는 일을 막음
+- **배포 실패 진단**
+    - 실패하면 ECS 이벤트 · 멈춘 태스크 사유 · 최근 앱 로그를 Actions 로그에 출력하고, 실행마다 배포 요약표를 남김
+    - 비root 컨테이너의 로그 폴더 쓰기 권한 문제를 로그 백업 배치가 돌기 전에 해결
+- **Actuator 보안**
+    - `/actuator/health`만 공개하고, `/actuator/prometheus`는 내부 IP가 아니면 404로 응답해 경로 자체를 숨김 (인코딩 우회 주소도 정리 후 판단)
+- **Prometheus · Grafana · CloudWatch**
+    - EC2 전환 뒤 끊긴 연동을 Cloud Map SRV 조회와 provisioning 파일로 복구하고, 모니터링 설정 · 이미지를 저장소에서 커밋 번호 태그로 관리
+    - 배치 5종의 실행 · 실패 · 처리량을 보여 주는 "Monew 배치 현황" 대시보드 구성 (Job 이름 한글 표시)
+    <br><img width="700" alt="Grafana Monew 배치 현황 대시보드" src="docs/images/screens/grafana-batch-dashboard.png" />
+    - 배치 지표 일부는 허용 목록 방식으로 CloudWatch에도 보내고, Grafana에서 CloudWatch 지표 · 로그를 함께 조회
 
 
 <p align="right"><a href="#feature-9">⬆️ 맨 위로 (제목을 눌러 접기)</a></p>
@@ -472,13 +522,31 @@
 
 ### 💡 구현 포인트
 
-- 초기 세팅: 클론 후 프로젝트만 열면 Spotless · Checkstyle · IntelliJ 코드 스타일, 깃 훅, 테스트 환경이 자동 적용 ([#81](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/81), [#82](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/82))
-- 공통 코드 · 예외: `BaseEntity` 등 공통 코드와 `MonewException` · `GlobalExceptionHandler` 기반 공통 에러 응답 구성 ([#83](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/83))
-- 요청자 ID: `@RequestId`만 붙이면 Swagger에 요청자 ID 헤더가 자동으로 추가되고, 컨트롤러에서 받는 방식도 하나로 통일 ([#147](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/147))
-- 로그 추적: 요청별 ID · IP를 MDC로 남기고 비동기 스레드까지 이어 붙여, 한 요청의 로그를 끝까지 추적 ([#192](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/192))
-  <br><img width="700" alt="요청 ID가 붙은 콘솔 로그" src="docs/images/screens/mdc-log.png" />
-- Swagger 에러 응답: 공통 에러 응답 설정과 `ErrorResponse` 예시값으로 API마다 에러 형식 표시 ([#259](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/259))
-- 배치 중복 방지: ShedLock으로 같은 배치가 동시에 두 번 실행되지 않도록 공통 설정 ([#255](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/255))
+> 관련 이슈: [#1](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/1) · [#10](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/10) · Swagger [#232](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/232) (하위 이슈 · PR은 부모 이슈에서 확인)
+
+- **클론만 하면 끝나는 초기 세팅**
+    - 프로젝트를 열면(Gradle sync) 깃 훅 · 커밋 템플릿 · IntelliJ 코드 스타일이 자동 설치
+    - IntelliJ · Spotless · Checkstyle의 import 규칙을 맞춰, develop의 Checkstyle 위반 18건 → 0건
+- **깃 훅으로 커밋 규칙 자동화**
+    - `t1;` → `test(red) :` 같은 단축키 변환, 브랜치 이름의 이슈 번호 자동 삽입, 영어 Merge · Revert 제목 한글 변환
+    - 커밋 전 Spotless 자동 정리, push 전 포맷 검사 · 컴파일 (테스트는 CI에서)
+- **테스트 환경 · 구조 검사**
+    - Testcontainers로 실제 PostgreSQL 16 · MongoDB 7에서 통합 테스트 (`@IntegrationTest` 하나로 설정)
+    - ArchUnit으로 헥사고날 패키지 규칙 9개를 PR마다 검사 (경고만)
+- **공통 예외 · 에러 응답**
+    - `MonewException` + 도메인별 `ErrorType`으로 통일하고, 스프링 기본 에러도 같은 `ErrorResponse` 형식으로 응답
+    - 예상 못 한 500은 내부 예외 이름을 숨기고, 동시 수정 충돌은 500 대신 409로 응답
+- **요청 단위 로그 추적 (MDC)**
+    - 요청 ID · IP · 사용자 ID · 메서드 · URL을 모든 로그와 응답 헤더에 남기고, `@Async` 스레드까지 이어 붙여 한 요청의 로그를 끝까지 추적
+    <br><img width="700" alt="요청 ID가 붙은 콘솔 로그" src="docs/images/screens/mdc-log.png" />
+- **Swagger 공통 설정**
+    - `@RequestId`만 붙이면 요청자 ID 헤더(`Monew-Request-User-ID`) 입력칸이 자동으로 생김
+    - 모든 API에 500을 추가하고, 4xx · 5xx 응답 본문을 `ErrorResponse` 형식으로 자동 표시
+    <br><img width="700" alt="Swagger 요청자 ID 헤더 입력칸과 ErrorResponse 응답 형식" src="docs/images/screens/swagger-common.png" />
+- **배치 중복 실행 방지 (ShedLock)**
+    - 공통 Aspect로 모든 `@Scheduled`에 잠금을 걸어, 배포 중 앱 2개가 겹쳐도 한 회차에 한 번만 실행 (배치 코드는 수정 없음)
+- **SPA 라우팅**
+    - 프론트 화면 주소로 새로고침해도 404가 나지 않게 `index.html`로 연결하고, 없는 `/api/**` 주소는 원래의 404 · 405 응답을 그대로 반환
 
 
 <p align="right"><a href="#feature-12">⬆️ 맨 위로 (제목을 눌러 접기)</a></p>
