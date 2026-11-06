@@ -4,6 +4,7 @@ import com.sprint.monew.adapter.in.controller.useractivity.dto.response.UserActi
 import com.sprint.monew.application.useractivity.provided.UserActivityUseCase;
 import com.sprint.monew.global.annotation.RestWebAdapter;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,7 +30,8 @@ public class UserActivityController {
     })
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/{userId}")
-    public UserActivityDto findUserActivity(@PathVariable UUID userId) {
+    public UserActivityDto findUserActivity(
+            @Parameter(description = "사용자 ID", required = true) @PathVariable UUID userId) {
         return UserActivityDto.from(userActivityUseCase.findByUserId(userId));
     }
 }
