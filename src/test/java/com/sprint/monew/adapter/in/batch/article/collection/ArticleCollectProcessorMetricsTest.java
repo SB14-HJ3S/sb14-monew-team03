@@ -35,12 +35,13 @@ class ArticleCollectProcessorMetricsTest {
 
     private final SimpleMeterRegistry registry = new SimpleMeterRegistry();
     private final ArticleCollectionUseCase useCase = mock(ArticleCollectionUseCase.class);
+    private final ArticleCollectionTiming timing = new ArticleCollectionTiming();
     private final ArticleCollectionStepListener stepListener =
-            new ArticleCollectionStepListener(registry);
+            new ArticleCollectionStepListener(registry, timing);
     private final StepExecution stepExecution =
             new JobExecution(1L, new JobParameters()).createStepExecution("articleCollectionStep");
     private final ArticleCollectProcessor processor =
-            new ArticleCollectProcessor(registry, useCase);
+            new ArticleCollectProcessor(registry, useCase, timing);
 
     @BeforeEach
     void initializeStep() {

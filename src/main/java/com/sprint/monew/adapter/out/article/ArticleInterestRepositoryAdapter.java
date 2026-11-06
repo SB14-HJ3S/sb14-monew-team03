@@ -15,6 +15,11 @@ public class ArticleInterestRepositoryAdapter implements ArticleInterestReposito
     private final ArticleInterestJpaRepository repository;
 
     @Override
+    public List<UUID> findLinkedArticleIds(UUID interestId, List<UUID> articleIds) {
+        return repository.findLinkedArticleIds(interestId, articleIds);
+    }
+
+    @Override
     public void saveAll(List<ArticleInterest> links) {
         repository.saveAll(links);
     }

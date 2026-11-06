@@ -64,6 +64,15 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
+    public List<Article> findAllBySourceUrls(List<String> sourceUrls) {
+        if (sourceUrls.isEmpty()) {
+            return List.of();
+        }
+
+        return repository.findAllBySourceUrlIn(sourceUrls);
+    }
+
+    @Override
     public Article save(Article article) {
         return repository.save(article);
     }

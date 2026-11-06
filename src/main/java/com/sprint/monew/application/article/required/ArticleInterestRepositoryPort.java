@@ -9,6 +9,8 @@ public interface ArticleInterestRepositoryPort {
 
     void saveAll(List<ArticleInterest> links);
 
+    List<UUID> findLinkedArticleIds(UUID interestId, List<UUID> articleIds);
+
     ArticleInterest save(ArticleInterest articleInterest);
 
     Optional<ArticleInterest> findByArticleIdAndInterestId(UUID articleId, UUID interestId);

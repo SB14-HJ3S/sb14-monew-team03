@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 public class ArticleCollectionChunkListener implements ChunkListener {
 
     private final MeterRegistry meterRegistry;
+    private final ArticleCollectionTiming timing;
     private long chunkSavedCount;
 
     public void addSavedCount(int count) {
@@ -26,6 +27,12 @@ public class ArticleCollectionChunkListener implements ChunkListener {
 
     @Override
     public void afterChunk(ChunkContext context) {
+        timing.finishStorage();
         meterRegistry.counter(ArticleCollectionMetrics.SAVED_ARTICLES).increment(chunkSavedCount);
+    }
+
+    @Override
+    public void afterChunkError(ChunkContext context) {
+        timing.finishStorage();
     }
 }
