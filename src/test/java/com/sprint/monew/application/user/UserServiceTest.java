@@ -177,6 +177,20 @@ class UserServiceTest {
     }
 
     @Test
+    @DisplayName("없거나 탈퇴한 사용자의 이메일이어도 비밀번호 확인을 거친 뒤 USER_LOGIN_FAILED 예외가 난다")
+    void givenNoActiveUser_whenLogin_thenCheckPasswordBeforeThrow() {
+        given(passwordEncoder.encode(any())).willReturn("비교용해시");
+        UserService service = new UserService(repository, passwordEncoder, userEventPublisher);
+        given(repository.findUserByEmail("none@monew.com")).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.login("none@monew.com", "password1!"))
+                .isInstanceOf(MonewException.class)
+                .extracting("errorType")
+                .isEqualTo(UserErrorType.USER_LOGIN_FAILED);
+        verify(passwordEncoder).matches("password1!", "비교용해시");
+    }
+
+    @Test
     @DisplayName("닉네임을 바꾸면 닉네임이 바뀐다")
     void givenActiveUser_whenUpdateNickname_thenChanged() {
         UUID userId = UUID.randomUUID();

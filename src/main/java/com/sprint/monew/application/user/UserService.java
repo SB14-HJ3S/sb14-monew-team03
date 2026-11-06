@@ -11,19 +11,29 @@ import com.sprint.monew.global.exception.errortype.UserErrorType;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor
 public class UserService implements IUserService {
 
     private final UserRepositoryPort repository;
     private final PasswordEncoder passwordEncoder;
     private final UserEventPublisherPort userEventPublisher;
+    private final String dummyPasswordHash;
+
+    public UserService(
+            UserRepositoryPort repository,
+            PasswordEncoder passwordEncoder,
+            UserEventPublisherPort userEventPublisher) {
+        this.repository = repository;
+        this.passwordEncoder = passwordEncoder;
+        this.userEventPublisher = userEventPublisher;
+        this.dummyPasswordHash = passwordEncoder.encode(UUID.randomUUID().toString());
+    }
 
     @Override
     public User getActiveUser(UUID userId) {
@@ -57,11 +67,13 @@ public class UserService implements IUserService {
 
     @Override
     public User login(String email, String password) {
-        User user = repository.findUserByEmail(email).orElseThrow(this::loginFailed);
-        if (!passwordEncoder.matches(password, user.getPassword())) {
+        Optional<User> user = repository.findUserByEmail(email);
+        String passwordHash = user.map(User::getPassword).orElse(dummyPasswordHash);
+        boolean matched = passwordEncoder.matches(password, passwordHash);
+        if (user.isEmpty() || !matched) {
             throw loginFailed();
         }
-        return user;
+        return user.get();
     }
 
     @Override
