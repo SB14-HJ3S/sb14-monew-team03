@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,9 @@ public class ArticleRestoreApplication implements ArticleRestoreUseCase {
     @Override
     @Transactional
     public List<ArticleRestoreResult> restoreArticles(LocalDateTime from, LocalDateTime to) {
+        if (Objects.isNull(from) || (Objects.isNull(to))) {
+            throw new MonewException(CommonErrorType.INVALID_REQUEST);
+        }
         if (from.isAfter(to)) {
             throw new MonewException(
                     CommonErrorType.INVALID_REQUEST, Map.of("from", from, "to", to));
