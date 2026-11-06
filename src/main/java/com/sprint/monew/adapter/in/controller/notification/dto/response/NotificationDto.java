@@ -12,7 +12,7 @@ public record NotificationDto(
         @Schema(description = "수정 시각") Instant updatedAt,
         @Schema(description = "확인 여부") boolean confirmed,
         @Schema(description = "알림 받는 사용자 ID") UUID userId,
-        @Schema(description = "알림 내용", example = "[축구]와 관련된 기사가 3건 등록되었습니다.") String content,
+        @Schema(description = "알림 내용", example = "축구와 관련된 기사가 3건 등록되었습니다.") String content,
         @Schema(description = "관련 리소스 종류", example = "INTEREST") ResourceType resourceType,
         @Schema(description = "관련 리소스 ID (관심사 또는 댓글)") UUID resourceId) {
 
