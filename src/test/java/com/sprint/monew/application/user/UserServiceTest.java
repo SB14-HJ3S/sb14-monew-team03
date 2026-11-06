@@ -291,4 +291,37 @@ class UserServiceTest {
 
         assertThat(result).isEqualTo(ids);
     }
+
+    @Test
+    @DisplayName("탈퇴한 사용자 목록을 지우면 잠금 조회된 사용자만 이벤트로 한 번 보내고 그다음 한 번에 지운다")
+    void givenDeletedUsers_whenHardDeleteUsers_thenPublishOnceThenDeleteLockedIds() {
+        UUID deletedId = UUID.randomUUID();
+        UUID activeId = UUID.randomUUID();
+        User deleted = User.create("gone@monew.com", "탈퇴자", "암호화된비밀번호");
+        ReflectionTestUtils.setField(deleted, "id", deletedId);
+        deleted.softDelete();
+        given(repository.findDeletedUsersForUpdate(List.of(deletedId, activeId)))
+                .willReturn(List.of(deleted));
+        given(repository.deleteUsers(List.of(deletedId))).willReturn(1);
+
+        int result = userService.hardDeleteUsers(List.of(deletedId, activeId));
+
+        assertThat(result).isEqualTo(1);
+        InOrder inOrder = inOrder(userEventPublisher, repository);
+        inOrder.verify(userEventPublisher).publish(new UserHardDeletingEvent(List.of(deletedId)));
+        inOrder.verify(repository).deleteUsers(List.of(deletedId));
+    }
+
+    @Test
+    @DisplayName("목록에 탈퇴한 사용자가 없으면 이벤트도 삭제도 없이 0을 돌려준다")
+    void givenNoDeletedUsers_whenHardDeleteUsers_thenZeroWithoutEventAndDelete() {
+        List<UUID> ids = List.of(UUID.randomUUID());
+        given(repository.findDeletedUsersForUpdate(ids)).willReturn(List.of());
+
+        int result = userService.hardDeleteUsers(ids);
+
+        assertThat(result).isZero();
+        verifyNoInteractions(userEventPublisher);
+        verify(repository, never()).deleteUsers(any());
+    }
 }
