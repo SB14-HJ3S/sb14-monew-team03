@@ -7,6 +7,7 @@ import com.sprint.monew.application.article.required.ArticleBackupStoragePort;
 import com.sprint.monew.global.config.S3Properties;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.ArticleErrorType;
+import com.sprint.monew.global.exception.errortype.ExternalErrorType;
 import com.sprint.monew.global.util.backup.ArticleBackupGzipCompressor;
 import com.sprint.monew.global.util.backup.ArticleBackupJsonSerializer;
 import java.time.LocalDate;
@@ -77,7 +78,7 @@ public class S3ArticleBackupStorageAdapter implements ArticleBackupStoragePort {
                 }
             }
         } catch (SdkException e) {
-            throw new MonewException(ArticleErrorType.ARTICLE_BACKUP_READ_FAILED, e);
+            throw new MonewException(ExternalErrorType.EXTERNAL_API_CALL_FAILED, e);
         }
 
         return List.copyOf(articles);
