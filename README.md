@@ -485,6 +485,24 @@
 - 헥사고날 패키지 구조 설계
 - 도메인별 엔티티 설계
 
+### 💡 구현 포인트
+
+> 관련 이슈: [#73](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/73) (부모 이슈 [#1](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/1))
+
+- **헥사고날 패키지 구조**
+    - `adapter`(in: 컨트롤러 · 배치 · 이벤트 리스너 / out: DB · 외부 API) · `application`(UseCase · Port) · `domain`(엔티티) · `global`(공통)으로 나눠, 바깥 기술이 바뀌어도 핵심 로직은 그대로 두는 구조
+    - 요청 · 응답 DTO는 `adapter/in/controller`에 두어, 엔티티가 API 형식에 끌려가지 않게 함
+    - 모든 도메인이 같은 패키지 모양을 따라, 한 도메인을 알면 나머지도 바로 읽힘
+- **ERD 기반 엔티티 10개 설계**
+    - ERD Cloud에서 팀이 함께 정한 테이블 10개(사용자 · 관심사 · 키워드 · 구독 · 기사 · 기사-관심사 · 기사 조회 기록 · 댓글 · 댓글 좋아요 · 알림)를 엔티티로 작성
+    - 논리 삭제가 필요한 사용자 · 기사 · 댓글은 삭제 시각을 가진 공통 부모 엔티티를 상속
+- **중복은 DB 유니크 제약으로 차단**
+    - 이메일 · 기사 원본 URL · 관심사 이름, 그리고 (기사, 관심사) · (사용자, 기사 조회) · (사용자, 댓글 좋아요) · (사용자, 관심사 구독) · (관심사, 키워드) 조합에 유니크 제약
+    - 동시에 같은 요청이 들어와도 애플리케이션 검사만으로 놓치는 중복을 DB에서 한 번 더 막음
+- **연관관계 · 생성 규칙 통일**
+    - 연관관계는 `@ManyToOne(fetch = LAZY)`로 통일해 필요할 때만 조회
+    - 기본 생성자는 `protected`로 막고, 엔티티는 `create()` 정적 팩토리로만 생성
+
 
 <p align="right"><a href="#feature-10">⬆️ 맨 위로 (제목을 눌러 접기)</a></p>
 
@@ -500,6 +518,24 @@
 - 도메인별 UseCase · Port 정의
 - 커서 페이지네이션
 - 요청자 ID 처리
+
+### 💡 구현 포인트
+
+> 관련 이슈: [#95](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/95) · [#139](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/139) (부모 이슈 [#1](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/1) · [#10](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/10))
+
+- **도메인별 UseCase · Port 먼저 정의**
+    - 기능 구현 전에 도메인마다 "무엇을 제공하는지"를 `provided/{Domain}UseCase` 인터페이스 하나로 정의해, 담당자들이 같은 계약 위에서 병렬로 구현
+    - 저장소는 `required` Port와 `adapter/out` Adapter로 나누고, 기사 도메인에 예시를 만들어 다른 담당자가 같은 방식으로 따라 만들게 함
+- **공통 커서 페이지네이션**
+    - 목록 조회 조건은 도메인별 Query가 공통 계약 `PageQuery`(cursor · after · limit) · `SortedPageQuery`(+ 정렬 기준 · 방향)를 구현
+    - `limit`보다 1개 더 조회해 다음 페이지 여부를 판단하고, 마지막 요소의 정렬 값(커서)과 생성 시각(보조 커서)으로 `PageResult`를 한 곳에서 조합
+    - 정렬 기준 enum(`SortOrder`)이 다음 커서 값을 직접 뽑아, 도메인마다 커서 계산 코드를 반복하지 않음
+- **정렬 파라미터 자동 변환**
+    - `orderBy=publishDate` 같은 쿼리 문자열을 각 도메인의 `SortOrder` enum으로 바꾸는 공통 변환기를 등록해, 잘못된 정렬 값은 컨트롤러에 닿기 전에 거부
+- **요청자 ID 처리**
+    - `@RequestId`가 붙은 API만 인터셉터가 `Monew-Request-User-ID` 헤더를 UUID로 바꿔 `RequestIdContext`(ThreadLocal)에 저장하고, 요청이 끝나면 비움
+    - 헤더가 없거나 UUID 형식이 아니면 400(`INVALID_REQUEST`)으로 응답
+    - `@RequestHeader`로 받는 방식과 비교한 뒤 인터셉터 방식으로 팀 결정(ADR [#103](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/103))
 
 
 <p align="right"><a href="#feature-11">⬆️ 맨 위로 (제목을 눌러 접기)</a></p>
