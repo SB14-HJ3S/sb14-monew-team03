@@ -205,7 +205,9 @@
               "type": "value",
               "options": {
                 "articleCollectionJob": { "text": "뉴스 기사 수집" },
+                "articleBackupJob": { "text": "뉴스 기사 백업" },
                 "notificationCleanupJob": { "text": "알림 삭제" },
+                "userCleanupJob": { "text": "사용자 삭제" },
                 "logBackupJob": { "text": "로그 백업" }
               }
             }
@@ -314,20 +316,17 @@
             "stacking": { "group": "A", "mode": "none" }
           },
           "decimals": 0,
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "articleCollectionJob": { "text": "뉴스 기사 수집" },
-                "notificationCleanupJob": { "text": "알림 삭제" },
-                "logBackupJob": { "text": "로그 백업" }
-              }
-            }
-          ],
+          "mappings": [],
           "min": 0,
           "unit": "short"
         },
-        "overrides": []
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "articleCollectionJob" }, "properties": [{ "id": "displayName", "value": "뉴스 기사 수집" }] },
+          { "matcher": { "id": "byName", "options": "articleBackupJob" }, "properties": [{ "id": "displayName", "value": "뉴스 기사 백업" }] },
+          { "matcher": { "id": "byName", "options": "notificationCleanupJob" }, "properties": [{ "id": "displayName", "value": "알림 삭제" }] },
+          { "matcher": { "id": "byName", "options": "userCleanupJob" }, "properties": [{ "id": "displayName", "value": "사용자 삭제" }] },
+          { "matcher": { "id": "byName", "options": "logBackupJob" }, "properties": [{ "id": "displayName", "value": "로그 백업" }] }
+        ]
       },
       "gridPos": { "h": 9, "w": 12, "x": 0, "y": 14 },
       "id": 8,
@@ -366,20 +365,17 @@
             "stacking": { "group": "A", "mode": "none" }
           },
           "decimals": 2,
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "articleCollectionJob": { "text": "뉴스 기사 수집" },
-                "notificationCleanupJob": { "text": "알림 삭제" },
-                "logBackupJob": { "text": "로그 백업" }
-              }
-            }
-          ],
+          "mappings": [],
           "min": 0,
           "unit": "s"
         },
-        "overrides": []
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "articleCollectionJob" }, "properties": [{ "id": "displayName", "value": "뉴스 기사 수집" }] },
+          { "matcher": { "id": "byName", "options": "articleBackupJob" }, "properties": [{ "id": "displayName", "value": "뉴스 기사 백업" }] },
+          { "matcher": { "id": "byName", "options": "notificationCleanupJob" }, "properties": [{ "id": "displayName", "value": "알림 삭제" }] },
+          { "matcher": { "id": "byName", "options": "userCleanupJob" }, "properties": [{ "id": "displayName", "value": "사용자 삭제" }] },
+          { "matcher": { "id": "byName", "options": "logBackupJob" }, "properties": [{ "id": "displayName", "value": "로그 백업" }] }
+        ]
       },
       "gridPos": { "h": 9, "w": 12, "x": 12, "y": 14 },
       "id": 9,
@@ -610,6 +606,93 @@
         }
       ],
       "title": "로그 백업: 대상 파일 vs 올린 파일",
+      "type": "timeseries"
+    }
+,
+    {
+      "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
+      "description": "하루 단위로 탈퇴 후 1일이 지나 완전히 삭제한 사용자 수입니다.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisLabel": "삭제 건수",
+            "drawStyle": "bars",
+            "fillOpacity": 45,
+            "lineWidth": 1,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" }
+          },
+          "decimals": 0,
+          "mappings": [],
+          "min": 0,
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 42 },
+      "id": 15,
+      "options": {
+        "legend": { "calcs": ["sum"], "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
+          "editorMode": "code",
+          "expr": "round(sum(increase(batch_user_cleanup_deleted_total[1d])))",
+          "legendFormat": "삭제한 사용자",
+          "range": true,
+          "instant": false,
+          "refId": "A",
+          "interval": "1d"
+        }
+      ],
+      "title": "사용자 삭제: 하루 삭제 건수",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
+      "description": "하루 단위로 전날 기사를 S3에 백업한 기사 수입니다. 0이 이어지면 백업이 멈췄는지 확인하세요.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisLabel": "기사 수",
+            "drawStyle": "bars",
+            "fillOpacity": 45,
+            "lineWidth": 1,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" }
+          },
+          "decimals": 0,
+          "mappings": [],
+          "min": 0,
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 42 },
+      "id": 16,
+      "options": {
+        "legend": { "calcs": ["sum"], "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
+          "editorMode": "code",
+          "expr": "round(sum(increase(batch_article_backup_uploaded_articles_total[1d])))",
+          "legendFormat": "백업한 기사",
+          "range": true,
+          "instant": false,
+          "refId": "A",
+          "interval": "1d"
+        }
+      ],
+      "title": "뉴스 기사 백업: 하루 백업 기사 수",
       "type": "timeseries"
     }
   ],

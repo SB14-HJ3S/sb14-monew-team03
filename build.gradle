@@ -223,7 +223,7 @@ jacocoTestReport {
   }
 }
 
-// 테스트 커버리지 최소 기준 검사. 지금은 0%(막지 않음) — 나중에 숫자만 올리면 됨(예: 0.8 = 80%)
+// 테스트 커버리지 최소 기준 검사: 줄 기준 80% 미만이면 빌드 실패
 // `check`에 연결돼 있어 `./gradlew build`에 자동 포함됨
 jacocoTestCoverageVerification {
   dependsOn jacocoTestReport
@@ -238,7 +238,7 @@ jacocoTestCoverageVerification {
         // 줄(LINE) 기준: Codecov 배지와 같은 기준
         counter = 'LINE'
         value = 'COVEREDRATIO'
-        minimum = 0.0
+        minimum = 0.8
       }
     }
   }

@@ -4,9 +4,12 @@ import com.sprint.monew.application.interest.provided.dto.InterestQuery;
 import com.sprint.monew.domain.interest.entity.Interest;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 public interface InterestRepository {
+    List<Interest> findAllById(Set<UUID> ids);
+
     Interest save(Interest entity);
 
     List<String> findAllNames();

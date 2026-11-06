@@ -10,6 +10,8 @@ import static org.mockito.Mockito.verify;
 
 import com.sprint.monew.application.user.provided.dto.UserResult;
 import com.sprint.monew.domain.user.entity.User;
+import com.sprint.monew.global.exception.MonewException;
+import com.sprint.monew.global.exception.errortype.UserErrorType;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -107,5 +109,44 @@ class UserApplicationTest {
 
         assertThat(deleted).isZero();
         verify(userService, never()).hardDeleteUsers(any());
+    }
+
+    @Test
+    @DisplayName("한 명씩 다시 지울 때 이미 지워진 사용자(USER_NOT_FOUND)는 건너뛰고 지운 수에 넣지 않는다")
+    void givenAlreadyDeletedUser_whenRetryOneByOne_thenSkipAndNotCount() {
+        UUID first = UUID.randomUUID();
+        UUID gone = UUID.randomUUID();
+        List<UUID> targets = List.of(first, gone);
+        given(userService.findCleanupTargetIds(any())).willReturn(targets);
+        willThrow(new IllegalStateException("DB 오류")).given(userService).hardDeleteUsers(targets);
+        lenient()
+                .doThrow(new MonewException(UserErrorType.USER_NOT_FOUND))
+                .when(userService)
+                .hardDeleteUser(gone);
+
+        int deleted = userApplication.cleanupDeletedUsers();
+
+        verify(userService).hardDeleteUser(first);
+        verify(userService).hardDeleteUser(gone);
+        assertThat(deleted).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("한 명씩 다시 지울 때 USER_NOT_FOUND가 아닌 MonewException은 실패로 세고 다음 사용자를 계속 지운다")
+    void givenOtherMonewException_whenRetryOneByOne_thenCountAsFailureAndContinue() {
+        UUID failing = UUID.randomUUID();
+        UUID next = UUID.randomUUID();
+        List<UUID> targets = List.of(failing, next);
+        given(userService.findCleanupTargetIds(any())).willReturn(targets);
+        willThrow(new IllegalStateException("DB 오류")).given(userService).hardDeleteUsers(targets);
+        willThrow(new MonewException(UserErrorType.USER_EMAIL_DUPLICATED))
+                .given(userService)
+                .hardDeleteUser(failing);
+
+        int deleted = userApplication.cleanupDeletedUsers();
+
+        verify(userService).hardDeleteUser(failing);
+        verify(userService).hardDeleteUser(next);
+        assertThat(deleted).isEqualTo(1);
     }
 }
