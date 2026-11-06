@@ -8,6 +8,7 @@ import com.sprint.monew.application.useractivity.provided.dto.ArticleViewActivit
 import com.sprint.monew.application.useractivity.provided.dto.CommentActivityResult;
 import com.sprint.monew.application.useractivity.provided.dto.CommentLikeActivityResult;
 import com.sprint.monew.application.useractivity.provided.dto.SubscriptionActivityResult;
+import com.sprint.monew.application.useractivity.provided.dto.UserActivityResult;
 import com.sprint.monew.global.type.ArticleSourceType;
 import com.sprint.monew.support.MongoIntegrationTest;
 import java.time.Instant;
@@ -172,6 +173,20 @@ class UserActivityMongoWriterTest {
         assertThat(find(woody).commentLikes()).isEmpty();
     }
 
+    @Test
+    @DisplayName("최근 댓글 중 하나가 지워져도 담아둔 다음 댓글로 10건을 채운다.")
+    void givenElevenComments_whenRemoveLatest_thenStillTen() {
+        UUID latestId = UUID.randomUUID();
+        for (int i = 1; i <= 10; i++) {
+            writer.addComment(woody, comment(UUID.randomUUID(), UUID.randomUUID(), woody));
+        }
+        writer.addComment(woody, comment(latestId, UUID.randomUUID(), woody)); // 11번째 = 가장 최신
+
+        writer.removeComment(latestId);
+
+        assertThat(find(woody).toResult().comments()).hasSize(10);
+    }
+
     // ===== 좋아요 =====
 
     @Test
@@ -232,6 +247,26 @@ class UserActivityMongoWriterTest {
 
         assertThat(find(buzz).comments().get(0).likeCount()).isEqualTo(5L);
         assertThat(find(woody).commentLikes().get(0).commentLikeCount()).isEqualTo(5L);
+    }
+
+    @Test
+    @DisplayName("활동 내역 전체를 저장하면 같은 내용으로 다시 꺼내진다.")
+    void whenSave_thenSameResult() {
+        UUID userId = UUID.randomUUID();
+        UserActivityResult activity =
+                new UserActivityResult(
+                        userId,
+                        "rex@monew.com",
+                        "렉스",
+                        T,
+                        List.of(subscription(UUID.randomUUID(), List.of("손흥민"))),
+                        List.of(comment(UUID.randomUUID(), UUID.randomUUID(), userId)),
+                        List.of(),
+                        List.of());
+
+        writer.save(activity);
+
+        assertThat(find(userId).toResult()).isEqualTo(activity);
     }
 
     // ===== 도우미 =====

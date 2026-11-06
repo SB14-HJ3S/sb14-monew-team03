@@ -120,6 +120,9 @@ dependencies {
   implementation platform('software.amazon.awssdk:bom:2.55.12')
   implementation 'software.amazon.awssdk:s3'
 
+  // 로그 파일 묶음의 TAR 아카이브 생성
+  implementation 'org.apache.commons:commons-compress:1.28.0'
+
   // ── QueryDSL (동적 쿼리 + 커서 페이지네이션용) ────────
   implementation 'io.github.openfeign.querydsl:querydsl-core:6.10.1'
   implementation 'io.github.openfeign.querydsl:querydsl-jpa:6.10.1'

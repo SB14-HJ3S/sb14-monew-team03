@@ -4,12 +4,15 @@ import com.sprint.monew.application.useractivity.provided.dto.ArticleViewActivit
 import com.sprint.monew.application.useractivity.provided.dto.CommentActivityResult;
 import com.sprint.monew.application.useractivity.provided.dto.CommentLikeActivityResult;
 import com.sprint.monew.application.useractivity.provided.dto.SubscriptionActivityResult;
+import com.sprint.monew.application.useractivity.provided.dto.UserActivityResult;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
 /** 활동 내역 문서 갱신 포트. MongoDB 어댑터가 구현한다. Application은 Mongo 항목 타입을 모르도록 결과 객체로 주고받는다. */
 public interface UserActivityWriter {
+    /** 활동 내역 전체로 문서를 저장한다 (문서가 없는 사용자 채우기용) */
+    void save(UserActivityResult activity);
 
     // 사용자
 

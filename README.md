@@ -307,7 +307,7 @@
 ### ✨ 기능
 
 - 댓글 등록 · 목록 조회 · 수정 · 논리 삭제 / 물리 삭제
-- 작성자 본인만 수정 · 삭제 가능하도록 권한 검증
+- 작성자 본인만 수정 가능하도록 권한 검증
 - 작성일 · 좋아요 수 기준 정렬 및 Cursor Pagination
 - 댓글 좋아요 등록 / 취소 및 중복 좋아요 방지
 - 좋아요 수 · 기사 댓글 수 정합성 관리
@@ -315,7 +315,23 @@
 
 ### 💡 구현 포인트
 
-- (프로젝트 진행 후 작성 예정 : 구현 스크린샷 또는 PR/이슈 번호 링크 기재)
+- **좋아요 수 동시성** ([#148](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/148))
+    - 20명이 동시에 좋아요를 누르면 좋아요 행은 20개인데 `like_count`는 3으로 남는 갱신 손실을 테스트로 확인
+    - 엔티티 값을 읽어 바꾸는 대신 DB에서 `UPDATE ... SET like_count = like_count + 1`로 원자적으로 증감
+- **중복 좋아요 방지** ([#148](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/148))
+    - 동시 요청이 사전 확인을 함께 통과하는 경우를 `(comment_id, user_id)` 유니크 제약으로 차단
+    - 유니크 위반(23505)일 때만 409로 변환하고, 다른 DB 오류는 그대로 전달
+- **삭제와 카운트 정합성** ([#254](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/254))
+    - 조건부 UPDATE로 동시 삭제 중 한 요청만 성공 처리해 기사 댓글 수가 두 번 줄지 않게 함
+    - 물리 삭제 시 좋아요와 좋아요 알림도 함께 삭제
+    - `CHECK` 제약으로 좋아요 수 · 댓글 수가 0 아래로 내려가지 않게 DB에서 한 번 더 방어
+- **댓글 수정 시 좋아요 수 보존** ([#254](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/254))
+    - 수정 시 바뀐 컬럼만 저장해, 동시에 눌린 좋아요 수를 덮어쓰지 않게 함
+- **커서 페이지네이션** ([#292](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/292))
+    - 마지막 댓글 id를 커서로 쓰고, 정렬 값 → 작성 시각 → id 순으로 비교해 값이 같은 댓글도 누락 · 중복 없이 조회
+- **사용자 완전 삭제 시 카운트 정리** ([#302](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/302))
+    - 도메인 간 순환 참조를 피하려고 이벤트로 처리하고, 같은 트랜잭션에서 좋아요 수와 기사 댓글 수를 함께 차감
+    - 이미 논리 삭제된 댓글은 그때 줄였으므로 차감 대상에서 제외
 
 
 <p align="right"><a href="#feature-6">⬆️ 맨 위로 (제목을 눌러 접기)</a></p>
@@ -1127,7 +1143,7 @@ src/main/java/com/sprint/monew
 └── global/                                       # 공통: 설정 · 예외(ArticleErrorType) · 타입(ArticleSourceType) · 페이지네이션 · 요청자 ID · 로깅
 ```
 
-> 요청 흐름: `ArticleController` → `ArticleUseCase`(구현 `ArticleApplication`) → `ArticleService` → `ArticleRepositoryPort`(구현 `ArticleRepositoryAdapter`) → DB  
+> 요청 흐름: `ArticleController` → `ArticleUseCase`(구현 `ArticleApplication`) → `ArticleService` → `ArticleRepositoryPort`(구현 `ArticleRepositoryAdapter`) → DB
 > 다른 도메인(`user` · `interest` · `comment` · `notification` · `useractivity`)도 같은 구조입니다.
 
 | 도메인 · 기능 | 담당 |

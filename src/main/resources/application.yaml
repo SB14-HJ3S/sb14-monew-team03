@@ -61,6 +61,7 @@ monew:
   log:
     backup:
       cron: "0 0 3 * * *"
+      limit: 10
 
   article:
     backup:

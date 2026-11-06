@@ -29,14 +29,12 @@ class UserActivityDocumentUpdaterTest {
     }
 
     @Test
-    @DisplayName("댓글을 11번 추가하면 최신 10건만 최신순으로 남는다.")
-    void givenElevenComments_whenPush_thenKeepsLatestTen() {
-        // given
+    @DisplayName("댓글을 21번 추가하면 문서에는 최신 20건까지 저장된다.")
+    void givenTwentyOneComments_whenPush_thenKeepsLatestTwenty() {
         UUID userId = UUID.randomUUID();
         repository.save(UserActivityDocument.create(userId, "woody@monew.com", "우디", T));
 
-        // when
-        for (int i = 1; i <= 11; i++) {
+        for (int i = 1; i <= 21; i++) {
             updater.pushComment(
                     userId,
                     new CommentItem(
@@ -50,22 +48,19 @@ class UserActivityDocumentUpdaterTest {
                             T.plusSeconds(i)));
         }
 
-        // then
         UserActivityDocument found = repository.findById(userId).orElseThrow();
-        assertThat(found.comments()).hasSize(UserActivityDocument.RECENT_LIMIT);
-        assertThat(found.comments().get(0).content()).isEqualTo("댓글11"); // 최신이 맨 앞
-        assertThat(found.comments())
-                .extracting(CommentItem::content)
-                .doesNotContain("댓글1"); // 가장 오래된 것 밀려남
+        assertThat(found.comments()).hasSize(UserActivityDocument.STORED_LIMIT);
+        assertThat(found.comments().get(0).content()).isEqualTo("댓글21");
+        assertThat(found.comments()).extracting(CommentItem::content).doesNotContain("댓글1");
     }
 
     @Test
-    @DisplayName("좋아요를 11번 추가하면 최신 10건만 최신순으로 남는다.")
-    void givenElevenLikes_whenPush_thenKeepsLatestTen() {
+    @DisplayName("좋아요를 21번 추가하면 문서에는 최신 20건까지 저장된다.")
+    void givenTwentyOneLikes_whenPush_thenKeepsLatestTwenty() {
         UUID userId = UUID.randomUUID();
         repository.save(UserActivityDocument.create(userId, "woody@monew.com", "우디", T));
 
-        for (int i = 1; i <= 11; i++) {
+        for (int i = 1; i <= 21; i++) {
             updater.pushCommentLike(
                     userId,
                     new CommentLikeItem(
@@ -82,20 +77,20 @@ class UserActivityDocumentUpdaterTest {
         }
 
         UserActivityDocument found = repository.findById(userId).orElseThrow();
-        assertThat(found.commentLikes()).hasSize(UserActivityDocument.RECENT_LIMIT);
-        assertThat(found.commentLikes().get(0).commentContent()).isEqualTo("댓글11");
+        assertThat(found.commentLikes()).hasSize(UserActivityDocument.STORED_LIMIT);
+        assertThat(found.commentLikes().get(0).commentContent()).isEqualTo("댓글21");
         assertThat(found.commentLikes())
                 .extracting(CommentLikeItem::commentContent)
                 .doesNotContain("댓글1");
     }
 
     @Test
-    @DisplayName("본 기사를 11번 추가하면 최신 10건만 최신순으로 남는다.")
-    void givenElevenViews_whenPush_thenKeepsLatestTen() {
+    @DisplayName("본 기사를 21번 추가하면 문서에는 최신 20건까지 저장된다.")
+    void givenTwentyOneViews_whenPush_thenKeepsLatestTwenty() {
         UUID userId = UUID.randomUUID();
         repository.save(UserActivityDocument.create(userId, "woody@monew.com", "우디", T));
 
-        for (int i = 1; i <= 11; i++) {
+        for (int i = 1; i <= 21; i++) {
             updater.pushArticleView(
                     userId,
                     new ArticleViewItem(
@@ -113,8 +108,8 @@ class UserActivityDocumentUpdaterTest {
         }
 
         UserActivityDocument found = repository.findById(userId).orElseThrow();
-        assertThat(found.articleViews()).hasSize(UserActivityDocument.RECENT_LIMIT);
-        assertThat(found.articleViews().get(0).articleTitle()).isEqualTo("기사11");
+        assertThat(found.articleViews()).hasSize(UserActivityDocument.STORED_LIMIT);
+        assertThat(found.articleViews().get(0).articleTitle()).isEqualTo("기사21");
         assertThat(found.articleViews())
                 .extracting(ArticleViewItem::articleTitle)
                 .doesNotContain("기사1");

@@ -19,10 +19,7 @@ public class NotificationCleanupTasklet implements Tasklet {
     public @Nullable RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext)
             throws Exception {
         int deletedCount = useCase.deleteOldReadNotifications();
-        contribution
-                .getStepExecution()
-                .getExecutionContext()
-                .putInt(NotificationMetrics.DELETED, deletedCount);
+        contribution.incrementWriteCount(deletedCount);
 
         return RepeatStatus.FINISHED;
     }

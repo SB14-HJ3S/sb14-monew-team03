@@ -12,12 +12,13 @@ import static com.sprint.monew.domain.user.entity.QUser.user;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.sprint.monew.adapter.out.useractivity.document.UserActivityDocument;
 import com.sprint.monew.application.useractivity.provided.dto.ArticleViewActivityResult;
 import com.sprint.monew.application.useractivity.provided.dto.CommentActivityResult;
 import com.sprint.monew.application.useractivity.provided.dto.CommentLikeActivityResult;
 import com.sprint.monew.application.useractivity.provided.dto.SubscriptionActivityResult;
 import com.sprint.monew.application.useractivity.provided.dto.UserActivityResult;
-import com.sprint.monew.application.useractivity.required.UserActivityReader;
+import com.sprint.monew.application.useractivity.required.UserActivitySourceReader;
 import com.sprint.monew.domain.user.entity.QUser;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -32,9 +33,10 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
-public class UserActivityRdbAdapter implements UserActivityReader {
+public class UserActivityRdbAdapter implements UserActivitySourceReader {
+    // 문서 채우기용 원본 조회라, 삭제·취소 후에도 10건을 채울 수 있게 문서 저장 한도(20)만큼 가져온다
+    private static final int SOURCE_LIMIT = UserActivityDocument.STORED_LIMIT;
 
-    private static final int RECENT_LIMIT = 10;
     private final JPAQueryFactory queryFactory;
 
     @Override
@@ -114,7 +116,7 @@ public class UserActivityRdbAdapter implements UserActivityReader {
                                         r -> r.get(interestKeyword.keyword), Collectors.toList())));
     }
 
-    // ===== 최근 작성한 댓글 (최대 10건) =====
+    // ===== 최근 작성한 댓글 (최대 20건, 문서채우기용) =====
 
     private List<CommentActivityResult> findRecentComments(UUID userId) {
         return queryFactory
@@ -134,11 +136,11 @@ public class UserActivityRdbAdapter implements UserActivityReader {
                 .join(comment.user, user)
                 .where(user.id.eq(userId), comment.deletedAt.isNull(), article.deletedAt.isNull())
                 .orderBy(comment.createdAt.desc())
-                .limit(RECENT_LIMIT)
+                .limit(SOURCE_LIMIT)
                 .fetch();
     }
 
-    // ===== 최근 좋아요 누른 댓글 (최대 10건) =====
+    // ===== 최근 좋아요 누른 댓글 (최대 20건, 문서 채우기용) =====
 
     private List<CommentLikeActivityResult> findRecentCommentLikes(UUID userId) {
         QUser commentUser = new QUser("commentUser"); // 댓글 작성자 (좋아요 누른 사람과 구분)
@@ -166,11 +168,11 @@ public class UserActivityRdbAdapter implements UserActivityReader {
                         comment.deletedAt.isNull(),
                         article.deletedAt.isNull())
                 .orderBy(commentLike.createdAt.desc())
-                .limit(RECENT_LIMIT)
+                .limit(SOURCE_LIMIT)
                 .fetch();
     }
 
-    // ===== 최근 본 기사 (최대 10건, 마지막으로 본 순) =====
+    // ===== 최근 본 기사 (최대 20건, 문서 채우기용, 마지막으로 본 순) =====
 
     private List<ArticleViewActivityResult> findRecentArticleViews(UUID userId) {
         return queryFactory
@@ -189,7 +191,7 @@ public class UserActivityRdbAdapter implements UserActivityReader {
                 .join(articleViewStatus.article, article)
                 .where(articleViewStatus.user.id.eq(userId), article.deletedAt.isNull())
                 .orderBy(articleViewStatus.lastViewedAt.desc()) // 다시 본 기사가 위로
-                .limit(RECENT_LIMIT)
+                .limit(SOURCE_LIMIT)
                 .fetch()
                 .stream()
                 .map(
@@ -199,7 +201,7 @@ public class UserActivityRdbAdapter implements UserActivityReader {
                                         userId, // viewedBy = 조회 조건의 사용자
                                         toInstant(r.get(articleViewStatus.lastViewedAt)), // 본 시각
                                         r.get(article.id),
-                                        r.get(article.source), // enum → "NAVER"
+                                        r.get(article.source),
                                         r.get(article.sourceUrl),
                                         r.get(article.title),
                                         toInstant(r.get(article.publishedAt)),
