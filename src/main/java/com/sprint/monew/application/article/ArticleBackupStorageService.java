@@ -9,5 +9,9 @@ import java.util.List;
 public interface ArticleBackupStorageService {
     ArticleBackupResult save(long partNumber, ArticleBackupFile file);
 
+    List<String> findKeys(LocalDate date);
+
+    List<ArticleBackupItem> readFile(String key);
+
     List<ArticleBackupItem> readAll(LocalDate date);
 }

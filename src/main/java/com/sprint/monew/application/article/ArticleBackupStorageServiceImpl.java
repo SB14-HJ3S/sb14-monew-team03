@@ -21,6 +21,16 @@ public class ArticleBackupStorageServiceImpl implements ArticleBackupStorageServ
     }
 
     @Override
+    public List<String> findKeys(LocalDate date) {
+        return articleBackupStoragePort.findKeys(date);
+    }
+
+    @Override
+    public List<ArticleBackupItem> readFile(String key) {
+        return articleBackupStoragePort.readFile(key);
+    }
+
+    @Override
     public List<ArticleBackupItem> readAll(LocalDate date) {
         return articleBackupStoragePort.readAll(date);
     }

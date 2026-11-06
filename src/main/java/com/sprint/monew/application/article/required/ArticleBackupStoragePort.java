@@ -10,5 +10,9 @@ public interface ArticleBackupStoragePort {
 
     ArticleBackupResult save(long partNumber, ArticleBackupFile backupFile);
 
+    List<String> findKeys(LocalDate date);
+
+    List<ArticleBackupItem> readFile(String key);
+
     List<ArticleBackupItem> readAll(LocalDate date);
 }

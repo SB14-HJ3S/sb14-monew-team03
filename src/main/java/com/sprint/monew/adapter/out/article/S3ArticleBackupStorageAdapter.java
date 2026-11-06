@@ -48,40 +48,48 @@ public class S3ArticleBackupStorageAdapter implements ArticleBackupStoragePort {
     }
 
     @Override
-    public List<ArticleBackupItem> readAll(LocalDate date) {
+    public List<String> findKeys(LocalDate date) {
         String prefix = "articles/" + date + "/articles-" + date + "-";
-
         ListObjectsV2Request request =
                 ListObjectsV2Request.builder()
                         .bucket(properties.getBucket())
                         .prefix(prefix)
                         .build();
-
-        List<ArticleBackupItem> articles = new ArrayList<>();
-
+        List<String> keys = new ArrayList<>();
         try {
             for (ListObjectsV2Response page : s3Client.listObjectsV2Paginator(request)) {
                 for (S3Object object : page.contents()) {
-                    if (!object.key().endsWith(".json.gz")) {
-                        continue;
+                    if (object.key().endsWith(".json.gz")) {
+                        keys.add(object.key());
                     }
-
-                    GetObjectRequest getObjectRequest =
-                            GetObjectRequest.builder()
-                                    .bucket(properties.getBucket())
-                                    .key(object.key())
-                                    .build();
-
-                    byte[] compressed = s3Client.getObjectAsBytes(getObjectRequest).asByteArray();
-                    byte[] json = gzipCompressor.decompress(compressed);
-                    articles.addAll(serializer.deserialize(json));
                 }
             }
         } catch (SdkException e) {
             throw new MonewException(ExternalErrorType.EXTERNAL_API_CALL_FAILED, e);
         }
+        return keys;
+    }
 
-        return List.copyOf(articles);
+    @Override
+    public List<ArticleBackupItem> readFile(String key) {
+        GetObjectRequest request =
+                GetObjectRequest.builder().bucket(properties.getBucket()).key(key).build();
+        try {
+            byte[] compressed = s3Client.getObjectAsBytes(request).asByteArray();
+            byte[] json = gzipCompressor.decompress(compressed);
+            return serializer.deserialize(json);
+        } catch (SdkException e) {
+            throw new MonewException(ExternalErrorType.EXTERNAL_API_CALL_FAILED, e);
+        }
+    }
+
+    @Override
+    public List<ArticleBackupItem> readAll(LocalDate date) {
+        List<ArticleBackupItem> articles = new ArrayList<>();
+        for (String key : findKeys(date)) {
+            articles.addAll(readFile(key));
+        }
+        return articles;
     }
 
     private void upload(String key, byte[] content) {
