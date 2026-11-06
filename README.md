@@ -72,7 +72,7 @@
 </tr>
 <tr>
   <td align="center" valign="top"><b>김민재</b><br/>기술팀장<br/><br/><sub><kbd><b>뉴스&nbsp;기사&nbsp;도메인</b></kbd>&nbsp;⭐<br/>·&nbsp;네이버&nbsp;API&nbsp;·&nbsp;RSS&nbsp;수집<br/>·&nbsp;기사&nbsp;검색&nbsp;·&nbsp;조회수<br/>·&nbsp;기사&nbsp;S3&nbsp;백업&nbsp;·&nbsp;복구<br/><kbd><b>공통</b></kbd><br/>·&nbsp;헥사고날&nbsp;패키지&nbsp;설계<br/>·&nbsp;도메인별&nbsp;엔티티&nbsp;설계</sub></td>
-  <td align="center" valign="top"><b>박수민</b><br/>기술부팀장<br/><br/><sub><kbd><b>관심사&nbsp;도메인</b></kbd><br/>·&nbsp;관심사&nbsp;등록&nbsp;·&nbsp;수정&nbsp;·&nbsp;삭제<br/>·&nbsp;관심사&nbsp;이름&nbsp;유사도&nbsp;검사<br/>·&nbsp;관심사&nbsp;구독&nbsp;·&nbsp;취소<br/><kbd><b>Spring&nbsp;Batch&nbsp;적용</b></kbd>&nbsp;🚀<br/>·&nbsp;배치&nbsp;5종&nbsp;Spring&nbsp;Batch&nbsp;전환<br/>(기사&nbsp;수집&nbsp;·&nbsp;기사&nbsp;S3&nbsp;백업&nbsp;·<br/>알림&nbsp;삭제&nbsp;·&nbsp;사용자&nbsp;삭제&nbsp;·<br/>로그&nbsp;백업)<br/>·&nbsp;배치&nbsp;로그&nbsp;S3&nbsp;적재<br/>·&nbsp;배치&nbsp;메트릭&nbsp;모니터링<br/><kbd><b>공통</b></kbd><br/>·&nbsp;도메인별&nbsp;UseCase&nbsp;·&nbsp;Port&nbsp;정의<br/>·&nbsp;커서&nbsp;페이지네이션<br/>·&nbsp;요청자&nbsp;ID&nbsp;처리</sub></td>
+  <td align="center" valign="top"><b>박수민</b><br/>기술부팀장<br/><br/><sub><kbd><b>관심사&nbsp;도메인</b></kbd><br/>·&nbsp;관심사&nbsp;등록&nbsp;·&nbsp;수정&nbsp;·&nbsp;삭제<br/>·&nbsp;관심사&nbsp;이름&nbsp;유사도&nbsp;검사<br/>·&nbsp;관심사&nbsp;구독&nbsp;·&nbsp;취소<br/><kbd><b>Spring&nbsp;Batch&nbsp;적용</b></kbd>&nbsp;🚀<br/>·&nbsp;배치&nbsp;5종&nbsp;Spring&nbsp;Batch&nbsp;전환<br/>(기사&nbsp;수집&nbsp;·&nbsp;기사&nbsp;S3&nbsp;백업&nbsp;·<br/>알림&nbsp;삭제&nbsp;·&nbsp;사용자&nbsp;삭제&nbsp;·<br/>로그&nbsp;백업)<br/>·&nbsp;배치&nbsp;로그&nbsp;S3&nbsp;적재<br/>·&nbsp;배치&nbsp;메트릭&nbsp;모니터링<br/><kbd><b>공통</b></kbd><br/>·&nbsp;도메인별&nbsp;UseCase&nbsp;·&nbsp;Port&nbsp;정의<br/>·&nbsp;커서&nbsp;페이지네이션<br/>·&nbsp;요청자&nbsp;ID&nbsp;처리<br/>·&nbsp;Bean&nbsp;Validation&nbsp;공통&nbsp;적용</sub></td>
   <td align="center" valign="top"><b>이수찬</b><br/>팀원<br/><br/><sub><kbd><b>알림&nbsp;도메인</b></kbd><br/>·&nbsp;기사&nbsp;·&nbsp;좋아요&nbsp;알림&nbsp;생성<br/>·&nbsp;알림&nbsp;조회&nbsp;·&nbsp;확인&nbsp;처리<br/>·&nbsp;오래된&nbsp;알림&nbsp;삭제&nbsp;배치<br/><kbd><b>활동&nbsp;내역&nbsp;도메인</b></kbd>&nbsp;🚀<br/>·&nbsp;활동&nbsp;내역&nbsp;조회<br/>·&nbsp;MongoDB&nbsp;조회&nbsp;최적화</sub></td>
   <td align="center" valign="top"><b>이승현</b><br/>행정팀장<br/><br/><sub><kbd><b>사용자&nbsp;도메인</b></kbd><br/>·&nbsp;회원가입&nbsp;·&nbsp;로그인<br/>·&nbsp;닉네임&nbsp;수정<br/>·&nbsp;논리&nbsp;·&nbsp;물리&nbsp;삭제<br/>·&nbsp;탈퇴&nbsp;사용자&nbsp;삭제&nbsp;배치<br/><kbd><b>뉴스&nbsp;기사&nbsp;도메인</b></kbd><br/>·&nbsp;출처&nbsp;목록&nbsp;조회<br/>·&nbsp;기사&nbsp;논리&nbsp;·&nbsp;물리&nbsp;삭제<br/><kbd><b>AWS&nbsp;무중단&nbsp;자동&nbsp;배포</b></kbd><br/>·&nbsp;모니터링&nbsp;환경&nbsp;구축<br/><kbd><b>공통</b></kbd><br/>·&nbsp;공통&nbsp;코드&nbsp;·&nbsp;예외<br/>·&nbsp;Swagger&nbsp;설정<br/>·&nbsp;CI&nbsp;·&nbsp;협업&nbsp;자동화</sub></td>
   <td align="center" valign="top"><b>정수환</b><br/>팀원<br/><br/><sub><kbd><b>댓글&nbsp;도메인</b></kbd><br/>·&nbsp;댓글&nbsp;등록&nbsp;·&nbsp;수정<br/>·&nbsp;댓글&nbsp;논리&nbsp;·&nbsp;물리&nbsp;삭제<br/>·&nbsp;기사별&nbsp;댓글&nbsp;목록&nbsp;조회<br/>·&nbsp;댓글&nbsp;좋아요&nbsp;·&nbsp;취소</sub></td>
@@ -511,13 +511,14 @@
 <a id="feature-11"></a>
 
 <details>
-<summary><b>공통 (UseCase · 페이지네이션 · 요청자 ID)</b> — 박수민</summary>
+<summary><b>공통 (UseCase · 페이지네이션 · 요청자 ID · Bean Validation)</b> — 박수민</summary>
 
 ### ✨ 기능
 
 - 도메인별 UseCase · Port 정의
 - 커서 페이지네이션
 - 요청자 ID 처리
+- Bean Validation 공통 적용
 
 ### 💡 구현 포인트
 
@@ -536,6 +537,9 @@
     - `@RequestId`가 붙은 API만 인터셉터가 `Monew-Request-User-ID` 헤더를 UUID로 바꿔 `RequestIdContext`(ThreadLocal)에 저장하고, 요청이 끝나면 비움
     - 헤더가 없거나 UUID 형식이 아니면 400(`INVALID_REQUEST`)으로 응답
     - `@RequestHeader`로 받는 방식과 비교한 뒤 인터셉터 방식으로 팀 결정(ADR [#103](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/103))
+- **Bean Validation 공통 적용**
+    - Application 계층 표시 어노테이션 `@ApplicationService`에 `@Validated`를 넣어, UseCase 인터페이스 파라미터에 붙인 `@Valid` · `@NotNull` · `@Min` 등이 메서드 실행 전에 자동으로 검사됨
+    - 도메인마다 서비스 안에 직접 쓰던 입력값 검사(`if (limit <= 0) throw …` 등)를 어노테이션으로 옮기는 기준이 됨 (도메인별 적용 [#239](https://github.com/SB14-HJ3S/sb14-monew-team03/issues/239))
 
 
 <p align="right"><a href="#feature-11">⬆️ 맨 위로 (제목을 눌러 접기)</a></p>
