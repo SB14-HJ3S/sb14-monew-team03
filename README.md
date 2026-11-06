@@ -113,14 +113,14 @@
   </td>
   <td align="center" width="50%">
     <img src="docs/images/screens/news.gif" width="100%"/><br/>
-    <b>뉴스 기사 목록</b> <sub>(구현 후 수정 예정)</sub><br/>
+    <b>뉴스 기사 목록</b><br/>
     <sub>검색 · 정렬 (게시일 · 조회수 · 댓글수) · 필터</sub>
   </td>
 </tr>
 <tr>
   <td align="center" width="50%">
     <img src="docs/images/screens/detail.gif" width="100%"/><br/>
-    <b>기사 상세 · 댓글</b> <sub>(구현 후 수정 예정)</sub><br/>
+    <b>기사 상세 · 댓글</b><br/>
     <sub>기사 요약 · 댓글 목록 · 좋아요 수</sub>
   </td>
   <td align="center" width="50%">
@@ -132,12 +132,12 @@
 <tr>
   <td align="center" width="50%">
     <img src="docs/images/screens/activities.gif" width="100%"/><br/>
-    <b>사용자 활동 내역</b> <sub>(구현 후 수정 예정)</sub><br/>
+    <b>사용자 활동 내역</b><br/>
     <sub>작성한 댓글 · 좋아요한 댓글 · 최근 본 기사</sub>
   </td>
   <td align="center" width="50%">
     <img src="docs/images/screens/notification.gif" width="100%"/><br/>
-    <b>알림</b> <sub>(구현 후 수정 예정)</sub><br/>
+    <b>알림</b><br/>
     <sub>구독 관심사 새 기사 · 댓글 좋아요 알림</sub>
   </td>
 </tr>
