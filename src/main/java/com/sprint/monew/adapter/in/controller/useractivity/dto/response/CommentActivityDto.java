@@ -1,18 +1,20 @@
 package com.sprint.monew.adapter.in.controller.useractivity.dto.response;
 
 import com.sprint.monew.application.useractivity.provided.dto.CommentActivityResult;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 import java.util.UUID;
 
+@Schema(description = "최근 작성한 댓글")
 public record CommentActivityDto(
-        UUID id, // 댓글 ID
-        UUID articleId, // 기사 ID
-        String articleTitle, // 기사 제목
-        UUID userId, // 작성자 ID
-        String userNickname, // 작성자 닉네임
-        String content, // 내용
-        Long likeCount, // 좋아요 수
-        Instant createdAt) {
+        @Schema(description = "댓글 ID") UUID id,
+        @Schema(description = "기사 ID") UUID articleId,
+        @Schema(description = "기사 제목") String articleTitle,
+        @Schema(description = "작성자 ID") UUID userId,
+        @Schema(description = "작성자 닉네임") String userNickname,
+        @Schema(description = "댓글 내용") String content,
+        @Schema(description = "좋아요 수") long likeCount,
+        @Schema(description = "작성한 날짜") Instant createdAt) {
 
     public static CommentActivityDto from(CommentActivityResult r) {
         return new CommentActivityDto(
