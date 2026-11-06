@@ -1,20 +1,21 @@
 package com.sprint.monew.adapter.in.controller.comment.dto.response;
 
 import com.sprint.monew.application.comment.provided.dto.CommentLikeResult;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 import java.util.UUID;
 
 public record CommentLikeDto(
-        UUID id, // 좋아요 ID
-        UUID likedBy, // 좋아요한 사용자 ID
-        Instant createdAt, // 좋아요한 날짜
-        UUID commentId, // 댓글 ID
-        UUID articleId, // 기사 ID
-        UUID commentUserId, // 작성자 ID
-        String commentUserNickname, // 작성자 닉네임
-        String commentContent, // 내용
-        Long commentLikeCount, // 좋아요 수
-        Instant commentCreatedAt) { // 작성된 날짜
+        @Schema(description = "좋아요 ID") UUID id,
+        @Schema(description = "좋아요를 누른 사용자 ID") UUID likedBy,
+        @Schema(description = "좋아요를 누른 시각") Instant createdAt,
+        @Schema(description = "댓글 ID") UUID commentId,
+        @Schema(description = "기사 ID") UUID articleId,
+        @Schema(description = "댓글 작성자 ID") UUID commentUserId,
+        @Schema(description = "댓글 작성자 닉네임") String commentUserNickname,
+        @Schema(description = "댓글 내용") String commentContent,
+        @Schema(description = "이번 좋아요를 반영한 좋아요 수") Long commentLikeCount,
+        @Schema(description = "댓글 작성 시각") Instant commentCreatedAt) {
 
     public static CommentLikeDto from(CommentLikeResult result) {
         return new CommentLikeDto(
