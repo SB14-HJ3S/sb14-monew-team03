@@ -45,31 +45,47 @@ public class ArticleController {
         return articleUseCase.findSourceTypes();
     }
 
+    @Operation(summary = "뉴스 기사 단건 조회", description = "뉴스 기사 ID로 뉴스 기사 단건을 조회합니다.")
+    @ApiResponse(responseCode = "200", description = "조회 성공")
+    @ApiResponse(responseCode = "404", description = "뉴스 기사 정보 없음")
     @RequestId
     @GetMapping("/{articleId}")
-    public ArticleDto findById(@PathVariable UUID articleId) {
+    public ArticleDto findById(@Parameter(description = "뉴스 기사 ID") @PathVariable UUID articleId) {
         return ArticleDto.from(articleUseCase.findById(articleId));
     }
 
+    @Operation(summary = "뉴스 기사 목록 조회", description = "조건에 맞는 뉴스 기사 목록을 조회합니다.")
+    @ApiResponse(responseCode = "200", description = "조회 성공")
+    @ApiResponse(responseCode = "400", description = "잘못된 요청 (정렬 기준 오류, 페이지네이션 파라미터 오류 등)")
     @RequestId
     @GetMapping
     public PageResult<ArticleDto> findArticlePagesByQuery(
-            @RequestParam(name = "keyword", required = false) String keyword,
-            @RequestParam(name = "interestId", required = false) UUID interestId,
-            @RequestParam(name = "sourceIn", required = false) List<ArticleSourceType> sourceIn,
-            @RequestParam(name = "publishDateFrom", required = false)
+            @Parameter(description = "검색어(제목, 요약)")
+                    @RequestParam(name = "keyword", required = false)
+                    String keyword,
+            @Parameter(description = "관심사 ID") @RequestParam(name = "interestId", required = false)
+                    UUID interestId,
+            @Parameter(description = "출처(포함)") @RequestParam(name = "sourceIn", required = false)
+                    List<ArticleSourceType> sourceIn,
+            @Parameter(description = "날짜 시작(범위) (LocalDateTime)")
+                    @RequestParam(name = "publishDateFrom", required = false)
                     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
                     LocalDateTime publishDateFrom,
-            @RequestParam(name = "publishDateTo", required = false)
+            @Parameter(description = "날짜 끝(범위) (LocalDateTime)")
+                    @RequestParam(name = "publishDateTo", required = false)
                     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
                     LocalDateTime publishDateTo,
-            @RequestParam(name = "orderBy") ArticleQuery.SortOrder orderBy,
-            @RequestParam(name = "direction") SortDirection direction,
-            @RequestParam(name = "cursor", required = false) String cursor,
-            @RequestParam(name = "after", required = false)
+            @Parameter(description = "정렬 속성 이름") @RequestParam(name = "orderBy")
+                    ArticleQuery.SortOrder orderBy,
+            @Parameter(description = "정렬 방향 (ASC, DESC)") @RequestParam(name = "direction")
+                    SortDirection direction,
+            @Parameter(description = "커서 값") @RequestParam(name = "cursor", required = false)
+                    String cursor,
+            @Parameter(description = "보조 커서(createdAt) 값")
+                    @RequestParam(name = "after", required = false)
                     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
                     Instant after,
-            @RequestParam(name = "limit") @Min(1) int limit) {
+            @Parameter(description = "커서 페이지 크기") @RequestParam(name = "limit") @Min(1) int limit) {
 
         ArticleQuery query =
                 new ArticleQuery(
@@ -109,9 +125,13 @@ public class ArticleController {
         log.info("뉴스 기사 논리 삭제 완료: articleId={}", articleId);
     }
 
+    @Operation(summary = "기사 뷰 등록", description = "기사 뷰를 등록합니다.")
+    @ApiResponse(responseCode = "200", description = "기사 뷰 등록 성공")
+    @ApiResponse(responseCode = "404", description = "뉴스 기사 또는 사용자 정보 없음")
     @RequestId
     @PostMapping("/{articleId}/article-views")
-    public ArticleViewDto registerView(@PathVariable UUID articleId) {
+    public ArticleViewDto registerView(
+            @Parameter(description = "기사 ID") @PathVariable UUID articleId) {
         return ArticleViewDto.from(articleUseCase.register(articleId));
     }
 
