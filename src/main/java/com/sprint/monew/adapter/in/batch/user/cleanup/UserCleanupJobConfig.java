@@ -5,9 +5,9 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.support.transaction.ResourcelessTransactionManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
 public class UserCleanupJobConfig {
@@ -15,11 +15,10 @@ public class UserCleanupJobConfig {
     @Bean
     public Step userCleanupStep(
             JobRepository jobRepository,
-            PlatformTransactionManager transactionManager,
             UserCleanupTasklet tasklet,
             UserCleanupStepListener listener) {
         return new StepBuilder("userCleanupStep", jobRepository)
-                .tasklet(tasklet, transactionManager)
+                .tasklet(tasklet, new ResourcelessTransactionManager())
                 .listener(listener)
                 .build();
     }
