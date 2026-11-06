@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
+@Schema(description = "커서 기반 페이지 응답")
 public record PageResult<T>(
         @Schema(description = "페이지 내용") List<T> content,
         @Schema(description = "다음 페이지 커서(다음 페이지가 없으면 null)") String nextCursor,

@@ -9,6 +9,7 @@ import com.sprint.monew.global.pagination.PageResult;
 import com.sprint.monew.global.util.similarity.StringSimilarityUtils;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,11 @@ public class InterestServiceImpl implements InterestService {
     private static final double NAME_SIMILARITY_THRESHOLD = 0.8D;
 
     private final InterestRepository repository;
+
+    @Override
+    public List<Interest> findAllById(Set<UUID> ids) {
+        return repository.findAllById(ids);
+    }
 
     @Override
     public Interest create(String name, List<String> keywords) {

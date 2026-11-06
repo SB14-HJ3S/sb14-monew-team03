@@ -5,6 +5,7 @@ import com.sprint.monew.application.interest.required.InterestRepository;
 import com.sprint.monew.domain.interest.entity.Interest;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -14,6 +15,11 @@ import org.springframework.stereotype.Repository;
 public class InterestRepositoryAdapter implements InterestRepository {
 
     private final InterestJpaRepository jpaRepository;
+
+    @Override
+    public List<Interest> findAllById(Set<UUID> ids) {
+        return jpaRepository.findAllById(ids);
+    }
 
     @Override
     public Interest save(Interest entity) {

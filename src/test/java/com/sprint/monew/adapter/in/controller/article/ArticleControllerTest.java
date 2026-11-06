@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.sprint.monew.application.article.provided.ArticleRestoreUseCase;
 import com.sprint.monew.application.article.provided.ArticleUseCase;
 import com.sprint.monew.application.article.provided.dto.ArticleQuery;
 import com.sprint.monew.application.article.provided.dto.ArticleResult;
@@ -46,6 +47,7 @@ class ArticleControllerTest {
 
     @Autowired private MockMvc mockMvc;
     @MockitoBean private ArticleUseCase articleUseCase;
+    @MockitoBean private ArticleRestoreUseCase articleRestoreUseCase;
 
     @Test
     @DisplayName("모든 검색 조건과 커서를 전달하고 Swagger의 페이지 응답 필드를 반환한다")
