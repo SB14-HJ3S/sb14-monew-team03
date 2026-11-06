@@ -2,10 +2,10 @@ package com.sprint.monew.adapter.out.article;
 
 import com.sprint.monew.domain.article.entity.Article;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -66,14 +66,14 @@ public interface ArticleJpaRepository extends JpaRepository<Article, UUID>, Arti
             SELECT a
             FROM Article a
             WHERE a.deletedAt IS NULL
-              AND a.createdAt >= :from
-              AND a.createdAt < :to
+              AND a.publishedAt >= :from
+              AND a.publishedAt < :to
               AND (:afterId IS NULL OR a.id > :afterId)
             ORDER BY a.id ASC
             """)
     List<Article> findBackupChunk(
-            @Param("from") Instant from,
-            @Param("to") Instant to,
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to,
             @Param("afterId") UUID afterId,
             Pageable pageable);
 
@@ -86,7 +86,4 @@ public interface ArticleJpaRepository extends JpaRepository<Article, UUID>, Arti
                             AND a.deletedAt IS NULL
             """)
     int increaseViewCount(@Param("id") UUID id);
-
-    @Query("SELECT a.id FROM Article a WHERE a.id IN :ids")
-    Set<UUID> findExistingIds(@Param("ids") Collection<UUID> ids);
 }

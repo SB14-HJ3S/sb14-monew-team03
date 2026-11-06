@@ -15,6 +15,11 @@ public class ArticleInterestRepositoryAdapter implements ArticleInterestReposito
     private final ArticleInterestJpaRepository repository;
 
     @Override
+    public void saveAll(List<ArticleInterest> links) {
+        repository.saveAll(links);
+    }
+
+    @Override
     public void deleteAllByInterestId(UUID interestId) {
         repository.deleteAllByInterestId(interestId);
     }
