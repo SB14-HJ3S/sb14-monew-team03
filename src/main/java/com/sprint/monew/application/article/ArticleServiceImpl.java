@@ -5,7 +5,6 @@ import com.sprint.monew.application.article.required.ArticleRepositoryPort;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.ArticleErrorType;
-import com.sprint.monew.global.exception.errortype.CommonErrorType;
 import com.sprint.monew.global.pagination.PageResult;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -29,10 +28,6 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     @Transactional(readOnly = true)
     public List<Article> getArticlesForBackup(LocalDate date, UUID afterId, int limit) {
-        if (limit <= 0) {
-            throw new MonewException(CommonErrorType.INVALID_REQUEST, Map.of("limit", limit));
-        }
-
         ZoneId zone = ZoneId.of("Asia/Seoul");
 
         Instant from = date.atStartOfDay(zone).toInstant();

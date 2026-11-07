@@ -12,7 +12,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,9 +29,7 @@ public class ArticleRestoreApplication implements ArticleRestoreUseCase {
     @Override
     public List<ArticleRestoreResult> restoreArticles(LocalDateTime from, LocalDateTime to) {
         log.info("뉴스 기사 복구 요청: from={}, to={}", from, to);
-        if (Objects.isNull(from) || (Objects.isNull(to))) {
-            throw new MonewException(CommonErrorType.INVALID_REQUEST);
-        }
+
         if (from.isAfter(to)) {
             throw new MonewException(
                     CommonErrorType.INVALID_REQUEST, Map.of("from", from, "to", to));
