@@ -38,7 +38,7 @@
   <img width="570" alt="팀 로고 - 현재삼수" src="docs/images/team-logo.png" />
 </p>
 
-## 📌 현.재.삼.수 멤버 5인 소개
+## 📌 현.재.삼.수 5인 소개
 
 <table align="center">
 <tr>
@@ -1184,7 +1184,7 @@ GitHub Actions CI가 실행됩니다. (PR은 문서 · 프론트엔드 정적 �
 | 구분 | 규칙 |
 | :--- | :--- |
 | 브랜치 전략 | `{타입}/{이슈번호}-{작업명}` → `develop` → `main` (예: `feat/12-interest-subscribe`) — 이슈의 Branch Keyword 칸에 작업명을 적으면 브랜치가 자동으로 생성됨 |
-| 커밋 컨벤션 | `타입 : 작업 내용 [#이슈번호]` (예: `feat : 관심사 구독 API 추가 [#12]`) — 이슈 번호는 브랜치 이름에서 자동으로 붙음, TDD 단계는 `test(red)` · `feat(green)`/`fix(green)` · `refactor(blue)` (단축키 `t1` · `f1`/`x1` · `r1`), 리뷰 반영 커밋은 제목 끝에 `;c`(클로드) · `;r`(코드래빗) · `;t`(팀원) |
+| 커밋 컨벤션 | `타입 : 작업 내용 [#이슈번호]` (예: `feat : 관심사 구독 API 추가 [#12]`) — 이슈 번호는 브랜치 이름에서 자동으로 붙음, TDD 단계는 `test(red)` · `feat(green)`/`fix(green)` · `refactor(blue)` (단축키 `t1` · `f1`/`x1` · `r1`), 리뷰 반영 커밋은 제목 끝에 `;c`(클로드) · `;r`(코드래빗) · `;t`(사람 리뷰) |
 | PR 규칙 | 이슈 연결(`close #이슈번호`) · 리뷰 승인 1명 이상 후 **일반 머지가 기본**(TDD 단계 커밋을 develop에 그대로 남김) |
 | 코드 스타일 | Spotless(google-java-format `aosp()`, 들여쓰기 4칸) — 커밋 시 Git Hook으로 자동 적용, **최종 포맷 기준**. push 전에는 포맷 검사 · 컴파일을 한 번 더 확인 |
 | 협업 자동화 | PR 제목 · 라벨 자동 정리, 이슈 · PR · 리뷰 디스코드 알림, 프로젝트 보드 상태 자동 변경 |
