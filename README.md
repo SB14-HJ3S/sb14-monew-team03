@@ -38,7 +38,7 @@
   <img width="570" alt="팀 로고 - 현재삼수" src="docs/images/team-logo.png" />
 </p>
 
-## 📌 현.재.삼.수 멤버 5인 소개
+## 📌 현.재.삼.수 5인 소개
 
 <table align="center">
 <tr>
@@ -71,11 +71,11 @@
   <td align="center"><a href="https://app.notion.com/p/a5d9e310974383f1962e812f40211f0f">📝 개발 리포트</a></td>
 </tr>
 <tr>
-  <td align="center" valign="top"><b>김민재</b><br/>기술팀장<br/><br/><sub><kbd><b>뉴스&nbsp;기사&nbsp;도메인</b></kbd>&nbsp;⭐<br/>·&nbsp;네이버&nbsp;API&nbsp;·&nbsp;RSS&nbsp;수집<br/>·&nbsp;기사&nbsp;검색&nbsp;·&nbsp;조회수<br/>·&nbsp;기사&nbsp;S3&nbsp;백업&nbsp;·&nbsp;복구<br/><kbd><b>공통</b></kbd><br/>·&nbsp;헥사고날&nbsp;패키지&nbsp;설계<br/>·&nbsp;도메인별&nbsp;엔티티&nbsp;설계</sub></td>
-  <td align="center" valign="top"><b>박수민</b><br/>기술부팀장<br/><br/><sub><kbd><b>관심사&nbsp;도메인</b></kbd><br/>·&nbsp;관심사&nbsp;등록&nbsp;·&nbsp;수정&nbsp;·&nbsp;삭제<br/>·&nbsp;관심사&nbsp;이름&nbsp;유사도&nbsp;검사<br/>·&nbsp;관심사&nbsp;구독&nbsp;·&nbsp;취소<br/><kbd><b>Spring&nbsp;Batch&nbsp;적용</b></kbd>&nbsp;🚀<br/>·&nbsp;배치&nbsp;5종&nbsp;Spring&nbsp;Batch&nbsp;전환<br/>(기사&nbsp;수집&nbsp;·&nbsp;기사&nbsp;S3&nbsp;백업&nbsp;·<br/>알림&nbsp;삭제&nbsp;·&nbsp;사용자&nbsp;삭제&nbsp;·<br/>로그&nbsp;백업)<br/>·&nbsp;배치&nbsp;로그&nbsp;S3&nbsp;적재<br/>·&nbsp;배치&nbsp;메트릭&nbsp;모니터링<br/><kbd><b>공통</b></kbd><br/>·&nbsp;도메인별&nbsp;UseCase&nbsp;·&nbsp;Port&nbsp;정의<br/>·&nbsp;커서&nbsp;페이지네이션<br/>·&nbsp;요청자&nbsp;ID&nbsp;처리<br/>·&nbsp;Bean&nbsp;Validation&nbsp;적용</sub></td>
-  <td align="center" valign="top"><b>이수찬</b><br/>팀원<br/><br/><sub><kbd><b>알림&nbsp;도메인</b></kbd><br/>·&nbsp;기사&nbsp;·&nbsp;좋아요&nbsp;알림&nbsp;생성<br/>·&nbsp;알림&nbsp;조회&nbsp;·&nbsp;확인&nbsp;처리<br/>·&nbsp;오래된&nbsp;알림&nbsp;삭제&nbsp;배치<br/><kbd><b>활동&nbsp;내역&nbsp;도메인</b></kbd>&nbsp;🚀<br/>·&nbsp;활동&nbsp;내역&nbsp;조회<br/>·&nbsp;MongoDB&nbsp;조회&nbsp;최적화</sub></td>
-  <td align="center" valign="top"><b>이승현</b><br/>행정팀장<br/><br/><sub><kbd><b>사용자&nbsp;도메인</b></kbd><br/>·&nbsp;회원가입&nbsp;·&nbsp;로그인<br/>·&nbsp;닉네임&nbsp;수정<br/>·&nbsp;논리&nbsp;·&nbsp;물리&nbsp;삭제<br/>·&nbsp;탈퇴&nbsp;사용자&nbsp;삭제&nbsp;배치<br/><kbd><b>뉴스&nbsp;기사&nbsp;도메인</b></kbd><br/>·&nbsp;출처&nbsp;목록&nbsp;조회<br/>·&nbsp;기사&nbsp;논리&nbsp;·&nbsp;물리&nbsp;삭제<br/><kbd><b>배포&nbsp;·&nbsp;모니터링</b></kbd><br/>·&nbsp;AWS&nbsp;무중단&nbsp;자동&nbsp;배포<br/>·&nbsp;모니터링&nbsp;환경&nbsp;구축<br/><kbd><b>공통</b></kbd><br/>·&nbsp;공통&nbsp;코드&nbsp;·&nbsp;예외<br/>·&nbsp;Swagger&nbsp;설정<br/>·&nbsp;CI&nbsp;·&nbsp;협업&nbsp;자동화<br/>·&nbsp;배치&nbsp;중복&nbsp;실행&nbsp;방지<br/><kbd><b>발표&nbsp;·&nbsp;문서</b></kbd><br/>·&nbsp;최종&nbsp;발표&nbsp;PPT&nbsp;·&nbsp;영상<br/>·&nbsp;README&nbsp;작성</sub></td>
-  <td align="center" valign="top"><b>정수환</b><br/>팀원<br/><br/><sub><kbd><b>댓글&nbsp;도메인</b></kbd><br/>·&nbsp;댓글&nbsp;등록&nbsp;·&nbsp;수정<br/>·&nbsp;댓글&nbsp;논리&nbsp;·&nbsp;물리&nbsp;삭제<br/>·&nbsp;기사별&nbsp;댓글&nbsp;목록&nbsp;조회<br/>·&nbsp;댓글&nbsp;좋아요&nbsp;·&nbsp;취소</sub></td>
+  <td align="center" valign="top"><b>김민재</b><br/><br/><sub><kbd><b>뉴스&nbsp;기사&nbsp;도메인</b></kbd>&nbsp;⭐<br/>·&nbsp;네이버&nbsp;API&nbsp;·&nbsp;RSS&nbsp;수집<br/>·&nbsp;기사&nbsp;검색&nbsp;·&nbsp;조회수<br/>·&nbsp;기사&nbsp;S3&nbsp;백업&nbsp;·&nbsp;복구<br/><kbd><b>공통</b></kbd><br/>·&nbsp;헥사고날&nbsp;패키지&nbsp;설계<br/>·&nbsp;도메인별&nbsp;엔티티&nbsp;설계</sub></td>
+  <td align="center" valign="top"><b>박수민</b><br/><br/><sub><kbd><b>관심사&nbsp;도메인</b></kbd><br/>·&nbsp;관심사&nbsp;등록&nbsp;·&nbsp;수정&nbsp;·&nbsp;삭제<br/>·&nbsp;관심사&nbsp;이름&nbsp;유사도&nbsp;검사<br/>·&nbsp;관심사&nbsp;구독&nbsp;·&nbsp;취소<br/><kbd><b>Spring&nbsp;Batch&nbsp;적용</b></kbd>&nbsp;🚀<br/>·&nbsp;배치&nbsp;5종&nbsp;Spring&nbsp;Batch&nbsp;전환<br/>(기사&nbsp;수집&nbsp;·&nbsp;기사&nbsp;S3&nbsp;백업&nbsp;·<br/>알림&nbsp;삭제&nbsp;·&nbsp;사용자&nbsp;삭제&nbsp;·<br/>로그&nbsp;백업)<br/>·&nbsp;배치&nbsp;로그&nbsp;S3&nbsp;적재<br/>·&nbsp;배치&nbsp;메트릭&nbsp;모니터링<br/><kbd><b>공통</b></kbd><br/>·&nbsp;도메인별&nbsp;UseCase&nbsp;·&nbsp;Port&nbsp;정의<br/>·&nbsp;커서&nbsp;페이지네이션<br/>·&nbsp;요청자&nbsp;ID&nbsp;처리<br/>·&nbsp;Bean&nbsp;Validation&nbsp;적용</sub></td>
+  <td align="center" valign="top"><b>이수찬</b><br/><br/><sub><kbd><b>알림&nbsp;도메인</b></kbd><br/>·&nbsp;기사&nbsp;·&nbsp;좋아요&nbsp;알림&nbsp;생성<br/>·&nbsp;알림&nbsp;조회&nbsp;·&nbsp;확인&nbsp;처리<br/>·&nbsp;오래된&nbsp;알림&nbsp;삭제&nbsp;배치<br/><kbd><b>활동&nbsp;내역&nbsp;도메인</b></kbd>&nbsp;🚀<br/>·&nbsp;활동&nbsp;내역&nbsp;조회<br/>·&nbsp;MongoDB&nbsp;조회&nbsp;최적화</sub></td>
+  <td align="center" valign="top"><b>이승현</b>&nbsp;🚩<br/><br/><sub><kbd><b>사용자&nbsp;도메인</b></kbd><br/>·&nbsp;회원가입&nbsp;·&nbsp;로그인<br/>·&nbsp;닉네임&nbsp;수정<br/>·&nbsp;논리&nbsp;·&nbsp;물리&nbsp;삭제<br/>·&nbsp;탈퇴&nbsp;사용자&nbsp;삭제&nbsp;배치<br/><kbd><b>뉴스&nbsp;기사&nbsp;도메인</b></kbd><br/>·&nbsp;출처&nbsp;목록&nbsp;조회<br/>·&nbsp;기사&nbsp;논리&nbsp;·&nbsp;물리&nbsp;삭제<br/><kbd><b>배포&nbsp;·&nbsp;모니터링</b></kbd><br/>·&nbsp;AWS&nbsp;무중단&nbsp;자동&nbsp;배포<br/>·&nbsp;모니터링&nbsp;환경&nbsp;구축<br/><kbd><b>공통</b></kbd><br/>·&nbsp;공통&nbsp;코드&nbsp;·&nbsp;예외<br/>·&nbsp;Swagger&nbsp;설정<br/>·&nbsp;CI&nbsp;·&nbsp;협업&nbsp;자동화<br/>·&nbsp;배치&nbsp;중복&nbsp;실행&nbsp;방지<br/><kbd><b>발표&nbsp;·&nbsp;문서</b></kbd><br/>·&nbsp;최종&nbsp;발표&nbsp;PPT&nbsp;·&nbsp;영상<br/>·&nbsp;README&nbsp;작성</sub></td>
+  <td align="center" valign="top"><b>정수환</b><br/><br/><sub><kbd><b>댓글&nbsp;도메인</b></kbd><br/>·&nbsp;댓글&nbsp;등록&nbsp;·&nbsp;수정<br/>·&nbsp;댓글&nbsp;논리&nbsp;·&nbsp;물리&nbsp;삭제<br/>·&nbsp;기사별&nbsp;댓글&nbsp;목록&nbsp;조회<br/>·&nbsp;댓글&nbsp;좋아요&nbsp;·&nbsp;취소</sub></td>
 </tr>
 </table>
 
@@ -183,6 +183,7 @@
     - 다른 도메인은 `UserUseCase`로만 사용자를 꺼내고, 탈퇴한 사용자는 자동으로 404
     - 여러 명을 한 번에 조회할 때는 탈퇴자를 예외 없이 빼서, 한 명 때문에 알림 전체가 실패하지 않게 함
 - **회원가입 검증과 이메일 중복 409**
+    - 비밀번호 규칙(6~20자, 영문 · 숫자 · 특수문자 모두 포함)은 커스텀 Bean Validation 어노테이션 `@ValidPassword`로 분리
     - 비밀번호는 BCrypt로 저장하고, 응답 모델에는 비밀번호 칸을 두지 않음
     - 중복 검사에 탈퇴자(1일 보관)도 포함해, DB 유니크 위반 전에 `USER_EMAIL_DUPLICATED`(409)로 응답
     <br><img width="600" alt="회원가입 이메일 중복 409 응답" src="docs/images/screens/user-signup-409.png" />
@@ -234,7 +235,7 @@
 
 - **이름 유사도 80% 검사**
     - 이름을 공백 제거 · 소문자 · 한글 자모 분리로 정리한 뒤 레벤슈타인 거리로 유사도를 계산해, 80% 이상 비슷하면 409(`SIMILAR_NAME_CONFLICT`)로 응답 (응답에 비슷한 기존 이름과 유사도 포함)
-    - 동시에 같은 이름이 등록되는 경우는 이름 유니크 제약으로 한 번 더 막고 같은 409로 변환
+    - 동시에 같은 이름이 등록되면 이름 유니크 제약이 막고, 공통 예외 처리가 409(`DUPLICATE_RESOURCE`)로 응답
 - **키워드 규칙**
     - 키워드는 1~10개만 허용(요청 DTO와 엔티티에서 검증)하고, 요청 안의 중복 키워드는 엔티티에서 거절
     - 키워드 수정 시 빠진 키워드만 지우고 새 키워드만 추가
@@ -242,13 +243,15 @@
     - 엔티티 값을 읽어 바꾸지 않고 DB에서 `subscriberCount ± 1`로 직접 증감해, 동시에 구독해도 숫자가 틀어지지 않음
     - 감소는 0보다 클 때만 실행하고, DB `CHECK` 제약으로 0 아래로 내려가지 않게 한 번 더 방어
 - **중복 구독 방지**
-    - 먼저 구독 여부를 확인하고, 동시에 들어온 요청은 (사용자, 관심사) 유니크 제약으로 막아 모두 409(`SUBSCRIPTION_ALREADY_EXISTS`)로 응답
+    - 먼저 구독 여부를 확인해 409(`SUBSCRIPTION_ALREADY_EXISTS`)로 응답하고, 확인을 동시에 통과한 요청은 (사용자, 관심사) 유니크 제약이 막아 공통 409(`DUPLICATE_RESOURCE`)로 응답
 - **QueryDSL 검색 · 커서 페이지네이션**
     - 검색어 하나로 관심사 이름 또는 키워드를 대소문자 구분 없이 부분 일치 검색
     - 이름 · 구독자 수 정렬에 생성 시각 · id를 보조로 써서 커서로 다음 페이지를 이어 가고, 내 구독 여부는 IN 조회 한 번으로 채움
 - **삭제 · 이벤트 · 탈퇴 정리**
     - 구독 · 구독 취소 · 키워드 수정 · 삭제 때 이벤트를 발행해 활동 내역(MongoDB)에 반영
     - 사용자 물리 삭제 직전에 그 사용자들이 구독하던 관심사의 구독자 수를 UPDATE 한 번으로 정리
+- **Swagger 문서화**
+    - 컨트롤러를 Swagger 설명용 인터페이스(`InterestController`)와 구현체(`InterestControllerImpl`)로 나눠, API 문서와 요청 처리 코드를 분리
 
 
 <p align="right"><a href="#feature-2">⬆️ 맨 위로 (제목을 눌러 접기)</a></p>
@@ -290,8 +293,17 @@
 - **중복 없는 저장과 관심사 연결**
     - 수집 결과 안에서 원본 URL 중복을 없애고, DB `source_url` 유니크 제약으로 한 번 더 막음
     - 이미 있는 기사는 다시 저장하지 않고 관심사 연결만 추가하며, 논리 삭제된 기사는 되살리지 않음
+- **기사 수집 배치 최적화** ([#348](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/348))
+    - 기존: 수집한 기사마다 "이미 저장된 URL인지", "이 관심사와 연결돼 있는지"를 따로 조회해 기사 수만큼 DB 왕복이 반복됨
+    - 개선: URL 목록으로 기존 기사를 한 번에 조회하고, 관심사 연결 여부도 한 번에 조회한 뒤 새 기사만 저장
+    - 저장은 Hibernate JDBC 배치(`batch_size: 100`)와 PostgreSQL `reWriteBatchedInserts`로 INSERT 100건을 한 문장으로 전송
+    - 결과(운영 서버, 같은 날 00시 · 01시 배치 비교): **4분 27초 → 53초 (약 80% 단축)**, 처리한 기사는 약 19% 더 많았음
+    - 로컬 측정: 기사 10만 건 적재 45.1초 → 9.4초
+- **목록 조회 복합 인덱스**
+    - 기본 정렬 순서대로 `(published_at, created_at, id)` 복합 인덱스를 둬, 목록 조회 때 인덱스에 미리 정렬된 순서로 읽음 (1,000건 조회 평균 6.5ms → 0.8ms)
 - **S3 백업 (JSON + gzip)**
-    - 전날 발행된 기사(논리 삭제 제외)를 1,000건씩 읽어, 연결된 관심사 ID와 함께 JSON으로 만들고 gzip으로 압축해 날짜별 · 파트별 파일로 업로드
+    - 전날 DB에 저장된 기사(논리 삭제 제외)를 1,000건씩 읽어, 연결된 관심사 ID와 함께 JSON으로 만들고 gzip으로 압축
+    - 수집 때 몇 년 전 기사도 들어오므로 저장일 기준으로 빠짐없이 읽고, 파일은 기사 발행일별 폴더 · 파트별로 나눠 업로드
     - Spring Batch Job 구성 · 재시작 지원은 배치 담당(박수민)이 진행
 - **백업 복구 API**
     - 최대 31일 범위를 받아 날짜별 백업 파일을 읽고, DB에 같은 원본 URL이 없는 유실 기사만 골라냄
@@ -381,6 +393,9 @@
     - Step 전체를 한 트랜잭션으로 묶지 않아(`ResourcelessTransactionManager`), 100명 단위로 커밋한 삭제가 뒤의 실패로 함께 롤백되지 않게 함
 - **테스트**
     - Job 통합 테스트로 실패 → 재시작 → 이어서 처리, 커밋 실패 시 집계 제외 같은 시나리오 검증
+- **운영 확인**
+    - 운영 서버 최근 7일(11/7 기준) 배치 5종 135회 실행 · 실패 0회 (뉴스 기사 수집 94 · 사용자 완전 삭제 31 · 로그 S3 백업 5 · 알림 삭제 4 · 뉴스 기사 S3 백업 1)
+    <br><img width="700" alt="Grafana 배치 5종 실행 결과" src="docs/images/screens/grafana-batch-jobs.png" />
 
 
 <p align="right"><a href="#feature-5">⬆️ 맨 위로 (제목을 눌러 접기)</a></p>
@@ -825,6 +840,7 @@ RequestIdContext 비우기
 - **언론사 RSS**: 한국경제 · 조선일보 · 연합뉴스
 - **수집 실패 처리**: RSS 출처 하나나 네이버 키워드 하나가 실패해도 건너뛰고 나머지로 계속 수집
 - **관심사마다 커밋**: 중간에 Job이 멈춰도 앞 관심사의 기사는 저장된 상태로 남음
+- **일괄 처리**: 기존 기사 · 관심사 연결을 한 번에 조회해 새로 저장할 기사만 고르고, INSERT는 100건씩 JDBC 배치로 전송
 - **삭제된 기사**: 같은 URL로 다시 수집돼도 되살리지 않음
 - **알림 생성**: `ArticlesSavedEvent` 발행 → 커밋 후 비동기로 생성
 
@@ -919,11 +935,13 @@ MongoDB 사용자 활동 문서 갱신
 ```text
 매일 오전 1시 Spring Batch 실행
    ↓
-전날 발행된 기사 조회 (1,000건씩, 논리 삭제된 기사 제외)
+전날 DB에 저장된 기사 조회 (1,000건씩, 논리 삭제된 기사 제외)
+   ↓
+기사 발행일별로 묶기
    ↓
 기사 + 연결된 관심사 ID를 JSON 직렬화 + gzip 압축
    ↓
-Amazon S3 업로드 (articles/날짜/articles-날짜-000001.json.gz)
+Amazon S3 업로드 (articles/발행일/articles-발행일-000001.json.gz)
 ```
 
 **복구**
@@ -1166,7 +1184,7 @@ GitHub Actions CI가 실행됩니다. (PR은 문서 · 프론트엔드 정적 �
 | 구분 | 규칙 |
 | :--- | :--- |
 | 브랜치 전략 | `{타입}/{이슈번호}-{작업명}` → `develop` → `main` (예: `feat/12-interest-subscribe`) — 이슈의 Branch Keyword 칸에 작업명을 적으면 브랜치가 자동으로 생성됨 |
-| 커밋 컨벤션 | `타입 : 작업 내용 [#이슈번호]` (예: `feat : 관심사 구독 API 추가 [#12]`) — 이슈 번호는 브랜치 이름에서 자동으로 붙음, TDD 단계는 `test(red)` · `feat(green)`/`fix(green)` · `refactor(blue)` (단축키 `t1` · `f1`/`x1` · `r1`), 리뷰 반영 커밋은 제목 끝에 `;c`(클로드) · `;r`(코드래빗) · `;t`(팀원) |
+| 커밋 컨벤션 | `타입 : 작업 내용 [#이슈번호]` (예: `feat : 관심사 구독 API 추가 [#12]`) — 이슈 번호는 브랜치 이름에서 자동으로 붙음, TDD 단계는 `test(red)` · `feat(green)`/`fix(green)` · `refactor(blue)` (단축키 `t1` · `f1`/`x1` · `r1`), 리뷰 반영 커밋은 제목 끝에 `;c`(클로드) · `;r`(코드래빗) · `;t`(사람 리뷰) |
 | PR 규칙 | 이슈 연결(`close #이슈번호`) · 리뷰 승인 1명 이상 후 **일반 머지가 기본**(TDD 단계 커밋을 develop에 그대로 남김) |
 | 코드 스타일 | Spotless(google-java-format `aosp()`, 들여쓰기 4칸) — 커밋 시 Git Hook으로 자동 적용, **최종 포맷 기준**. push 전에는 포맷 검사 · 컴파일을 한 번 더 확인 |
 | 협업 자동화 | PR 제목 · 라벨 자동 정리, 이슈 · PR · 리뷰 디스코드 알림, 프로젝트 보드 상태 자동 변경 |
@@ -1442,7 +1460,6 @@ src/main/java/com/sprint/monew/global/
 │   ├── backup/                                     # 기사 백업 파일 만들기
 │   │   ├── ArticleBackupGzipCompressor             # gzip 압축 (로그 백업도 같이 사용)
 │   │   └── ArticleBackupJsonSerializer             # 기사 목록 → JSON
-│   ├── DatabaseConstraintUtils                     # DB 제약 조건 위반 확인
 │   └── similarity/
 │       └── StringSimilarityUtils                   # 관심사 이름 유사도 계산
 └── web/
@@ -1487,6 +1504,7 @@ src/main/java/com/sprint/monew/
 │   │   │   │       ├── ArticleCollectionMetrics
 │   │   │   │       ├── ArticleCollectionScheduler
 │   │   │   │       ├── ArticleCollectionStepListener
+│   │   │   │       ├── ArticleCollectionTiming
 │   │   │   │       └── dto/                        # Job 안에서 쓰는 DTO
 │   │   │   │           └── InterestCollectedArticles
 │   │   │   ├── log/                                # 로그 S3 백업 Job
@@ -1531,6 +1549,7 @@ src/main/java/com/sprint/monew/
 │   │   │   │           └── CursorPageResponseCommentDto
 │   │   │   ├── interest/                           # 관심사 · 구독 (박수민)
 │   │   │   │   ├── InterestController
+│   │   │   │   ├── InterestControllerImpl
 │   │   │   │   └── dto/                            # 요청 / 응답 DTO
 │   │   │   │       ├── request/                    # 요청 DTO
 │   │   │   │       │   ├── InterestRegisterRequest
@@ -1552,8 +1571,11 @@ src/main/java/com/sprint/monew/
 │   │   │   │       │   ├── UserLoginRequest
 │   │   │   │       │   ├── UserRegisterRequest
 │   │   │   │       │   └── UserUpdateRequest
-│   │   │   │       └── response/                   # 응답 DTO
-│   │   │   │           └── UserDto
+│   │   │   │       ├── response/                   # 응답 DTO
+│   │   │   │       │   └── UserDto
+│   │   │   │       └── validation/                 # 비밀번호 검증 어노테이션
+│   │   │   │           ├── PasswordValidator
+│   │   │   │           └── ValidPassword
 │   │   │   └── useractivity/                       # 사용자 활동 내역 (이수찬)
 │   │   │       ├── UserActivityController
 │   │   │       └── dto/                            # 요청 / 응답 DTO
@@ -1714,8 +1736,6 @@ src/main/java/com/sprint/monew/
 │   │   │       ├── InterestResult
 │   │   │       └── SubscriptionResult
 │   │   └── required/                               # 저장소 · 이벤트 발행 Port
-│   │       ├── DuplicateInterestNameException
-│   │       ├── DuplicateSubscriptionException
 │   │       ├── InterestEventPublisherPort
 │   │       ├── InterestRepository
 │   │       └── SubscriptionRepository
