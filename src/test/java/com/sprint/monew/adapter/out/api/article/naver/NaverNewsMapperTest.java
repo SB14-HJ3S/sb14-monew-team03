@@ -3,7 +3,7 @@ package com.sprint.monew.adapter.out.api.article.naver;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
-import com.sprint.monew.application.article.provided.dto.CollectedArticle;
+import com.sprint.monew.application.article.provided.usecase.dto.CollectedArticle;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.ArticleErrorType;
 import java.time.format.DateTimeParseException;

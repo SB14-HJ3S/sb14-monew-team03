@@ -11,7 +11,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import com.sprint.monew.application.interest.provided.dto.InterestQuery;
+import com.sprint.monew.application.interest.provided.usecase.dto.InterestQuery;
 import com.sprint.monew.application.interest.required.InterestRepository;
 import com.sprint.monew.domain.interest.entity.Interest;
 import com.sprint.monew.domain.interest.entity.InterestKeyword;

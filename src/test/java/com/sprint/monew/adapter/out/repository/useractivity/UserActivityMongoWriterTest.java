@@ -4,11 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.sprint.monew.adapter.out.repository.useractivity.document.ArticleViewItem;
 import com.sprint.monew.adapter.out.repository.useractivity.document.UserActivityDocument;
-import com.sprint.monew.application.useractivity.provided.dto.ArticleViewActivityResult;
-import com.sprint.monew.application.useractivity.provided.dto.CommentActivityResult;
-import com.sprint.monew.application.useractivity.provided.dto.CommentLikeActivityResult;
-import com.sprint.monew.application.useractivity.provided.dto.SubscriptionActivityResult;
-import com.sprint.monew.application.useractivity.provided.dto.UserActivityResult;
+import com.sprint.monew.application.useractivity.provided.usecase.dto.ArticleViewActivityResult;
+import com.sprint.monew.application.useractivity.provided.usecase.dto.CommentActivityResult;
+import com.sprint.monew.application.useractivity.provided.usecase.dto.CommentLikeActivityResult;
+import com.sprint.monew.application.useractivity.provided.usecase.dto.SubscriptionActivityResult;
+import com.sprint.monew.application.useractivity.provided.usecase.dto.UserActivityResult;
 import com.sprint.monew.global.type.ArticleSourceType;
 import com.sprint.monew.support.MongoIntegrationTest;
 import java.time.Instant;

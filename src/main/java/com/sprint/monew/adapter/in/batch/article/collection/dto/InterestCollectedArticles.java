@@ -1,6 +1,6 @@
 package com.sprint.monew.adapter.in.batch.article.collection.dto;
 
-import com.sprint.monew.application.article.provided.dto.CollectedArticle;
+import com.sprint.monew.application.article.provided.usecase.dto.CollectedArticle;
 import com.sprint.monew.domain.interest.entity.Interest;
 import java.util.List;
 

@@ -7,9 +7,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.sprint.monew.application.useractivity.provided.UserActivityUseCase;
-import com.sprint.monew.application.useractivity.provided.dto.CommentActivityResult;
-import com.sprint.monew.application.useractivity.provided.dto.UserActivityResult;
+import com.sprint.monew.application.useractivity.provided.usecase.UserActivityUseCase;
+import com.sprint.monew.application.useractivity.provided.usecase.dto.CommentActivityResult;
+import com.sprint.monew.application.useractivity.provided.usecase.dto.UserActivityResult;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.UserErrorType;
 import java.time.Instant;

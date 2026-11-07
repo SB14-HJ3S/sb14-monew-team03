@@ -1,5 +1,6 @@
 package com.sprint.monew.application.interest;
 
+import com.sprint.monew.application.interest.provided.service.ISubscriptionService;
 import com.sprint.monew.application.interest.required.SubscriptionRepository;
 import com.sprint.monew.domain.user.entity.Subscription;
 import com.sprint.monew.global.exception.MonewException;

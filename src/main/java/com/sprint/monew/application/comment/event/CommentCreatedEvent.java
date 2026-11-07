@@ -1,6 +1,6 @@
 package com.sprint.monew.application.comment.event;
 
-import com.sprint.monew.application.comment.provided.dto.CommentResult;
+import com.sprint.monew.application.comment.provided.usecase.dto.CommentResult;
 import java.time.Instant;
 import java.util.UUID;
 

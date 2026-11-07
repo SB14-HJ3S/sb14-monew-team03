@@ -8,7 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.sprint.monew.adapter.in.batch.article.collection.dto.InterestCollectedArticles;
-import com.sprint.monew.application.article.provided.ArticleCollectionUseCase;
+import com.sprint.monew.application.article.provided.usecase.ArticleCollectionUseCase;
 import com.sprint.monew.domain.interest.entity.Interest;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.List;

@@ -1,8 +1,8 @@
 package com.sprint.monew.application.article.required;
 
-import com.sprint.monew.application.article.provided.dto.ArticleBackupFile;
-import com.sprint.monew.application.article.provided.dto.ArticleBackupItem;
-import com.sprint.monew.application.article.provided.dto.ArticleBackupResult;
+import com.sprint.monew.application.article.provided.service.dto.ArticleBackupFile;
+import com.sprint.monew.application.article.provided.service.dto.ArticleBackupItem;
+import com.sprint.monew.application.article.provided.usecase.dto.ArticleBackupResult;
 import java.time.LocalDate;
 import java.util.List;
 

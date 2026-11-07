@@ -1,6 +1,6 @@
 package com.sprint.monew.application.interest.event;
 
-import com.sprint.monew.application.interest.provided.dto.SubscriptionResult;
+import com.sprint.monew.application.interest.provided.usecase.dto.SubscriptionResult;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;

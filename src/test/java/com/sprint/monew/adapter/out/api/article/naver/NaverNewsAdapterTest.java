@@ -9,7 +9,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
-import com.sprint.monew.application.article.provided.dto.CollectedArticle;
+import com.sprint.monew.application.article.provided.usecase.dto.CollectedArticle;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.ExternalErrorType;
 import java.io.IOException;

@@ -18,10 +18,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.monew.adapter.in.controller.interest.dto.request.InterestRegisterRequest;
 import com.sprint.monew.adapter.in.controller.interest.dto.request.InterestUpdateRequest;
-import com.sprint.monew.application.interest.provided.InterestUseCase;
-import com.sprint.monew.application.interest.provided.dto.InterestQuery;
-import com.sprint.monew.application.interest.provided.dto.InterestResult;
-import com.sprint.monew.application.interest.provided.dto.SubscriptionResult;
+import com.sprint.monew.application.interest.provided.usecase.InterestUseCase;
+import com.sprint.monew.application.interest.provided.usecase.dto.InterestQuery;
+import com.sprint.monew.application.interest.provided.usecase.dto.InterestResult;
+import com.sprint.monew.application.interest.provided.usecase.dto.SubscriptionResult;
 import com.sprint.monew.domain.interest.entity.Interest;
 import com.sprint.monew.domain.interest.entity.InterestKeyword;
 import com.sprint.monew.global.exception.MonewException;

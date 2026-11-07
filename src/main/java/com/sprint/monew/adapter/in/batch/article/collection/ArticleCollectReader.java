@@ -1,7 +1,7 @@
 package com.sprint.monew.adapter.in.batch.article.collection;
 
-import com.sprint.monew.application.article.provided.ArticleCollectionUseCase;
-import com.sprint.monew.application.interest.provided.dto.InterestKeywordResult;
+import com.sprint.monew.application.article.provided.usecase.ArticleCollectionUseCase;
+import com.sprint.monew.application.interest.provided.usecase.dto.InterestKeywordResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemReader;

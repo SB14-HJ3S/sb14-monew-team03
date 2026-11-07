@@ -1,6 +1,6 @@
 package com.sprint.monew.adapter.out.repository.useractivity.document;
 
-import com.sprint.monew.application.useractivity.provided.dto.ArticleViewActivityResult;
+import com.sprint.monew.application.useractivity.provided.usecase.dto.ArticleViewActivityResult;
 import com.sprint.monew.global.type.ArticleSourceType;
 import java.time.Instant;
 import java.util.UUID;

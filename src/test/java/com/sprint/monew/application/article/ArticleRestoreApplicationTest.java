@@ -6,8 +6,9 @@ import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import com.sprint.monew.application.article.provided.dto.ArticleBackupItem;
-import com.sprint.monew.application.article.provided.dto.ArticleRestoreResult;
+import com.sprint.monew.application.article.provided.service.ArticleBackupStorageService;
+import com.sprint.monew.application.article.provided.service.dto.ArticleBackupItem;
+import com.sprint.monew.application.article.provided.usecase.dto.ArticleRestoreResult;
 import com.sprint.monew.global.type.ArticleSourceType;
 import java.time.Instant;
 import java.time.LocalDate;

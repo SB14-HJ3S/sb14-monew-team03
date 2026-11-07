@@ -10,11 +10,11 @@ import com.sprint.monew.adapter.out.repository.useractivity.document.CommentItem
 import com.sprint.monew.adapter.out.repository.useractivity.document.CommentLikeItem;
 import com.sprint.monew.adapter.out.repository.useractivity.document.SubscriptionItem;
 import com.sprint.monew.adapter.out.repository.useractivity.document.UserActivityDocument;
-import com.sprint.monew.application.useractivity.provided.dto.ArticleViewActivityResult;
-import com.sprint.monew.application.useractivity.provided.dto.CommentActivityResult;
-import com.sprint.monew.application.useractivity.provided.dto.CommentLikeActivityResult;
-import com.sprint.monew.application.useractivity.provided.dto.SubscriptionActivityResult;
-import com.sprint.monew.application.useractivity.provided.dto.UserActivityResult;
+import com.sprint.monew.application.useractivity.provided.usecase.dto.ArticleViewActivityResult;
+import com.sprint.monew.application.useractivity.provided.usecase.dto.CommentActivityResult;
+import com.sprint.monew.application.useractivity.provided.usecase.dto.CommentLikeActivityResult;
+import com.sprint.monew.application.useractivity.provided.usecase.dto.SubscriptionActivityResult;
+import com.sprint.monew.application.useractivity.provided.usecase.dto.UserActivityResult;
 import com.sprint.monew.application.useractivity.required.UserActivityWriter;
 import java.time.Instant;
 import java.util.List;

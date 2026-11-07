@@ -4,7 +4,7 @@ import static com.sprint.monew.domain.notification.entity.QNotification.notifica
 
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.sprint.monew.application.notification.provided.dto.NotificationQuery;
+import com.sprint.monew.application.notification.provided.usecase.dto.NotificationQuery;
 import com.sprint.monew.domain.notification.entity.Notification;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.CommonErrorType;

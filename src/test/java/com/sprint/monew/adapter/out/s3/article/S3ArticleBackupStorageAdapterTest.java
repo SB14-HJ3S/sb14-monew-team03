@@ -8,7 +8,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.sprint.monew.application.article.provided.dto.ArticleBackupFile;
+import com.sprint.monew.application.article.provided.service.dto.ArticleBackupFile;
 import com.sprint.monew.global.config.S3Properties;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.util.backup.ArticleBackupGzipCompressor;

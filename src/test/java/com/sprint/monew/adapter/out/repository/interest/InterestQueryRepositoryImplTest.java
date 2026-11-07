@@ -3,7 +3,7 @@ package com.sprint.monew.adapter.out.repository.interest;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
-import com.sprint.monew.application.interest.provided.dto.InterestQuery;
+import com.sprint.monew.application.interest.provided.usecase.dto.InterestQuery;
 import com.sprint.monew.domain.interest.entity.Interest;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.CommonErrorType;

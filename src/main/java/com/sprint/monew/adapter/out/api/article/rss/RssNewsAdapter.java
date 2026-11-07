@@ -5,7 +5,7 @@ import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.io.FeedException;
 import com.rometools.rome.io.SyndFeedInput;
 import com.rometools.rome.io.XmlReader;
-import com.sprint.monew.application.article.provided.dto.CollectedArticle;
+import com.sprint.monew.application.article.provided.usecase.dto.CollectedArticle;
 import com.sprint.monew.application.article.required.RssNewsPort;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.CommonErrorType;

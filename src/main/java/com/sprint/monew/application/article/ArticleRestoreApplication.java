@@ -1,8 +1,9 @@
 package com.sprint.monew.application.article;
 
-import com.sprint.monew.application.article.provided.ArticleRestoreUseCase;
-import com.sprint.monew.application.article.provided.dto.ArticleBackupItem;
-import com.sprint.monew.application.article.provided.dto.ArticleRestoreResult;
+import com.sprint.monew.application.article.provided.service.ArticleBackupStorageService;
+import com.sprint.monew.application.article.provided.service.dto.ArticleBackupItem;
+import com.sprint.monew.application.article.provided.usecase.ArticleRestoreUseCase;
+import com.sprint.monew.application.article.provided.usecase.dto.ArticleRestoreResult;
 import com.sprint.monew.global.annotation.ApplicationService;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.CommonErrorType;

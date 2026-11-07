@@ -1,7 +1,7 @@
 package com.sprint.monew.adapter.in.batch.article.collection;
 
 import com.sprint.monew.adapter.in.batch.article.collection.dto.InterestCollectedArticles;
-import com.sprint.monew.application.article.provided.ArticleCollectionUseCase;
+import com.sprint.monew.application.article.provided.usecase.ArticleCollectionUseCase;
 import com.sprint.monew.domain.interest.entity.Interest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

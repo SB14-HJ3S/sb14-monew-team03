@@ -1,7 +1,8 @@
 package com.sprint.monew.application.user;
 
-import com.sprint.monew.application.user.provided.UserUseCase;
-import com.sprint.monew.application.user.provided.dto.UserResult;
+import com.sprint.monew.application.user.provided.service.IUserService;
+import com.sprint.monew.application.user.provided.usecase.UserUseCase;
+import com.sprint.monew.application.user.provided.usecase.dto.UserResult;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.annotation.ApplicationService;
 import com.sprint.monew.global.exception.MonewException;

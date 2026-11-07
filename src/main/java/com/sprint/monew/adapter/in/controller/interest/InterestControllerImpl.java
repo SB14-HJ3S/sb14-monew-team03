@@ -4,8 +4,8 @@ import com.sprint.monew.adapter.in.controller.interest.dto.request.InterestRegis
 import com.sprint.monew.adapter.in.controller.interest.dto.request.InterestUpdateRequest;
 import com.sprint.monew.adapter.in.controller.interest.dto.response.InterestDto;
 import com.sprint.monew.adapter.in.controller.interest.dto.response.SubscriptionDto;
-import com.sprint.monew.application.interest.provided.InterestUseCase;
-import com.sprint.monew.application.interest.provided.dto.InterestQuery;
+import com.sprint.monew.application.interest.provided.usecase.InterestUseCase;
+import com.sprint.monew.application.interest.provided.usecase.dto.InterestQuery;
 import com.sprint.monew.global.annotation.RequestId;
 import com.sprint.monew.global.annotation.RestWebAdapter;
 import com.sprint.monew.global.pagination.PageResult;

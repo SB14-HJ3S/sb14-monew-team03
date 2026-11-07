@@ -5,8 +5,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.sprint.monew.adapter.out.repository.article.ArticleJpaRepository;
-import com.sprint.monew.application.article.provided.dto.ArticleBackupItem;
-import com.sprint.monew.application.article.provided.dto.ArticleRestoreResult;
+import com.sprint.monew.application.article.provided.service.ArticleBackupStorageService;
+import com.sprint.monew.application.article.provided.service.ArticleService;
+import com.sprint.monew.application.article.provided.service.dto.ArticleBackupItem;
+import com.sprint.monew.application.article.provided.usecase.dto.ArticleRestoreResult;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.article.entity.ArticleInterest;
 import com.sprint.monew.domain.interest.entity.Interest;

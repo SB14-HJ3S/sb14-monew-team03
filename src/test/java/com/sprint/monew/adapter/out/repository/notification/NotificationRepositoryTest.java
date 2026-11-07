@@ -3,7 +3,7 @@ package com.sprint.monew.adapter.out.repository.notification;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.sprint.monew.application.notification.provided.dto.NotificationQuery;
+import com.sprint.monew.application.notification.provided.usecase.dto.NotificationQuery;
 import com.sprint.monew.domain.notification.entity.Notification;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.exception.MonewException;

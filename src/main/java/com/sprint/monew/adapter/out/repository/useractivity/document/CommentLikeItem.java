@@ -1,6 +1,6 @@
 package com.sprint.monew.adapter.out.repository.useractivity.document;
 
-import com.sprint.monew.application.useractivity.provided.dto.CommentLikeActivityResult;
+import com.sprint.monew.application.useractivity.provided.usecase.dto.CommentLikeActivityResult;
 import java.time.Instant;
 import java.util.UUID;
 

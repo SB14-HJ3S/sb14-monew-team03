@@ -1,6 +1,6 @@
 package com.sprint.monew.adapter.in.controller.comment.dto.response;
 
-import com.sprint.monew.application.comment.provided.dto.CommentLikeResult;
+import com.sprint.monew.application.comment.provided.usecase.dto.CommentLikeResult;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 import java.util.UUID;

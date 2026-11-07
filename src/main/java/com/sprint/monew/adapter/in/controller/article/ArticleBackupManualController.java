@@ -1,8 +1,8 @@
 package com.sprint.monew.adapter.in.controller.article;
 
-import com.sprint.monew.application.article.provided.ArticleBackupUseCase;
-import com.sprint.monew.application.article.provided.dto.ArticleBackupResult;
-import com.sprint.monew.application.article.provided.dto.ArticleResult;
+import com.sprint.monew.application.article.provided.usecase.ArticleBackupUseCase;
+import com.sprint.monew.application.article.provided.usecase.dto.ArticleBackupResult;
+import com.sprint.monew.application.article.provided.usecase.dto.ArticleResult;
 import com.sprint.monew.global.annotation.RestWebAdapter;
 import java.time.LocalDate;
 import java.util.ArrayList;

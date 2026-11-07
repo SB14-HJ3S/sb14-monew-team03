@@ -6,7 +6,7 @@ import static com.sprint.monew.domain.user.entity.QUser.user;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.sprint.monew.application.comment.provided.dto.CommentQuery;
+import com.sprint.monew.application.comment.provided.usecase.dto.CommentQuery;
 import com.sprint.monew.domain.comment.entity.Comment;
 import com.sprint.monew.global.pagination.SortDirection;
 import java.time.Instant;

@@ -1,6 +1,6 @@
 package com.sprint.monew.adapter.in.batch.article.backup;
 
-import com.sprint.monew.application.article.provided.dto.ArticleResult;
+import com.sprint.monew.application.article.provided.usecase.dto.ArticleResult;
 import java.util.List;
 import org.springframework.batch.core.ChunkListener;
 import org.springframework.batch.core.Job;

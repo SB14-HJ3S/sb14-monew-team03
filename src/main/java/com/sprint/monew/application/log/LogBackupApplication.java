@@ -1,8 +1,8 @@
 package com.sprint.monew.application.log;
 
-import com.sprint.monew.application.log.provided.LogBackupUseCase;
-import com.sprint.monew.application.log.provided.dto.LogBackupResult;
-import com.sprint.monew.application.log.provided.dto.LogResult;
+import com.sprint.monew.application.log.provided.usecase.LogBackupUseCase;
+import com.sprint.monew.application.log.provided.usecase.dto.LogBackupResult;
+import com.sprint.monew.application.log.provided.usecase.dto.LogResult;
 import com.sprint.monew.application.log.required.LogStoragePort;
 import com.sprint.monew.global.annotation.ApplicationService;
 import java.io.IOException;

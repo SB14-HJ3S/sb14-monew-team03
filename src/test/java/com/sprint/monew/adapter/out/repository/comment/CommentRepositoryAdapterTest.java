@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.sprint.monew.adapter.out.repository.article.ArticleRepositoryAdapter;
 import com.sprint.monew.adapter.out.repository.user.UserRepositoryAdapter;
-import com.sprint.monew.application.comment.provided.dto.CommentQuery;
+import com.sprint.monew.application.comment.provided.usecase.dto.CommentQuery;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.comment.entity.Comment;
 import com.sprint.monew.domain.comment.entity.CommentLike;

@@ -1,8 +1,8 @@
 package com.sprint.monew.adapter.in.controller.notification;
 
 import com.sprint.monew.adapter.in.controller.notification.dto.response.NotificationDto;
-import com.sprint.monew.application.notification.provided.NotificationUseCase;
-import com.sprint.monew.application.notification.provided.dto.NotificationQuery;
+import com.sprint.monew.application.notification.provided.usecase.NotificationUseCase;
+import com.sprint.monew.application.notification.provided.usecase.dto.NotificationQuery;
 import com.sprint.monew.global.annotation.RequestId;
 import com.sprint.monew.global.annotation.RestWebAdapter;
 import com.sprint.monew.global.pagination.PageResult;

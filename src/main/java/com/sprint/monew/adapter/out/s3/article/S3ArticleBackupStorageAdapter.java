@@ -1,8 +1,8 @@
 package com.sprint.monew.adapter.out.s3.article;
 
-import com.sprint.monew.application.article.provided.dto.ArticleBackupFile;
-import com.sprint.monew.application.article.provided.dto.ArticleBackupItem;
-import com.sprint.monew.application.article.provided.dto.ArticleBackupResult;
+import com.sprint.monew.application.article.provided.service.dto.ArticleBackupFile;
+import com.sprint.monew.application.article.provided.service.dto.ArticleBackupItem;
+import com.sprint.monew.application.article.provided.usecase.dto.ArticleBackupResult;
 import com.sprint.monew.application.article.required.ArticleBackupStoragePort;
 import com.sprint.monew.global.config.S3Properties;
 import com.sprint.monew.global.exception.MonewException;

@@ -8,7 +8,7 @@ import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.sprint.monew.application.article.provided.dto.ArticleQuery;
+import com.sprint.monew.application.article.provided.usecase.dto.ArticleQuery;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.CommonErrorType;

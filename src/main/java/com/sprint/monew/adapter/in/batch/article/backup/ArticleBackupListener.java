@@ -1,6 +1,6 @@
 package com.sprint.monew.adapter.in.batch.article.backup;
 
-import com.sprint.monew.application.article.provided.dto.ArticleResult;
+import com.sprint.monew.application.article.provided.usecase.dto.ArticleResult;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.List;
 import lombok.RequiredArgsConstructor;

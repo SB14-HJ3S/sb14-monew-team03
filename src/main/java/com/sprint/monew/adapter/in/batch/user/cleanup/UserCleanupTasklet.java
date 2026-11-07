@@ -1,6 +1,6 @@
 package com.sprint.monew.adapter.in.batch.user.cleanup;
 
-import com.sprint.monew.application.user.provided.UserUseCase;
+import com.sprint.monew.application.user.provided.usecase.UserUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;

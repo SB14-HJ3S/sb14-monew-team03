@@ -11,10 +11,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.sprint.monew.application.article.provided.ArticleRestoreUseCase;
-import com.sprint.monew.application.article.provided.ArticleUseCase;
-import com.sprint.monew.application.article.provided.dto.ArticleQuery;
-import com.sprint.monew.application.article.provided.dto.ArticleResult;
+import com.sprint.monew.application.article.provided.usecase.ArticleRestoreUseCase;
+import com.sprint.monew.application.article.provided.usecase.ArticleUseCase;
+import com.sprint.monew.application.article.provided.usecase.dto.ArticleQuery;
+import com.sprint.monew.application.article.provided.usecase.dto.ArticleResult;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.ArticleErrorType;
 import com.sprint.monew.global.pagination.PageResult;

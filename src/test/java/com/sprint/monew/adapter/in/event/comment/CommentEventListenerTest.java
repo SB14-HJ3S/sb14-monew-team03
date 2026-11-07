@@ -3,7 +3,7 @@ package com.sprint.monew.adapter.in.event.comment;
 import static org.mockito.Mockito.verify;
 
 import com.sprint.monew.application.article.event.ArticleHardDeletingEvent;
-import com.sprint.monew.application.comment.provided.CommentUseCase;
+import com.sprint.monew.application.comment.provided.usecase.CommentUseCase;
 import com.sprint.monew.application.user.event.UserHardDeletingEvent;
 import java.util.List;
 import java.util.UUID;

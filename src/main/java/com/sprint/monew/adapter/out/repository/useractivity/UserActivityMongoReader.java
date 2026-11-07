@@ -1,7 +1,7 @@
 package com.sprint.monew.adapter.out.repository.useractivity;
 
 import com.sprint.monew.adapter.out.repository.useractivity.document.UserActivityDocument;
-import com.sprint.monew.application.useractivity.provided.dto.UserActivityResult;
+import com.sprint.monew.application.useractivity.provided.usecase.dto.UserActivityResult;
 import com.sprint.monew.application.useractivity.required.UserActivityReader;
 import java.util.Optional;
 import java.util.UUID;

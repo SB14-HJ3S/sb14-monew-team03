@@ -3,7 +3,7 @@ package com.sprint.monew.application.article;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.sprint.monew.application.article.provided.ArticleUseCase;
+import com.sprint.monew.application.article.provided.usecase.ArticleUseCase;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.article.entity.ArticleInterest;
 import com.sprint.monew.domain.article.entity.ArticleViewStatus;

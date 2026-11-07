@@ -2,8 +2,8 @@ package com.sprint.monew.application.notification;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.sprint.monew.application.notification.provided.NotificationUseCase;
-import com.sprint.monew.application.notification.provided.dto.NotificationQuery;
+import com.sprint.monew.application.notification.provided.usecase.NotificationUseCase;
+import com.sprint.monew.application.notification.provided.usecase.dto.NotificationQuery;
 import com.sprint.monew.support.IntegrationTest;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.DisplayName;

@@ -5,10 +5,10 @@ import com.sprint.monew.adapter.in.controller.comment.dto.request.CommentUpdateR
 import com.sprint.monew.adapter.in.controller.comment.dto.response.CommentDto;
 import com.sprint.monew.adapter.in.controller.comment.dto.response.CommentLikeDto;
 import com.sprint.monew.adapter.in.controller.comment.dto.response.CursorPageResponseCommentDto;
-import com.sprint.monew.application.comment.provided.CommentUseCase;
-import com.sprint.monew.application.comment.provided.dto.CommentLikeResult;
-import com.sprint.monew.application.comment.provided.dto.CommentQuery;
-import com.sprint.monew.application.comment.provided.dto.CommentResult;
+import com.sprint.monew.application.comment.provided.usecase.CommentUseCase;
+import com.sprint.monew.application.comment.provided.usecase.dto.CommentLikeResult;
+import com.sprint.monew.application.comment.provided.usecase.dto.CommentQuery;
+import com.sprint.monew.application.comment.provided.usecase.dto.CommentResult;
 import com.sprint.monew.global.annotation.RequestId;
 import com.sprint.monew.global.pagination.PageResult;
 import com.sprint.monew.global.pagination.SortDirection;

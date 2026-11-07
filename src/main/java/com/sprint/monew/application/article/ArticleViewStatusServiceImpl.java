@@ -1,5 +1,6 @@
 package com.sprint.monew.application.article;
 
+import com.sprint.monew.application.article.provided.service.ArticleViewStatusService;
 import com.sprint.monew.application.article.required.ArticleViewStatusRepositoryPort;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.article.entity.ArticleViewStatus;

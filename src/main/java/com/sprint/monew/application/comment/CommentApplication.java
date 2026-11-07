@@ -1,18 +1,19 @@
 package com.sprint.monew.application.comment;
 
-import com.sprint.monew.application.article.ArticleService;
+import com.sprint.monew.application.article.provided.service.ArticleService;
 import com.sprint.monew.application.comment.event.CommentCreatedEvent;
 import com.sprint.monew.application.comment.event.CommentDeletedEvent;
 import com.sprint.monew.application.comment.event.CommentLikeCreatedEvent;
 import com.sprint.monew.application.comment.event.CommentUnlikedEvent;
 import com.sprint.monew.application.comment.event.CommentUpdatedEvent;
-import com.sprint.monew.application.comment.provided.CommentUseCase;
-import com.sprint.monew.application.comment.provided.dto.CommentLikeResult;
-import com.sprint.monew.application.comment.provided.dto.CommentQuery;
-import com.sprint.monew.application.comment.provided.dto.CommentResult;
+import com.sprint.monew.application.comment.provided.service.CommentService;
+import com.sprint.monew.application.comment.provided.usecase.CommentUseCase;
+import com.sprint.monew.application.comment.provided.usecase.dto.CommentLikeResult;
+import com.sprint.monew.application.comment.provided.usecase.dto.CommentQuery;
+import com.sprint.monew.application.comment.provided.usecase.dto.CommentResult;
 import com.sprint.monew.application.comment.required.CommentEventPublisherPort;
-import com.sprint.monew.application.notification.NotificationService;
-import com.sprint.monew.application.user.IUserService;
+import com.sprint.monew.application.notification.provided.service.NotificationService;
+import com.sprint.monew.application.user.provided.service.IUserService;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.comment.entity.Comment;
 import com.sprint.monew.domain.comment.entity.CommentLike;

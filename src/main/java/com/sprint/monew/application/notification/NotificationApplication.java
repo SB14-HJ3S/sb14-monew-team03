@@ -1,10 +1,11 @@
 package com.sprint.monew.application.notification;
 
-import com.sprint.monew.application.interest.ISubscriptionService;
-import com.sprint.monew.application.notification.provided.NotificationUseCase;
-import com.sprint.monew.application.notification.provided.dto.NotificationQuery;
-import com.sprint.monew.application.notification.provided.dto.NotificationResult;
-import com.sprint.monew.application.user.IUserService;
+import com.sprint.monew.application.interest.provided.service.ISubscriptionService;
+import com.sprint.monew.application.notification.provided.service.NotificationService;
+import com.sprint.monew.application.notification.provided.usecase.NotificationUseCase;
+import com.sprint.monew.application.notification.provided.usecase.dto.NotificationQuery;
+import com.sprint.monew.application.notification.provided.usecase.dto.NotificationResult;
+import com.sprint.monew.application.user.provided.service.IUserService;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.annotation.ApplicationService;
 import com.sprint.monew.global.context.RequestIdContext;

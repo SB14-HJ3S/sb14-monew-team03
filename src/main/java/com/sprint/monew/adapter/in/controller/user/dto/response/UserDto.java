@@ -1,6 +1,6 @@
 package com.sprint.monew.adapter.in.controller.user.dto.response;
 
-import com.sprint.monew.application.user.provided.dto.UserResult;
+import com.sprint.monew.application.user.provided.usecase.dto.UserResult;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 import java.util.UUID;

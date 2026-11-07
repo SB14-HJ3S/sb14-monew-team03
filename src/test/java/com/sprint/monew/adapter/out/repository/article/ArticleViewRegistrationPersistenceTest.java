@@ -7,7 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.sprint.monew.application.article.ArticleApplication;
-import com.sprint.monew.application.article.provided.dto.ArticleViewStatusResult;
+import com.sprint.monew.application.article.provided.usecase.dto.ArticleViewStatusResult;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.context.RequestIdContext;

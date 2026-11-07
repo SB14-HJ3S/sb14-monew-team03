@@ -2,7 +2,7 @@ package com.sprint.monew.adapter.out.repository.useractivity;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.sprint.monew.application.useractivity.provided.dto.UserActivityResult;
+import com.sprint.monew.application.useractivity.provided.usecase.dto.UserActivityResult;
 import com.sprint.monew.support.MongoIntegrationTest;
 import java.time.Instant;
 import java.util.UUID;

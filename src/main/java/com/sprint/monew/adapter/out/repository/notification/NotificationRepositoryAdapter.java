@@ -1,6 +1,6 @@
 package com.sprint.monew.adapter.out.repository.notification;
 
-import com.sprint.monew.application.notification.provided.dto.NotificationQuery;
+import com.sprint.monew.application.notification.provided.usecase.dto.NotificationQuery;
 import com.sprint.monew.application.notification.required.NotificationRepositoryPort;
 import com.sprint.monew.domain.notification.entity.Notification;
 import com.sprint.monew.global.type.ResourceType;

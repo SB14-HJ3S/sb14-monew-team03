@@ -1,6 +1,6 @@
 package com.sprint.monew.application.article.required;
 
-import com.sprint.monew.application.article.provided.dto.ArticleQuery;
+import com.sprint.monew.application.article.provided.usecase.dto.ArticleQuery;
 import com.sprint.monew.domain.article.entity.Article;
 import java.time.Instant;
 import java.util.Collection;

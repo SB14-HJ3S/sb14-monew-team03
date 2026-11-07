@@ -1,6 +1,6 @@
 package com.sprint.monew.adapter.out.api.article.naver;
 
-import com.sprint.monew.application.article.provided.dto.CollectedArticle;
+import com.sprint.monew.application.article.provided.usecase.dto.CollectedArticle;
 import com.sprint.monew.application.article.required.NaverNewsPort;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.ExternalErrorType;

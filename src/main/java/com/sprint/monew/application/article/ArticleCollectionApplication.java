@@ -1,13 +1,15 @@
 package com.sprint.monew.application.article;
 
 import com.sprint.monew.application.article.event.ArticlesSavedEvent;
-import com.sprint.monew.application.article.provided.ArticleCollectionUseCase;
-import com.sprint.monew.application.article.provided.dto.CollectedArticle;
+import com.sprint.monew.application.article.provided.service.ArticleInterestService;
+import com.sprint.monew.application.article.provided.service.ArticleService;
+import com.sprint.monew.application.article.provided.usecase.ArticleCollectionUseCase;
+import com.sprint.monew.application.article.provided.usecase.dto.CollectedArticle;
 import com.sprint.monew.application.article.required.ArticleEventPublisherPort;
 import com.sprint.monew.application.article.required.NaverNewsPort;
 import com.sprint.monew.application.article.required.RssNewsPort;
-import com.sprint.monew.application.interest.InterestService;
-import com.sprint.monew.application.interest.provided.dto.InterestKeywordResult;
+import com.sprint.monew.application.interest.provided.service.InterestService;
+import com.sprint.monew.application.interest.provided.usecase.dto.InterestKeywordResult;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.interest.entity.Interest;
 import com.sprint.monew.global.annotation.ApplicationService;

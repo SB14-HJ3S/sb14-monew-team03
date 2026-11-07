@@ -1,6 +1,6 @@
 package com.sprint.monew.application.notification.required;
 
-import com.sprint.monew.application.notification.provided.dto.NotificationQuery;
+import com.sprint.monew.application.notification.provided.usecase.dto.NotificationQuery;
 import com.sprint.monew.domain.notification.entity.Notification;
 import com.sprint.monew.global.type.ResourceType;
 import java.time.LocalDateTime;

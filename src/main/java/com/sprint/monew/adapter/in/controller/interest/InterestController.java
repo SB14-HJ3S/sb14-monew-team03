@@ -4,7 +4,7 @@ import com.sprint.monew.adapter.in.controller.interest.dto.request.InterestRegis
 import com.sprint.monew.adapter.in.controller.interest.dto.request.InterestUpdateRequest;
 import com.sprint.monew.adapter.in.controller.interest.dto.response.InterestDto;
 import com.sprint.monew.adapter.in.controller.interest.dto.response.SubscriptionDto;
-import com.sprint.monew.application.interest.provided.dto.InterestQuery;
+import com.sprint.monew.application.interest.provided.usecase.dto.InterestQuery;
 import com.sprint.monew.global.pagination.PageResult;
 import com.sprint.monew.global.pagination.SortDirection;
 import io.swagger.v3.oas.annotations.Operation;

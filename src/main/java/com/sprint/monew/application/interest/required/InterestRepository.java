@@ -1,6 +1,6 @@
 package com.sprint.monew.application.interest.required;
 
-import com.sprint.monew.application.interest.provided.dto.InterestQuery;
+import com.sprint.monew.application.interest.provided.usecase.dto.InterestQuery;
 import com.sprint.monew.domain.interest.entity.Interest;
 import java.util.List;
 import java.util.Optional;

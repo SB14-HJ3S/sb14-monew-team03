@@ -1,7 +1,7 @@
 package com.sprint.monew.adapter.in.controller.useractivity;
 
 import com.sprint.monew.adapter.in.controller.useractivity.dto.response.UserActivityDto;
-import com.sprint.monew.application.useractivity.provided.UserActivityUseCase;
+import com.sprint.monew.application.useractivity.provided.usecase.UserActivityUseCase;
 import com.sprint.monew.global.annotation.RestWebAdapter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

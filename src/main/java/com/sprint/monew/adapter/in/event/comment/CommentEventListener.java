@@ -1,7 +1,7 @@
 package com.sprint.monew.adapter.in.event.comment;
 
 import com.sprint.monew.application.article.event.ArticleHardDeletingEvent;
-import com.sprint.monew.application.comment.provided.CommentUseCase;
+import com.sprint.monew.application.comment.provided.usecase.CommentUseCase;
 import com.sprint.monew.application.user.event.UserHardDeletingEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;

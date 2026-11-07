@@ -11,9 +11,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.sprint.monew.application.notification.provided.NotificationUseCase;
-import com.sprint.monew.application.notification.provided.dto.NotificationQuery;
-import com.sprint.monew.application.notification.provided.dto.NotificationResult;
+import com.sprint.monew.application.notification.provided.usecase.NotificationUseCase;
+import com.sprint.monew.application.notification.provided.usecase.dto.NotificationQuery;
+import com.sprint.monew.application.notification.provided.usecase.dto.NotificationResult;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.NotificationErrorType;
 import com.sprint.monew.global.exception.errortype.UserErrorType;
