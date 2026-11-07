@@ -183,6 +183,7 @@
     - 다른 도메인은 `UserUseCase`로만 사용자를 꺼내고, 탈퇴한 사용자는 자동으로 404
     - 여러 명을 한 번에 조회할 때는 탈퇴자를 예외 없이 빼서, 한 명 때문에 알림 전체가 실패하지 않게 함
 - **회원가입 검증과 이메일 중복 409**
+    - 비밀번호 규칙(6~20자, 영문 · 숫자 · 특수문자 모두 포함)은 커스텀 Bean Validation 어노테이션 `@ValidPassword`로 분리
     - 비밀번호는 BCrypt로 저장하고, 응답 모델에는 비밀번호 칸을 두지 않음
     - 중복 검사에 탈퇴자(1일 보관)도 포함해, DB 유니크 위반 전에 `USER_EMAIL_DUPLICATED`(409)로 응답
     <br><img width="600" alt="회원가입 이메일 중복 409 응답" src="docs/images/screens/user-signup-409.png" />
@@ -1503,6 +1504,7 @@ src/main/java/com/sprint/monew/
 │   │   │   │       ├── ArticleCollectionMetrics
 │   │   │   │       ├── ArticleCollectionScheduler
 │   │   │   │       ├── ArticleCollectionStepListener
+│   │   │   │       ├── ArticleCollectionTiming
 │   │   │   │       └── dto/                        # Job 안에서 쓰는 DTO
 │   │   │   │           └── InterestCollectedArticles
 │   │   │   ├── log/                                # 로그 S3 백업 Job
@@ -1569,8 +1571,11 @@ src/main/java/com/sprint/monew/
 │   │   │   │       │   ├── UserLoginRequest
 │   │   │   │       │   ├── UserRegisterRequest
 │   │   │   │       │   └── UserUpdateRequest
-│   │   │   │       └── response/                   # 응답 DTO
-│   │   │   │           └── UserDto
+│   │   │   │       ├── response/                   # 응답 DTO
+│   │   │   │       │   └── UserDto
+│   │   │   │       └── validation/                 # 비밀번호 검증 어노테이션
+│   │   │   │           ├── PasswordValidator
+│   │   │   │           └── ValidPassword
 │   │   │   └── useractivity/                       # 사용자 활동 내역 (이수찬)
 │   │   │       ├── UserActivityController
 │   │   │       └── dto/                            # 요청 / 응답 DTO
