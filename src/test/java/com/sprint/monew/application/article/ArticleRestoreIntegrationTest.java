@@ -13,6 +13,7 @@ import com.sprint.monew.domain.interest.entity.Interest;
 import com.sprint.monew.global.type.ArticleSourceType;
 import com.sprint.monew.support.IntegrationTest;
 import jakarta.persistence.EntityManager;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
@@ -34,13 +35,24 @@ class ArticleRestoreIntegrationTest {
     @MockitoBean private ArticleBackupStorageService storage;
 
     @Test
-    @DisplayName("과거 발행 기사를 복구하면 발행일은 유지하고 생성일 기준 백업 대상으로 조회된다")
-    void restoredArticleIsSelectedByCreationDate() {
+    @DisplayName("복구 기사는 발행일과 실제 생성 시각을 유지하되 백업에서 제외하고 같은 날 수집한 기사만 백업한다")
+    void restoredArticleIsExcludedFromBackup() {
         // given
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
         LocalDate publishedDate = today.minusDays(3);
         Fixture fixture = backupArticle(publishedDate);
         deleteArticle(fixture);
+        Article collected =
+                Article.create(
+                        ArticleSourceType.NAVER,
+                        "https://example.com/" + UUID.randomUUID(),
+                        "새로 수집한 기사",
+                        publishedDate.atTime(9, 0),
+                        "기사 요약");
+        em.persist(collected);
+        em.flush();
+        UUID collectedId = collected.getId();
+        Instant restoreStartedAt = Instant.now();
 
         // when
         List<ArticleRestoreResult> results = restore(publishedDate);
@@ -55,9 +67,11 @@ class ArticleRestoreIntegrationTest {
         assertThat(restored.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDate())
                 .isEqualTo(today);
         assertThat(restored.getPublishedAt()).isEqualTo(fixture.backup().publishedAt());
+        assertThat(restored.getRestoredAt()).isBetween(restoreStartedAt, Instant.now());
+        assertThat(articles.findById(collectedId).orElseThrow().getRestoredAt()).isNull();
         assertThat(articleService.getArticlesForBackup(today, null, 100))
                 .extracting(Article::getId)
-                .containsExactly(restored.getId());
+                .containsExactly(collectedId);
         assertThat(articleService.getArticlesForBackup(publishedDate, null, 100)).isEmpty();
         assertThat(
                         em.createQuery(

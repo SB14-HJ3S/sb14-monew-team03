@@ -63,7 +63,7 @@ public class ArticleRestoreService {
                             .toList();
             if (!remaining.isEmpty() && existingUrls.add(entry.sourceUrl())) {
                 candidates.add(
-                        Article.create(
+                        Article.restore(
                                 entry.source(),
                                 entry.sourceUrl(),
                                 entry.title(),

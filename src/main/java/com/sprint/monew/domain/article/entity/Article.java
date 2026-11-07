@@ -9,6 +9,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -43,6 +44,10 @@ public class Article extends BaseSoftDeletableEntity {
     @Column(name = "summary", nullable = false, columnDefinition = "text")
     private String summary;
 
+    // 백업에서 복구한 기사는 다시 백업하지 않는다. 일반 수집 기사는 null이다.
+    @Column(name = "restored_at", updatable = false)
+    private Instant restoredAt;
+
     @Column(name = "view_count", nullable = false)
     private int viewCount;
 
@@ -71,6 +76,17 @@ public class Article extends BaseSoftDeletableEntity {
             LocalDateTime publishedAt,
             String summary) {
         return new Article(source, sourceUrl, title, publishedAt, summary);
+    }
+
+    public static Article restore(
+            ArticleSourceType source,
+            String sourceUrl,
+            String title,
+            LocalDateTime publishedAt,
+            String summary) {
+        Article article = new Article(source, sourceUrl, title, publishedAt, summary);
+        article.restoredAt = Instant.now();
+        return article;
     }
 
     public void updateContent(String title, String summary) {
