@@ -28,7 +28,7 @@ public record ArticleQuery(
         @NotNull SortDirection direction,
         String cursor,
         Instant after,
-        @Min(1) int limit)
+        @Min(value = 1, message = "조회 개수는 1 이상이어야 합니다") int limit)
         implements SortedPageQuery<Article> {
 
     public static ArticleQuery of(

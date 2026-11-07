@@ -106,7 +106,10 @@ public class ArticleController {
                     @RequestParam(name = "after", required = false)
                     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
                     Instant after,
-            @Parameter(description = "커서 페이지 크기") @RequestParam(name = "limit") @Min(1) int limit) {
+            @Parameter(description = "커서 페이지 크기")
+                    @RequestParam(name = "limit")
+                    @Min(value = 1, message = "조회 개수는 1 이상이어야 합니다.")
+                    int limit) {
 
         ArticleQuery query =
                 new ArticleQuery(
