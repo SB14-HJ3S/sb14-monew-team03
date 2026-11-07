@@ -14,11 +14,11 @@ import lombok.experimental.FieldDefaults;
 
 public record CommentQuery(
         UUID articleId,
-        @NotNull CommentQuery.SortOrder orderBy,
-        @NotNull SortDirection direction,
+        @NotNull(message = "정렬 기준은 필수입니다.") CommentQuery.SortOrder orderBy,
+        @NotNull(message = "정렬 방향은 필수입니다.") SortDirection direction,
         String cursor,
         Instant after,
-        @Min(1) int limit)
+        @Min(value = 1, message = "조회 개수는 1 이상이어야 합니다.") int limit)
         implements SortedPageQuery<Comment> {
     public static CommentQuery of(
             UUID articleId,
