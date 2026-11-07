@@ -108,7 +108,7 @@ class CommentControllerTest {
             mockMvc.perform(registerRequest(articleId, requestUserId, ""))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
-                    .andExpect(jsonPath("$.details.content").exists());
+                    .andExpect(jsonPath("$.details.content").value("댓글 내용은 필수입니다."));
             verifyNoInteractions(commentUseCase);
         }
 
@@ -118,7 +118,7 @@ class CommentControllerTest {
             mockMvc.perform(registerRequest(articleId, requestUserId, "가".repeat(501)))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
-                    .andExpect(jsonPath("$.details.content").exists());
+                    .andExpect(jsonPath("$.details.content").value("댓글 내용은 500자 이하여야 합니다."));
             verifyNoInteractions(commentUseCase);
         }
 
@@ -128,7 +128,7 @@ class CommentControllerTest {
             mockMvc.perform(registerRequest(null, requestUserId, "첫 댓글"))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
-                    .andExpect(jsonPath("$.details.articleId").exists());
+                    .andExpect(jsonPath("$.details.articleId").value("기사 ID는 필수입니다."));
             verifyNoInteractions(commentUseCase);
         }
 
@@ -138,7 +138,7 @@ class CommentControllerTest {
             mockMvc.perform(registerRequest(articleId, null, "첫 댓글"))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
-                    .andExpect(jsonPath("$.details.userId").exists());
+                    .andExpect(jsonPath("$.details.userId").value("사용자 ID는 필수입니다."));
             verifyNoInteractions(commentUseCase);
         }
 
@@ -192,7 +192,7 @@ class CommentControllerTest {
             mockMvc.perform(changeContentRequest(""))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
-                    .andExpect(jsonPath("$.details.content").exists());
+                    .andExpect(jsonPath("$.details.content").value("댓글 내용은 필수입니다."));
             verifyNoInteractions(commentUseCase);
         }
 
@@ -202,7 +202,7 @@ class CommentControllerTest {
             mockMvc.perform(changeContentRequest("가".repeat(501)))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
-                    .andExpect(jsonPath("$.details.content").exists());
+                    .andExpect(jsonPath("$.details.content").value("댓글 내용은 500자 이하여야 합니다."));
             verifyNoInteractions(commentUseCase);
         }
 
@@ -540,7 +540,7 @@ class CommentControllerTest {
         }
 
         @Test
-        @DisplayName("limit이 0이면 400을 응답하고 유스케이스를 부르지 않는다")
+        @DisplayName("limit이 0이면 400과 한국어 메시지를 응답하고 유스케이스를 부르지 않는다")
         void zeroLimit() throws Exception {
             mockMvc.perform(
                             get("/api/comments")
@@ -548,7 +548,8 @@ class CommentControllerTest {
                                     .param("orderBy", "createdAt")
                                     .param("direction", "DESC")
                                     .param("limit", "0"))
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.details.limit").value("조회 개수는 1 이상이어야 합니다."));
             verifyNoInteractions(commentUseCase);
         }
     }
