@@ -31,6 +31,23 @@ class ArticleRepositoryAdapterTest {
     @Autowired private EntityManager em;
     @Autowired private JdbcTemplate jdbcTemplate;
 
+    @Test
+    @DisplayName("기사 발행일·생성 시각·ID 순서의 복합 인덱스가 DB에 생성된다")
+    void givenArticleSchema_whenInspectIndexes_thenPublishedIndexExists() {
+        String indexDefinition =
+                jdbcTemplate.queryForObject(
+                        """
+                        SELECT indexdef
+                        FROM pg_indexes
+                        WHERE schemaname = current_schema()
+                          AND tablename = 'articles'
+                          AND indexname = 'idx_articles_published'
+                        """,
+                        String.class);
+
+        assertThat(indexDefinition).contains("(published_at, created_at, id)");
+    }
+
     private UUID savedArticleId() {
         return articleRepository
                 .save(

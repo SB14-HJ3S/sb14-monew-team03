@@ -162,6 +162,42 @@ class ArticleListIntegrationTest {
         assertThat(all).extracting(ArticleResult::id).doesNotHaveDuplicates();
     }
 
+    @ParameterizedTest(name = "{0}: {1}")
+    @CsvSource({"ASC, CDE", "DESC, EDC"})
+    @DisplayName("날짜 범위 안의 기사만 날짜순으로 페이지를 이어 조회하고 삭제 기사는 제외한다")
+    void givenDateRange_whenReadAllPages_thenReturnOnlyActiveArticlesInRange(
+            SortDirection direction, String expected) {
+        List<ArticleResult> all = new ArrayList<>();
+        String cursor = null;
+        Instant after = null;
+
+        for (int i = 0; i < 3; i++) {
+            PageResult<ArticleResult> page =
+                    articleUseCase.findArticlePage(
+                            new ArticleQuery(
+                                    null,
+                                    null,
+                                    null,
+                                    DATE,
+                                    DATE.plusDays(2),
+                                    ArticleQuery.SortOrder.PUBLISH_DATE,
+                                    direction,
+                                    cursor,
+                                    after,
+                                    1));
+
+            assertThat(page.content()).hasSize(1);
+            assertThat(page.totalElements()).isEqualTo(3);
+            assertThat(page.hasNext()).isEqualTo(i < 2);
+            all.addAll(page.content());
+            cursor = page.nextCursor();
+            after = page.nextAfter();
+        }
+
+        assertThat(labels(all)).isEqualTo(expected);
+        assertThat(all).extracting(ArticleResult::id).doesNotHaveDuplicates();
+    }
+
     @Test
     @DisplayName("응답 마지막 기사의 값으로 커서를 만들고 추가 조회한 기사는 제외한다")
     void givenMoreArticlesThanLimit_whenFindArticlePage_thenUseLastReturnedArticleAsCursor() {
