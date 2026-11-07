@@ -393,6 +393,9 @@
     - Step 전체를 한 트랜잭션으로 묶지 않아(`ResourcelessTransactionManager`), 100명 단위로 커밋한 삭제가 뒤의 실패로 함께 롤백되지 않게 함
 - **테스트**
     - Job 통합 테스트로 실패 → 재시작 → 이어서 처리, 커밋 실패 시 집계 제외 같은 시나리오 검증
+- **운영 확인**
+    - 운영 서버 최근 7일(11/7 기준) 배치 5종 135회 실행 · 실패 0회 (뉴스 기사 수집 94 · 사용자 완전 삭제 31 · 로그 S3 백업 5 · 알림 삭제 4 · 뉴스 기사 S3 백업 1)
+    <br><img width="700" alt="Grafana 배치 5종 실행 결과" src="docs/images/screens/grafana-batch-jobs.png" />
 
 
 <p align="right"><a href="#feature-5">⬆️ 맨 위로 (제목을 눌러 접기)</a></p>
