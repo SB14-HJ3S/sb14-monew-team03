@@ -69,6 +69,7 @@ public interface ArticleJpaRepository extends JpaRepository<Article, UUID>, Arti
             SELECT a
             FROM Article a
             WHERE a.deletedAt IS NULL
+              AND a.restoredAt IS NULL
               AND a.createdAt >= :from
               AND a.createdAt < :to
               AND (:afterId IS NULL OR a.id > :afterId)
