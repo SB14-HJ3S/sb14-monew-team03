@@ -97,7 +97,9 @@ public class CommentController {
                     @RequestParam(name = "after", required = false)
                     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
                     Instant after,
-            @Parameter(description = "한 번에 조회할 댓글 수 (1 이상)") @RequestParam(name = "limit") @Min(1)
+            @Parameter(description = "한 번에 조회할 댓글 수 (1 이상)")
+                    @RequestParam(name = "limit")
+                    @Min(value = 1, message = "조회 개수는 1 이상이어야 합니다.")
                     int limit) {
         log.info(
                 "댓글 목록 조회 요청: articleId={}, orderBy={}, direction={}, limit={}",
