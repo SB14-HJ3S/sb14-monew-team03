@@ -55,7 +55,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
           "editorMode": "code",
-          "expr": "round(sum(increase(spring_batch_job_seconds_count[$__range]))) or vector(0)",
+          "expr": "round(sum(max_over_time(spring_batch_job_seconds_count[$__range]))) or vector(0)",
           "legendFormat": "",
           "range": false,
           "instant": true,
@@ -93,7 +93,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
           "editorMode": "code",
-          "expr": "round(sum(increase(spring_batch_job_seconds_count{spring_batch_job_status!=\"COMPLETED\"}[$__range]))) or vector(0)",
+          "expr": "round(sum(max_over_time(spring_batch_job_seconds_count{spring_batch_job_status!=\"COMPLETED\"}[$__range]))) or vector(0)",
           "legendFormat": "",
           "range": false,
           "instant": true,
@@ -138,7 +138,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
           "editorMode": "code",
-          "expr": "sum(increase(spring_batch_job_seconds_count{spring_batch_job_status=\"COMPLETED\"}[$__range])) / sum(increase(spring_batch_job_seconds_count[$__range]))",
+          "expr": "sum(max_over_time(spring_batch_job_seconds_count{spring_batch_job_status=\"COMPLETED\"}[$__range])) / sum(max_over_time(spring_batch_job_seconds_count[$__range]))",
           "legendFormat": "",
           "range": false,
           "instant": true,
@@ -242,7 +242,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
           "editorMode": "code",
-          "expr": "round(sum by (spring_batch_job_name) (increase(spring_batch_job_seconds_count[$__range])))",
+          "expr": "round(sum by (spring_batch_job_name) (max_over_time(spring_batch_job_seconds_count[$__range])))",
           "legendFormat": "",
           "range": false,
           "instant": true,
@@ -252,7 +252,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
           "editorMode": "code",
-          "expr": "round(sum by (spring_batch_job_name) (increase(spring_batch_job_seconds_count{spring_batch_job_status=\"COMPLETED\"}[$__range]))) or (round(sum by (spring_batch_job_name) (increase(spring_batch_job_seconds_count[$__range]))) * 0)",
+          "expr": "round(sum by (spring_batch_job_name) (max_over_time(spring_batch_job_seconds_count{spring_batch_job_status=\"COMPLETED\"}[$__range]))) or (round(sum by (spring_batch_job_name) (max_over_time(spring_batch_job_seconds_count[$__range]))) * 0)",
           "legendFormat": "",
           "range": false,
           "instant": true,
@@ -262,7 +262,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
           "editorMode": "code",
-          "expr": "round(sum by (spring_batch_job_name) (increase(spring_batch_job_seconds_count{spring_batch_job_status!=\"COMPLETED\"}[$__range]))) or (round(sum by (spring_batch_job_name) (increase(spring_batch_job_seconds_count[$__range]))) * 0)",
+          "expr": "round(sum by (spring_batch_job_name) (max_over_time(spring_batch_job_seconds_count{spring_batch_job_status!=\"COMPLETED\"}[$__range]))) or (round(sum by (spring_batch_job_name) (max_over_time(spring_batch_job_seconds_count[$__range]))) * 0)",
           "legendFormat": "",
           "range": false,
           "instant": true,
@@ -272,7 +272,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
           "editorMode": "code",
-          "expr": "sum by (spring_batch_job_name) (increase(spring_batch_job_seconds_sum[$__range])) / sum by (spring_batch_job_name) (increase(spring_batch_job_seconds_count[$__range]))",
+          "expr": "sum by (spring_batch_job_name) (max_over_time(spring_batch_job_seconds_sum[$__range])) / sum by (spring_batch_job_name) (max_over_time(spring_batch_job_seconds_count[$__range]))",
           "legendFormat": "",
           "range": false,
           "instant": true,
@@ -544,7 +544,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
           "editorMode": "code",
-          "expr": "round(sum(increase(batch_notification_cleanup_deleted_total[1d])))",
+          "expr": "round(sum(max_over_time(batch_notification_cleanup_deleted_total[1d])))",
           "legendFormat": "삭제한 알림",
           "range": true,
           "instant": false,
@@ -587,7 +587,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
           "editorMode": "code",
-          "expr": "round(sum(increase(batch_log_backup_total_files_total[1d])))",
+          "expr": "round(sum(max_over_time(batch_log_backup_total_files_total[1d])))",
           "legendFormat": "대상 파일",
           "range": true,
           "instant": false,
@@ -597,7 +597,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
           "editorMode": "code",
-          "expr": "round(sum(increase(batch_log_backup_uploaded_files_total[1d])))",
+          "expr": "round(sum(max_over_time(batch_log_backup_uploaded_files_total[1d])))",
           "legendFormat": "올린 파일",
           "range": true,
           "instant": false,
@@ -641,7 +641,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
           "editorMode": "code",
-          "expr": "round(sum(increase(batch_user_cleanup_deleted_total[1d])))",
+          "expr": "round(sum(max_over_time(batch_user_cleanup_deleted_total[1d])))",
           "legendFormat": "삭제한 사용자",
           "range": true,
           "instant": false,
@@ -684,7 +684,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "monew-prometheus" },
           "editorMode": "code",
-          "expr": "round(sum(increase(batch_article_backup_uploaded_articles_total[1d])))",
+          "expr": "round(sum(max_over_time(batch_article_backup_uploaded_articles_total[1d])))",
           "legendFormat": "백업한 기사",
           "range": true,
           "instant": false,
