@@ -13,7 +13,7 @@ import java.util.UUID;
 public interface ArticleUseCase {
     PageResult<ArticleResult> findArticlePage(@NotNull @Valid ArticleQuery query);
 
-    ArticleResult findById(UUID articleId);
+    ArticleResult findById(@NotNull(message = "기사 ID는 필수입니다.") UUID articleId);
 
     List<ArticleSourceType> findSourceTypes();
 
@@ -21,5 +21,5 @@ public interface ArticleUseCase {
 
     void hardDeleteArticle(@NotNull UUID articleId);
 
-    ArticleViewStatusResult register(UUID articleId);
+    ArticleViewStatusResult register(@NotNull(message = "기사 ID는 필수입니다.") UUID articleId);
 }
