@@ -6,6 +6,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
@@ -17,7 +18,10 @@ import org.hibernate.annotations.Check;
 @Entity
 @Table(
         name = "articles",
-        uniqueConstraints = {@UniqueConstraint(columnNames = {"source_url"})})
+        uniqueConstraints = {@UniqueConstraint(columnNames = {"source_url"})},
+        indexes = {
+            @Index(name = "idx_articles_published", columnList = "published_at, created_at, id")
+        })
 @Check(name = "ck_articles_comment_count", constraints = "comment_count >= 0")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
