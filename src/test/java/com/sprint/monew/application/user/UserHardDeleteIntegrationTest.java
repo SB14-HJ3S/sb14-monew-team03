@@ -3,9 +3,9 @@ package com.sprint.monew.application.user;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.sprint.monew.adapter.out.interest.InterestRepositoryAdapter;
-import com.sprint.monew.adapter.out.interest.SubscriptionRepositoryAdapter;
-import com.sprint.monew.adapter.out.user.UserRepositoryAdapter;
+import com.sprint.monew.adapter.out.repository.interest.InterestRepositoryAdapter;
+import com.sprint.monew.adapter.out.repository.interest.SubscriptionRepositoryAdapter;
+import com.sprint.monew.adapter.out.repository.user.UserRepositoryAdapter;
 import com.sprint.monew.application.user.provided.UserUseCase;
 import com.sprint.monew.domain.interest.entity.Interest;
 import com.sprint.monew.domain.user.entity.Subscription;

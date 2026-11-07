@@ -5,7 +5,7 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 
-import com.sprint.monew.adapter.out.user.UserRepositoryAdapter;
+import com.sprint.monew.adapter.out.repository.user.UserRepositoryAdapter;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.support.IntegrationTest;
 import io.micrometer.core.instrument.MeterRegistry;

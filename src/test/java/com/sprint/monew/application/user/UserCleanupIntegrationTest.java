@@ -2,7 +2,7 @@ package com.sprint.monew.application.user;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.sprint.monew.adapter.out.user.UserRepositoryAdapter;
+import com.sprint.monew.adapter.out.repository.user.UserRepositoryAdapter;
 import com.sprint.monew.application.user.provided.UserUseCase;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.support.IntegrationTest;

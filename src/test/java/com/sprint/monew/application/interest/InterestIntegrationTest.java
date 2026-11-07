@@ -2,11 +2,11 @@ package com.sprint.monew.application.interest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.sprint.monew.adapter.out.article.ArticleInterestJpaRepository;
-import com.sprint.monew.adapter.out.article.ArticleJpaRepository;
-import com.sprint.monew.adapter.out.interest.InterestJpaRepository;
-import com.sprint.monew.adapter.out.interest.SubscriptionJpaRepository;
-import com.sprint.monew.adapter.out.user.UserJpaRepository;
+import com.sprint.monew.adapter.out.repository.article.ArticleInterestJpaRepository;
+import com.sprint.monew.adapter.out.repository.article.ArticleJpaRepository;
+import com.sprint.monew.adapter.out.repository.interest.InterestJpaRepository;
+import com.sprint.monew.adapter.out.repository.interest.SubscriptionJpaRepository;
+import com.sprint.monew.adapter.out.repository.user.UserJpaRepository;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.article.entity.ArticleInterest;
 import com.sprint.monew.domain.interest.entity.Interest;

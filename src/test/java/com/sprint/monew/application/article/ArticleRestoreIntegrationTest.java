@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.sprint.monew.adapter.out.article.ArticleJpaRepository;
+import com.sprint.monew.adapter.out.repository.article.ArticleJpaRepository;
 import com.sprint.monew.application.article.provided.dto.ArticleBackupItem;
 import com.sprint.monew.application.article.provided.dto.ArticleRestoreResult;
 import com.sprint.monew.domain.article.entity.Article;

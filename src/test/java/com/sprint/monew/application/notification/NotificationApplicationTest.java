@@ -2,9 +2,8 @@ package com.sprint.monew.application.notification;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.*;
 
-import com.sprint.monew.adapter.out.notification.NotificationJpaRepository;
+import com.sprint.monew.adapter.out.repository.notification.NotificationJpaRepository;
 import com.sprint.monew.application.notification.provided.NotificationUseCase;
 import com.sprint.monew.domain.notification.entity.Notification;
 import com.sprint.monew.domain.user.entity.User;
