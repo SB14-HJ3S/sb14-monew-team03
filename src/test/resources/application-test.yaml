@@ -20,3 +20,6 @@ monew:
   # 테스트 도중 @Scheduled 작업(매시간 수집 등)이 실행되지 않게 스케줄러를 끔 (SchedulingConfig)
   scheduling:
     enabled: false
+logging:
+  level:
+    com.zaxxer.hikari.pool.HikariPool: DEBUG   # 풀 상태(active, idle, waiting) 출력

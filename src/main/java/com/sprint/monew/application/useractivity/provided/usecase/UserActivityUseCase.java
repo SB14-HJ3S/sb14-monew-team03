@@ -5,44 +5,52 @@ import com.sprint.monew.application.useractivity.provided.usecase.dto.CommentAct
 import com.sprint.monew.application.useractivity.provided.usecase.dto.CommentLikeActivityResult;
 import com.sprint.monew.application.useractivity.provided.usecase.dto.SubscriptionActivityResult;
 import com.sprint.monew.application.useractivity.provided.usecase.dto.UserActivityResult;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
 public interface UserActivityUseCase {
     /** 사용자의 활동 내역을 조회한다. 없거나 탈퇴한 사용자면 404. */
-    UserActivityResult findByUserId(UUID userId);
+    UserActivityResult findByUserId(@NotNull UUID userId);
 
     // 사용자
-    void userRegistered(UUID userId, String email, String nickname, Instant createdAt);
+    void userRegistered(
+            @NotNull UUID userId,
+            @NotBlank String email,
+            @NotBlank String nickname,
+            @NotNull Instant createdAt);
 
-    void nicknameUpdated(UUID userId, String nickname);
+    void nicknameUpdated(@NotNull UUID userId, @NotBlank String nickname);
 
-    void usersHardDeleted(List<UUID> userIds);
+    void usersHardDeleted(@NotNull List<@NotNull UUID> userIds);
 
     // 구독 관심사
-    void subscribed(UUID userId, SubscriptionActivityResult item);
+    void subscribed(@NotNull UUID userId, @NotNull SubscriptionActivityResult item);
 
-    void unsubscribed(UUID userId, UUID interestId);
+    void unsubscribed(@NotNull UUID userId, @NotNull UUID interestId);
 
-    void interestKeywordsUpdated(UUID interestId, List<String> keywords);
+    void interestKeywordsUpdated(
+            @NotNull UUID interestId, @NotNull List<@NotBlank String> keywords);
 
-    void interestDeleted(UUID interestId);
+    void interestDeleted(@NotNull UUID interestId);
 
     // 댓글
-    void commentCreated(UUID userId, CommentActivityResult item);
+    void commentCreated(@NotNull UUID userId, @NotNull CommentActivityResult item);
 
-    void commentUpdated(UUID commentId, String content);
+    void commentUpdated(@NotNull UUID commentId, @NotBlank String content);
 
-    void commentDeleted(UUID commentId);
+    void commentDeleted(@NotNull UUID commentId);
 
     // 좋아요
-    void commentLiked(UUID likedById, CommentLikeActivityResult item);
+    void commentLiked(@NotNull UUID likedById, @NotNull CommentLikeActivityResult item);
 
-    void commentUnliked(UUID likedById, UUID commentId, long likeCount);
+    void commentUnliked(@NotNull UUID likedById, @NotNull UUID commentId, @Min(0) long likeCount);
 
     // 기사
-    void articleViewed(UUID userId, ArticleViewActivityResult item);
+    void articleViewed(@NotNull UUID userId, @NotNull ArticleViewActivityResult item);
 
-    void articleDeleted(UUID articleId);
+    void articleDeleted(@NotNull UUID articleId);
 }
