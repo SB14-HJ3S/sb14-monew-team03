@@ -3,7 +3,7 @@ package com.sprint.monew.adapter.in.batch.notification;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import com.sprint.monew.application.notification.provided.NotificationUseCase;
+import com.sprint.monew.application.notification.provided.usecase.NotificationUseCase;
 import com.sprint.monew.support.IntegrationTest;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.UUID;

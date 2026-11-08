@@ -2,6 +2,7 @@ package com.sprint.monew.application.article;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.sprint.monew.application.article.provided.service.ArticleInterestService;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.article.entity.ArticleInterest;
 import com.sprint.monew.domain.interest.entity.Interest;

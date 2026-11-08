@@ -3,6 +3,7 @@ package com.sprint.monew.application.user;
 import com.sprint.monew.application.user.event.UserHardDeletingEvent;
 import com.sprint.monew.application.user.event.UserNicknameUpdatedEvent;
 import com.sprint.monew.application.user.event.UserRegisteredEvent;
+import com.sprint.monew.application.user.provided.service.IUserService;
 import com.sprint.monew.application.user.required.UserEventPublisherPort;
 import com.sprint.monew.application.user.required.UserRepositoryPort;
 import com.sprint.monew.domain.user.entity.User;

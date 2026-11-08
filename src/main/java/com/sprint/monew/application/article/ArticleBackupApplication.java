@@ -1,10 +1,13 @@
 package com.sprint.monew.application.article;
 
-import com.sprint.monew.application.article.provided.ArticleBackupUseCase;
-import com.sprint.monew.application.article.provided.dto.ArticleBackupFile;
-import com.sprint.monew.application.article.provided.dto.ArticleBackupItem;
-import com.sprint.monew.application.article.provided.dto.ArticleBackupResult;
-import com.sprint.monew.application.article.provided.dto.ArticleResult;
+import com.sprint.monew.application.article.provided.service.ArticleBackupStorageService;
+import com.sprint.monew.application.article.provided.service.ArticleInterestService;
+import com.sprint.monew.application.article.provided.service.ArticleService;
+import com.sprint.monew.application.article.provided.service.dto.ArticleBackupFile;
+import com.sprint.monew.application.article.provided.service.dto.ArticleBackupItem;
+import com.sprint.monew.application.article.provided.usecase.ArticleBackupUseCase;
+import com.sprint.monew.application.article.provided.usecase.dto.ArticleBackupResult;
+import com.sprint.monew.application.article.provided.usecase.dto.ArticleResult;
 import com.sprint.monew.global.annotation.ApplicationService;
 import java.time.LocalDate;
 import java.util.ArrayList;

@@ -5,7 +5,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.sprint.monew.application.user.provided.UserUseCase;
+import com.sprint.monew.application.user.provided.usecase.UserUseCase;
 import com.sprint.monew.support.IntegrationTest;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.UUID;

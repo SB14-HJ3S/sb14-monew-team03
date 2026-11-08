@@ -3,7 +3,7 @@ package com.sprint.monew.application.user;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.sprint.monew.application.user.provided.UserUseCase;
+import com.sprint.monew.application.user.provided.usecase.UserUseCase;
 import com.sprint.monew.support.IntegrationTest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;

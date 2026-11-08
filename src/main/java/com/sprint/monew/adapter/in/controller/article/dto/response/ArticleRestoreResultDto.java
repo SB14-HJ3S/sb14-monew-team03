@@ -1,6 +1,6 @@
 package com.sprint.monew.adapter.in.controller.article.dto.response;
 
-import com.sprint.monew.application.article.provided.dto.ArticleRestoreResult;
+import com.sprint.monew.application.article.provided.usecase.dto.ArticleRestoreResult;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 import java.time.ZoneId;

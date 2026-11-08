@@ -1,7 +1,7 @@
 package com.sprint.monew.adapter.in.batch.article.collection;
 
 import com.sprint.monew.adapter.in.batch.article.collection.dto.InterestCollectedArticles;
-import com.sprint.monew.application.interest.provided.dto.InterestKeywordResult;
+import com.sprint.monew.application.interest.provided.usecase.dto.InterestKeywordResult;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.job.builder.JobBuilder;

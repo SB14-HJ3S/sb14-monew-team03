@@ -1,6 +1,6 @@
 package com.sprint.monew.adapter.in.batch.notification;
 
-import com.sprint.monew.application.notification.provided.NotificationUseCase;
+import com.sprint.monew.application.notification.provided.usecase.NotificationUseCase;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.batch.core.StepContribution;

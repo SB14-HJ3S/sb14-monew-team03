@@ -1,18 +1,23 @@
 package com.sprint.monew.application.article;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.sprint.monew.adapter.out.article.ArticleJpaRepository;
-import com.sprint.monew.adapter.out.interest.InterestJpaRepository;
+import com.sprint.monew.adapter.out.repository.article.ArticleJpaRepository;
+import com.sprint.monew.adapter.out.repository.interest.InterestJpaRepository;
 import com.sprint.monew.application.article.event.ArticlesSavedEvent;
-import com.sprint.monew.application.article.provided.ArticleCollectionUseCase;
-import com.sprint.monew.application.article.provided.dto.CollectedArticle;
+import com.sprint.monew.application.article.provided.usecase.ArticleCollectionUseCase;
+import com.sprint.monew.application.article.provided.usecase.dto.CollectedArticle;
 import com.sprint.monew.domain.interest.entity.Interest;
 import com.sprint.monew.global.type.ArticleSourceType;
 import com.sprint.monew.support.IntegrationTest;
 import java.time.LocalDateTime;
-import java.util.*;
-import org.junit.jupiter.api.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.event.ApplicationEvents;

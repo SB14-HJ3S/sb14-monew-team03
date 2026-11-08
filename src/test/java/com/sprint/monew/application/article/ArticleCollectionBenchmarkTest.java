@@ -2,9 +2,9 @@ package com.sprint.monew.application.article;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.sprint.monew.adapter.out.interest.InterestJpaRepository;
-import com.sprint.monew.application.article.provided.ArticleCollectionUseCase;
-import com.sprint.monew.application.article.provided.dto.CollectedArticle;
+import com.sprint.monew.adapter.out.repository.interest.InterestJpaRepository;
+import com.sprint.monew.application.article.provided.usecase.ArticleCollectionUseCase;
+import com.sprint.monew.application.article.provided.usecase.dto.CollectedArticle;
 import com.sprint.monew.application.article.required.ArticleEventPublisherPort;
 import com.sprint.monew.domain.interest.entity.Interest;
 import com.sprint.monew.global.type.ArticleSourceType;

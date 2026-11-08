@@ -8,7 +8,8 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-import com.sprint.monew.application.user.provided.dto.UserResult;
+import com.sprint.monew.application.user.provided.service.IUserService;
+import com.sprint.monew.application.user.provided.usecase.dto.UserResult;
 import com.sprint.monew.domain.user.entity.User;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.UserErrorType;

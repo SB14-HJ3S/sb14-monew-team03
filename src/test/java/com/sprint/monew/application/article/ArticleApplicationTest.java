@@ -10,6 +10,8 @@ import static org.mockito.Mockito.verify;
 
 import com.sprint.monew.application.article.event.ArticleHardDeletingEvent;
 import com.sprint.monew.application.article.event.ArticleSoftDeletedEvent;
+import com.sprint.monew.application.article.provided.service.ArticleService;
+import com.sprint.monew.application.article.provided.service.ArticleViewStatusService;
 import com.sprint.monew.application.article.required.ArticleEventPublisherPort;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.ArticleErrorType;

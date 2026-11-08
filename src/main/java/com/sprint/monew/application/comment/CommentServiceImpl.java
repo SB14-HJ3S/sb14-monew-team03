@@ -2,7 +2,8 @@ package com.sprint.monew.application.comment;
 
 import static org.springframework.util.StringUtils.hasText;
 
-import com.sprint.monew.application.comment.provided.dto.CommentQuery;
+import com.sprint.monew.application.comment.provided.service.CommentService;
+import com.sprint.monew.application.comment.provided.usecase.dto.CommentQuery;
 import com.sprint.monew.application.comment.required.CommentLikeRepositoryPort;
 import com.sprint.monew.application.comment.required.CommentRepositoryPort;
 import com.sprint.monew.domain.comment.entity.Comment;

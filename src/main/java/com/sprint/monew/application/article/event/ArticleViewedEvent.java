@@ -1,6 +1,6 @@
 package com.sprint.monew.application.article.event;
 
-import com.sprint.monew.application.article.provided.dto.ArticleViewStatusResult;
+import com.sprint.monew.application.article.provided.usecase.dto.ArticleViewStatusResult;
 import com.sprint.monew.global.type.ArticleSourceType;
 import java.time.Instant;
 import java.time.ZoneId;

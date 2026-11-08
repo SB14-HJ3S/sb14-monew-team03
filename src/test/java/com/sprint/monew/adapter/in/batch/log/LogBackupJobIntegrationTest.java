@@ -8,9 +8,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import com.sprint.monew.application.log.provided.LogBackupUseCase;
-import com.sprint.monew.application.log.provided.dto.LogBackupResult;
-import com.sprint.monew.application.log.provided.dto.LogResult;
+import com.sprint.monew.application.log.provided.usecase.LogBackupUseCase;
+import com.sprint.monew.application.log.provided.usecase.dto.LogBackupResult;
+import com.sprint.monew.application.log.provided.usecase.dto.LogResult;
 import com.sprint.monew.support.IntegrationTest;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.io.IOException;

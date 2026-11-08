@@ -8,9 +8,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.sprint.monew.application.article.provided.ArticleCollectionUseCase;
-import com.sprint.monew.application.article.provided.dto.CollectedArticle;
-import com.sprint.monew.application.interest.provided.dto.InterestKeywordResult;
+import com.sprint.monew.application.article.provided.usecase.ArticleCollectionUseCase;
+import com.sprint.monew.application.article.provided.usecase.dto.CollectedArticle;
+import com.sprint.monew.application.interest.provided.usecase.dto.InterestKeywordResult;
 import com.sprint.monew.domain.interest.entity.Interest;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.CommonErrorType;

@@ -1,7 +1,7 @@
 package com.sprint.monew.adapter.in.event.notification;
 
 import com.sprint.monew.application.article.event.ArticlesSavedEvent;
-import com.sprint.monew.application.notification.provided.NotificationUseCase;
+import com.sprint.monew.application.notification.provided.usecase.NotificationUseCase;
 import com.sprint.monew.domain.comment.event.CommentLikedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

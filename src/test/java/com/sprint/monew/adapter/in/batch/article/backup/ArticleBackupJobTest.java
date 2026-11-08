@@ -14,9 +14,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import com.sprint.monew.application.article.provided.ArticleBackupUseCase;
-import com.sprint.monew.application.article.provided.dto.ArticleBackupResult;
-import com.sprint.monew.application.article.provided.dto.ArticleResult;
+import com.sprint.monew.application.article.provided.usecase.ArticleBackupUseCase;
+import com.sprint.monew.application.article.provided.usecase.dto.ArticleBackupResult;
+import com.sprint.monew.application.article.provided.usecase.dto.ArticleResult;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.ArticleErrorType;
 import com.sprint.monew.global.type.ArticleSourceType;

@@ -2,10 +2,10 @@ package com.sprint.monew.application.article;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.sprint.monew.application.article.provided.ArticleBackupUseCase;
-import com.sprint.monew.application.article.provided.ArticleRestoreUseCase;
-import com.sprint.monew.application.article.provided.ArticleUseCase;
-import com.sprint.monew.application.article.provided.dto.ArticleQuery;
+import com.sprint.monew.application.article.provided.usecase.ArticleBackupUseCase;
+import com.sprint.monew.application.article.provided.usecase.ArticleRestoreUseCase;
+import com.sprint.monew.application.article.provided.usecase.ArticleUseCase;
+import com.sprint.monew.application.article.provided.usecase.dto.ArticleQuery;
 import com.sprint.monew.global.pagination.SortDirection;
 import com.sprint.monew.support.IntegrationTest;
 import jakarta.validation.ConstraintViolationException;

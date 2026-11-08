@@ -1,6 +1,6 @@
 package com.sprint.monew.application.comment.required;
 
-import com.sprint.monew.application.comment.provided.dto.CommentQuery;
+import com.sprint.monew.application.comment.provided.usecase.dto.CommentQuery;
 import com.sprint.monew.domain.comment.entity.Comment;
 import java.time.Instant;
 import java.util.List;

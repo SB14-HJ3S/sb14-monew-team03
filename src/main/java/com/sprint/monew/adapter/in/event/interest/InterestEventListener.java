@@ -1,6 +1,6 @@
 package com.sprint.monew.adapter.in.event.interest;
 
-import com.sprint.monew.application.interest.provided.UserDeletionSubscriptionCleaner;
+import com.sprint.monew.application.interest.provided.usecase.UserDeletionSubscriptionCleaner;
 import com.sprint.monew.application.user.event.UserHardDeletingEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;

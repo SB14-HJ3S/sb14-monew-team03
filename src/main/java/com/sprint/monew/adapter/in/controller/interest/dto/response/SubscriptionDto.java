@@ -1,6 +1,6 @@
 package com.sprint.monew.adapter.in.controller.interest.dto.response;
 
-import com.sprint.monew.application.interest.provided.dto.SubscriptionResult;
+import com.sprint.monew.application.interest.provided.usecase.dto.SubscriptionResult;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 import java.util.List;

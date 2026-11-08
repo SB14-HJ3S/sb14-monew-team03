@@ -2,8 +2,8 @@ package com.sprint.monew.application.comment;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.sprint.monew.application.comment.provided.CommentUseCase;
-import com.sprint.monew.application.comment.provided.dto.CommentQuery;
+import com.sprint.monew.application.comment.provided.usecase.CommentUseCase;
+import com.sprint.monew.application.comment.provided.usecase.dto.CommentQuery;
 import com.sprint.monew.global.pagination.SortDirection;
 import com.sprint.monew.support.IntegrationTest;
 import jakarta.validation.ConstraintViolationException;

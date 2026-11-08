@@ -1,6 +1,6 @@
 package com.sprint.monew.adapter.in.controller.notification.dto.response;
 
-import com.sprint.monew.application.notification.provided.dto.NotificationResult;
+import com.sprint.monew.application.notification.provided.usecase.dto.NotificationResult;
 import com.sprint.monew.global.type.ResourceType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;

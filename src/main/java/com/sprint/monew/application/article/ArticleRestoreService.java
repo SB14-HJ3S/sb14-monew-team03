@@ -1,9 +1,9 @@
 package com.sprint.monew.application.article;
 
-import com.sprint.monew.application.article.provided.dto.ArticleBackupItem;
+import com.sprint.monew.application.article.provided.service.dto.ArticleBackupItem;
 import com.sprint.monew.application.article.required.ArticleInterestRepositoryPort;
 import com.sprint.monew.application.article.required.ArticleRepositoryPort;
-import com.sprint.monew.application.interest.InterestService;
+import com.sprint.monew.application.interest.provided.service.InterestService;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.article.entity.ArticleInterest;
 import com.sprint.monew.domain.interest.entity.Interest;

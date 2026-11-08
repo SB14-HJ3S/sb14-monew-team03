@@ -1,10 +1,10 @@
 package com.sprint.monew.application.useractivity.required;
 
-import com.sprint.monew.application.useractivity.provided.dto.ArticleViewActivityResult;
-import com.sprint.monew.application.useractivity.provided.dto.CommentActivityResult;
-import com.sprint.monew.application.useractivity.provided.dto.CommentLikeActivityResult;
-import com.sprint.monew.application.useractivity.provided.dto.SubscriptionActivityResult;
-import com.sprint.monew.application.useractivity.provided.dto.UserActivityResult;
+import com.sprint.monew.application.useractivity.provided.usecase.dto.ArticleViewActivityResult;
+import com.sprint.monew.application.useractivity.provided.usecase.dto.CommentActivityResult;
+import com.sprint.monew.application.useractivity.provided.usecase.dto.CommentLikeActivityResult;
+import com.sprint.monew.application.useractivity.provided.usecase.dto.SubscriptionActivityResult;
+import com.sprint.monew.application.useractivity.provided.usecase.dto.UserActivityResult;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;

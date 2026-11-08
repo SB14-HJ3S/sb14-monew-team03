@@ -1,5 +1,6 @@
 package com.sprint.monew.application.article;
 
+import com.sprint.monew.application.article.provided.service.ArticleInterestService;
 import com.sprint.monew.application.article.required.ArticleInterestRepositoryPort;
 import com.sprint.monew.domain.article.entity.Article;
 import com.sprint.monew.domain.article.entity.ArticleInterest;

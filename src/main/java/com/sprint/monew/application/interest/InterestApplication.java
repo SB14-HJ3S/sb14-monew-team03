@@ -1,17 +1,19 @@
 package com.sprint.monew.application.interest;
 
-import com.sprint.monew.application.article.ArticleInterestService;
+import com.sprint.monew.application.article.provided.service.ArticleInterestService;
 import com.sprint.monew.application.interest.event.InterestDeletedEvent;
 import com.sprint.monew.application.interest.event.InterestKeywordsUpdatedEvent;
 import com.sprint.monew.application.interest.event.InterestSubscribedEvent;
 import com.sprint.monew.application.interest.event.InterestUnsubscribedEvent;
-import com.sprint.monew.application.interest.provided.InterestUseCase;
-import com.sprint.monew.application.interest.provided.UserDeletionSubscriptionCleaner;
-import com.sprint.monew.application.interest.provided.dto.InterestQuery;
-import com.sprint.monew.application.interest.provided.dto.InterestResult;
-import com.sprint.monew.application.interest.provided.dto.SubscriptionResult;
+import com.sprint.monew.application.interest.provided.service.ISubscriptionService;
+import com.sprint.monew.application.interest.provided.service.InterestService;
+import com.sprint.monew.application.interest.provided.usecase.InterestUseCase;
+import com.sprint.monew.application.interest.provided.usecase.UserDeletionSubscriptionCleaner;
+import com.sprint.monew.application.interest.provided.usecase.dto.InterestQuery;
+import com.sprint.monew.application.interest.provided.usecase.dto.InterestResult;
+import com.sprint.monew.application.interest.provided.usecase.dto.SubscriptionResult;
 import com.sprint.monew.application.interest.required.InterestEventPublisherPort;
-import com.sprint.monew.application.user.IUserService;
+import com.sprint.monew.application.user.provided.service.IUserService;
 import com.sprint.monew.domain.interest.entity.Interest;
 import com.sprint.monew.domain.user.entity.Subscription;
 import com.sprint.monew.domain.user.entity.User;

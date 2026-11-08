@@ -1,7 +1,7 @@
 package com.sprint.monew.adapter.in.batch.log;
 
-import com.sprint.monew.application.log.provided.LogBackupUseCase;
-import com.sprint.monew.application.log.provided.dto.LogBackupResult;
+import com.sprint.monew.application.log.provided.usecase.LogBackupUseCase;
+import com.sprint.monew.application.log.provided.usecase.dto.LogBackupResult;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.List;

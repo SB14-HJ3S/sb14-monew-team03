@@ -16,10 +16,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.monew.adapter.in.controller.comment.dto.request.CommentRegisterRequest;
 import com.sprint.monew.adapter.in.controller.comment.dto.request.CommentUpdateRequest;
-import com.sprint.monew.application.comment.provided.CommentUseCase;
-import com.sprint.monew.application.comment.provided.dto.CommentLikeResult;
-import com.sprint.monew.application.comment.provided.dto.CommentQuery;
-import com.sprint.monew.application.comment.provided.dto.CommentResult;
+import com.sprint.monew.application.comment.provided.usecase.CommentUseCase;
+import com.sprint.monew.application.comment.provided.usecase.dto.CommentLikeResult;
+import com.sprint.monew.application.comment.provided.usecase.dto.CommentQuery;
+import com.sprint.monew.application.comment.provided.usecase.dto.CommentResult;
 import com.sprint.monew.global.exception.MonewException;
 import com.sprint.monew.global.exception.errortype.ArticleErrorType;
 import com.sprint.monew.global.exception.errortype.CommentErrorType;

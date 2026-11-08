@@ -1,6 +1,6 @@
 package com.sprint.monew.adapter.in.controller.article.dto.response;
 
-import com.sprint.monew.application.article.provided.dto.ArticleViewStatusResult;
+import com.sprint.monew.application.article.provided.usecase.dto.ArticleViewStatusResult;
 import com.sprint.monew.global.type.ArticleSourceType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
