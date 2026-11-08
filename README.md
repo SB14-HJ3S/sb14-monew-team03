@@ -627,6 +627,9 @@
 - **도메인별 UseCase · Port 먼저 정의**
     - 기능 구현 전에 사용자를 뺀 5개 도메인(기사 · 댓글 · 관심사 · 알림 · 활동 내역)마다 "무엇을 제공하는지"를 `provided/{Domain}UseCase` 인터페이스 하나로 정의해, 담당자들이 같은 계약 위에서 병렬로 구현
     - 저장소는 `required` Port와 `adapter/out` Adapter로 나누고, 기사 도메인에 예시를 만들어 다른 담당자가 같은 방식으로 따라 만들게 함
+- **패키지 역할 구분** ([#362](https://github.com/SB14-HJ3S/sb14-monew-team03/pull/362))
+    - `provided`를 밖에서 부르는 `usecase/`와 도메인 안에서만 쓰는 `service/`로 나누고, `adapter/out`은 도메인별 폴더 대신 `repository` · `api` · `event` · `s3` 기능별 폴더로 묶음
+    - ArchUnit으로 Service 인터페이스가 `provided/service`에 있는지, application 밖에서 Service를 직접 부르지 않는지 빌드마다 검사
 - **공통 커서 페이지네이션**
     - 목록 조회 조건은 도메인별 Query가 공통 계약 `PageQuery`(cursor · after · limit) · `SortedPageQuery`(+ 정렬 기준 · 방향)를 구현
     - `limit`보다 1개 더 조회해 다음 페이지 여부를 판단하고, 마지막 요소의 커서(도메인에 따라 정렬 값 또는 id)와 생성 시각(보조 커서)으로 `PageResult`를 한 곳에서 조합
@@ -1344,23 +1347,29 @@ src/main/java/com/sprint/monew
 │   │   └── batch/article/                        # Spring Batch Job (Job 설정 · 스케줄러 · Reader · Writer · 리스너 · 메트릭)
 │   │       ├── collection/                       # 기사 수집: ArticleCollectionJobConfig · ArticleCollectionScheduler · ArticleCollectReader · ArticleCollectProcessor · ArticleCollectWriter
 │   │       └── backup/                           # 기사 S3 백업: ArticleBackupJobConfig · ArticleBackupScheduler · ArticleBackupReader · ArticleBackupWriter
-│   └── out/article/                              # 나가는 연결 (Port 구현)
-│       ├── ArticleRepositoryAdapter              # ArticleRepositoryPort 구현
-│       ├── ArticleJpaRepository                  # Spring Data JPA
-│       ├── ArticleQueryRepository(Impl)          # 검색 · 필터 · 정렬 동적 쿼리 (QueryDSL)
-│       ├── ArticleInterestRepositoryAdapter      # 기사-관심사 연결 저장 (+ JpaRepository)
-│       ├── ArticleViewStatusRepositoryAdapter    # 기사 조회 기록 저장 (+ JpaRepository)
-│       ├── ArticleEventPublisherAdapter          # 이벤트 발행
-│       ├── S3ArticleBackupStorageAdapter         # 백업 파일 S3 업로드 (JSON + gzip)
-│       ├── naver/                                # NaverNewsAdapter · NaverNewsMapper · NaverNewsResponse
-│       └── rss/                                  # RssNewsAdapter · RssNewsMapper
+│   └── out/                                      # 나가는 연결 (Port 구현, 기능별로 나눔)
+│       ├── repository/article/                   # DB 저장소
+│       │   ├── ArticleRepositoryAdapter          # ArticleRepositoryPort 구현
+│       │   ├── ArticleJpaRepository              # Spring Data JPA
+│       │   ├── ArticleQueryRepository(Impl)      # 검색 · 필터 · 정렬 동적 쿼리 (QueryDSL)
+│       │   ├── ArticleInterestRepositoryAdapter  # 기사-관심사 연결 저장 (+ JpaRepository)
+│       │   └── ArticleViewStatusRepositoryAdapter  # 기사 조회 기록 저장 (+ JpaRepository)
+│       ├── api/article/                          # 외부 뉴스 수집
+│       │   ├── naver/                            # NaverNewsAdapter · NaverNewsMapper · NaverNewsResponse
+│       │   └── rss/                              # RssNewsAdapter · RssNewsMapper
+│       ├── event/article/                        # ArticleEventPublisherAdapter (이벤트 발행)
+│       └── s3/article/                           # S3ArticleBackupStorageAdapter (백업 파일 S3 업로드 · 조회)
 ├── application/article/                          # 기능 흐름
 │   ├── provided/                                 # 밖에 제공
-│   │   ├── ArticleUseCase                        # 기사 조회 · 뷰 · 출처 · 삭제
-│   │   ├── ArticleCollectionUseCase              # 기사 수집
-│   │   ├── ArticleBackupUseCase                  # 기사 백업
-│   │   ├── ArticleRestoreUseCase                 # 기사 복구
-│   │   └── dto/                                  # ArticleQuery · ArticleResult · ArticleViewStatusResult · CollectedArticle · ArticleBackupFile · ArticleBackupItem · ArticleBackupResult · ArticleRestoreResult
+│   │   ├── usecase/                              # UseCase (컨트롤러 · 배치 · 리스너가 부르는 기능)
+│   │   │   ├── ArticleUseCase                    # 기사 조회 · 뷰 · 출처 · 삭제
+│   │   │   ├── ArticleCollectionUseCase          # 기사 수집
+│   │   │   ├── ArticleBackupUseCase              # 기사 백업
+│   │   │   ├── ArticleRestoreUseCase             # 기사 복구
+│   │   │   └── dto/                              # ArticleQuery · ArticleResult · ArticleViewStatusResult · CollectedArticle · ArticleBackupResult · ArticleRestoreResult
+│   │   └── service/                              # 도메인 내부 Service 인터페이스 (application 안에서만 사용)
+│   │       ├── ArticleService · ArticleInterestService · ArticleViewStatusService · ArticleBackupStorageService
+│   │       └── dto/                              # ArticleBackupFile · ArticleBackupItem
 │   ├── required/                                 # 밖에 요청 (Port)
 │   │   ├── ArticleRepositoryPort                 # 기사 저장소
 │   │   ├── ArticleInterestRepositoryPort         # 기사-관심사 연결 저장소
@@ -1374,7 +1383,7 @@ src/main/java/com/sprint/monew
 │   ├── ArticleBackupApplication                  # ArticleBackupUseCase 구현
 │   ├── ArticleRestoreApplication                 # ArticleRestoreUseCase 구현 (기간 검증 · 날짜별 백업 파일 읽기)
 │   ├── ArticleRestoreService                     # 유실 기사 저장 · 관심사 재연결 (파일 단위 트랜잭션)
-│   └── ArticleService · ArticleInterestService · ArticleViewStatusService · ArticleBackupStorageService (+ Impl)  # 도메인 서비스
+│   └── ArticleServiceImpl · ArticleInterestServiceImpl · ArticleViewStatusServiceImpl · ArticleBackupStorageServiceImpl  # 도메인 Service 구현
 ├── domain/article/entity/                        # Article · ArticleInterest · ArticleViewStatus
 └── global/                                       # 공통: 설정 · 예외(ArticleErrorType) · 타입(ArticleSourceType) · 페이지네이션 · 요청자 ID · 로깅 · 백업 직렬화/압축
 ```
@@ -1595,99 +1604,112 @@ src/main/java/com/sprint/monew/
 │   │       └── useractivity/                       # 사용자 활동 내역 (이수찬)
 │   │           └── UserActivityEventListener
 │   └── out/                                        # 나가는 연결 (저장소 · 외부 API · 이벤트 발행)
-│       ├── article/                                # 뉴스 기사 (김민재, 이승현)
-│       │   ├── ArticleEventPublisherAdapter
-│       │   ├── ArticleInterestJpaRepository
-│       │   ├── ArticleInterestRepositoryAdapter
-│       │   ├── ArticleJpaRepository
-│       │   ├── ArticleQueryRepository
-│       │   ├── ArticleQueryRepositoryImpl
-│       │   ├── ArticleRepositoryAdapter
-│       │   ├── ArticleViewStatusJpaRepository
-│       │   ├── ArticleViewStatusRepositoryAdapter
-│       │   ├── S3ArticleBackupStorageAdapter
-│       │   ├── naver/                              # 네이버 뉴스 API 수집
-│       │   │   ├── NaverNewsAdapter
-│       │   │   ├── NaverNewsMapper
-│       │   │   └── NaverNewsResponse
-│       │   └── rss/                                # 언론사 RSS 수집
-│       │       ├── RssNewsAdapter
-│       │       └── RssNewsMapper
-│       ├── comment/                                # 댓글 · 좋아요 (정수환)
-│       │   ├── CommentEventPublisherAdapter
-│       │   ├── CommentJpaRepository
-│       │   ├── CommentLikeJpaRepository
-│       │   ├── CommentLikeRepositoryAdapter
-│       │   ├── CommentQueryRepository
-│       │   ├── CommentQueryRepositoryImpl
-│       │   └── CommentRepositoryAdapter
-│       ├── interest/                               # 관심사 · 구독 (박수민)
-│       │   ├── InterestAnchor
-│       │   ├── InterestEventPublisherAdapter
-│       │   ├── InterestJpaRepository
-│       │   ├── InterestQueryRepository
-│       │   ├── InterestQueryRepositoryImpl
-│       │   ├── InterestRepositoryAdapter
-│       │   ├── SubscriptionJpaRepository
-│       │   └── SubscriptionRepositoryAdapter
-│       ├── log/                                    # 로그 S3 적재 (박수민)
-│       │   └── S3LogStorageAdapter
-│       ├── notification/                           # 알림 (이수찬)
-│       │   ├── NotificationJpaRepository
-│       │   ├── NotificationQueryRepository
-│       │   ├── NotificationQueryRepositoryImpl
-│       │   └── NotificationRepositoryAdapter
-│       ├── user/                                   # 사용자 (이승현)
-│       │   ├── UserEventPublisherAdapter
-│       │   ├── UserJpaRepository
-│       │   └── UserRepositoryAdapter
-│       └── useractivity/                           # 사용자 활동 내역 (이수찬)
-│           ├── ArticleStatRdbAdapter
-│           ├── UserActivityDocumentUpdater
-│           ├── UserActivityMongoReader
-│           ├── UserActivityMongoRepository
-│           ├── UserActivityMongoWriter
-│           ├── UserActivityRdbAdapter
-│           └── document/                           # MongoDB 문서
-│               ├── ArticleViewItem
-│               ├── CommentItem
-│               ├── CommentLikeItem
-│               ├── SubscriptionItem
-│               └── UserActivityDocument
+│       ├── api/                                    # 외부 API 호출
+│       │   └── article/                            # 뉴스 기사 (김민재, 이승현)
+│       │       ├── naver/                          # 네이버 뉴스 API 수집
+│       │       │   ├── NaverNewsAdapter
+│       │       │   ├── NaverNewsMapper
+│       │       │   └── NaverNewsResponse
+│       │       └── rss/                            # 언론사 RSS 수집
+│       │           ├── RssNewsAdapter
+│       │           └── RssNewsMapper
+│       ├── event/                                  # 이벤트 발행
+│       │   ├── article/                            # 뉴스 기사 (김민재, 이승현)
+│       │   │   └── ArticleEventPublisherAdapter
+│       │   ├── comment/                            # 댓글 · 좋아요 (정수환)
+│       │   │   └── CommentEventPublisherAdapter
+│       │   ├── interest/                           # 관심사 · 구독 (박수민)
+│       │   │   └── InterestEventPublisherAdapter
+│       │   └── user/                               # 사용자 (이승현)
+│       │       └── UserEventPublisherAdapter
+│       ├── repository/                             # DB 저장소 (JPA · QueryDSL · MongoDB)
+│       │   ├── article/                            # 뉴스 기사 (김민재, 이승현)
+│       │   │   ├── ArticleInterestJpaRepository
+│       │   │   ├── ArticleInterestRepositoryAdapter
+│       │   │   ├── ArticleJpaRepository
+│       │   │   ├── ArticleQueryRepository
+│       │   │   ├── ArticleQueryRepositoryImpl
+│       │   │   ├── ArticleRepositoryAdapter
+│       │   │   ├── ArticleViewStatusJpaRepository
+│       │   │   └── ArticleViewStatusRepositoryAdapter
+│       │   ├── comment/                            # 댓글 · 좋아요 (정수환)
+│       │   │   ├── CommentJpaRepository
+│       │   │   ├── CommentLikeJpaRepository
+│       │   │   ├── CommentLikeRepositoryAdapter
+│       │   │   ├── CommentQueryRepository
+│       │   │   ├── CommentQueryRepositoryImpl
+│       │   │   └── CommentRepositoryAdapter
+│       │   ├── interest/                           # 관심사 · 구독 (박수민)
+│       │   │   ├── InterestAnchor
+│       │   │   ├── InterestJpaRepository
+│       │   │   ├── InterestQueryRepository
+│       │   │   ├── InterestQueryRepositoryImpl
+│       │   │   ├── InterestRepositoryAdapter
+│       │   │   ├── SubscriptionJpaRepository
+│       │   │   └── SubscriptionRepositoryAdapter
+│       │   ├── notification/                       # 알림 (이수찬)
+│       │   │   ├── NotificationJpaRepository
+│       │   │   ├── NotificationQueryRepository
+│       │   │   ├── NotificationQueryRepositoryImpl
+│       │   │   └── NotificationRepositoryAdapter
+│       │   ├── user/                               # 사용자 (이승현)
+│       │   │   ├── UserJpaRepository
+│       │   │   └── UserRepositoryAdapter
+│       │   └── useractivity/                       # 사용자 활동 내역 (이수찬)
+│       │       ├── ArticleStatRdbAdapter
+│       │       ├── UserActivityDocumentUpdater
+│       │       ├── UserActivityMongoReader
+│       │       ├── UserActivityMongoRepository
+│       │       ├── UserActivityMongoWriter
+│       │       ├── UserActivityRdbAdapter
+│       │       └── document/                       # MongoDB 문서
+│       │           ├── ArticleViewItem
+│       │           ├── CommentItem
+│       │           ├── CommentLikeItem
+│       │           ├── SubscriptionItem
+│       │           └── UserActivityDocument
+│       └── s3/                                     # Amazon S3 업로드 · 조회
+│           ├── article/                            # 뉴스 기사 (김민재, 이승현)
+│           │   └── S3ArticleBackupStorageAdapter
+│           └── log/                                # 로그 S3 적재 (박수민)
+│               └── S3LogStorageAdapter
 ├── application/                                    # 기능 흐름 (도메인별 UseCase 구현)
 │   ├── article/                                    # 뉴스 기사 (김민재, 이승현)
 │   │   ├── ArticleApplication
 │   │   ├── ArticleBackupApplication
-│   │   ├── ArticleBackupStorageService
 │   │   ├── ArticleBackupStorageServiceImpl
 │   │   ├── ArticleCollectionApplication
-│   │   ├── ArticleInterestService
 │   │   ├── ArticleInterestServiceImpl
 │   │   ├── ArticleRestoreApplication
 │   │   ├── ArticleRestoreService
-│   │   ├── ArticleService
 │   │   ├── ArticleServiceImpl
-│   │   ├── ArticleViewStatusService
 │   │   ├── ArticleViewStatusServiceImpl
 │   │   ├── event/                                  # 이벤트
 │   │   │   ├── ArticleHardDeletingEvent
 │   │   │   ├── ArticleSoftDeletedEvent
 │   │   │   ├── ArticleViewedEvent
 │   │   │   └── ArticlesSavedEvent
-│   │   ├── provided/                               # UseCase (밖에서 부르는 기능)
-│   │   │   ├── ArticleBackupUseCase
-│   │   │   ├── ArticleCollectionUseCase
-│   │   │   ├── ArticleRestoreUseCase
-│   │   │   ├── ArticleUseCase
-│   │   │   └── dto/                                # Query · Result DTO
-│   │   │       ├── ArticleBackupFile
-│   │   │       ├── ArticleBackupItem
-│   │   │       ├── ArticleBackupResult
-│   │   │       ├── ArticleQuery
-│   │   │       ├── ArticleRestoreResult
-│   │   │       ├── ArticleResult
-│   │   │       ├── ArticleViewStatusResult
-│   │   │       └── CollectedArticle
+│   │   ├── provided/                               # 밖에 제공 (UseCase · Service)
+│   │   │   ├── service/                            # 도메인 내부 Service 인터페이스
+│   │   │   │   ├── ArticleBackupStorageService
+│   │   │   │   ├── ArticleInterestService
+│   │   │   │   ├── ArticleService
+│   │   │   │   ├── ArticleViewStatusService
+│   │   │   │   └── dto/                            # Service 전용 DTO
+│   │   │   │       ├── ArticleBackupFile
+│   │   │   │       └── ArticleBackupItem
+│   │   │   └── usecase/                            # UseCase (밖에서 부르는 기능)
+│   │   │       ├── ArticleBackupUseCase
+│   │   │       ├── ArticleCollectionUseCase
+│   │   │       ├── ArticleRestoreUseCase
+│   │   │       ├── ArticleUseCase
+│   │   │       └── dto/                            # Query · Result DTO
+│   │   │           ├── ArticleBackupResult
+│   │   │           ├── ArticleQuery
+│   │   │           ├── ArticleRestoreResult
+│   │   │           ├── ArticleResult
+│   │   │           ├── ArticleViewStatusResult
+│   │   │           └── CollectedArticle
 │   │   └── required/                               # 저장소 · 이벤트 발행 Port
 │   │       ├── ArticleBackupStoragePort
 │   │       ├── ArticleEventPublisherPort
@@ -1698,7 +1720,6 @@ src/main/java/com/sprint/monew/
 │   │       └── RssNewsPort
 │   ├── comment/                                    # 댓글 · 좋아요 (정수환)
 │   │   ├── CommentApplication
-│   │   ├── CommentService
 │   │   ├── CommentServiceImpl
 │   │   ├── event/                                  # 이벤트
 │   │   │   ├── CommentCreatedEvent
@@ -1706,20 +1727,21 @@ src/main/java/com/sprint/monew/
 │   │   │   ├── CommentLikeCreatedEvent
 │   │   │   ├── CommentUnlikedEvent
 │   │   │   └── CommentUpdatedEvent
-│   │   ├── provided/                               # UseCase (밖에서 부르는 기능)
-│   │   │   ├── CommentUseCase
-│   │   │   └── dto/                                # Query · Result DTO
-│   │   │       ├── CommentLikeResult
-│   │   │       ├── CommentQuery
-│   │   │       └── CommentResult
+│   │   ├── provided/                               # 밖에 제공 (UseCase · Service)
+│   │   │   ├── service/                            # 도메인 내부 Service 인터페이스
+│   │   │   │   └── CommentService
+│   │   │   └── usecase/                            # UseCase (밖에서 부르는 기능)
+│   │   │       ├── CommentUseCase
+│   │   │       └── dto/                            # Query · Result DTO
+│   │   │           ├── CommentLikeResult
+│   │   │           ├── CommentQuery
+│   │   │           └── CommentResult
 │   │   └── required/                               # 저장소 · 이벤트 발행 Port
 │   │       ├── CommentEventPublisherPort
 │   │       ├── CommentLikeRepositoryPort
 │   │       └── CommentRepositoryPort
 │   ├── interest/                                   # 관심사 · 구독 (박수민)
-│   │   ├── ISubscriptionService
 │   │   ├── InterestApplication
-│   │   ├── InterestService
 │   │   ├── InterestServiceImpl
 │   │   ├── SubscriptionService
 │   │   ├── event/                                  # 이벤트
@@ -1727,63 +1749,73 @@ src/main/java/com/sprint/monew/
 │   │   │   ├── InterestKeywordsUpdatedEvent
 │   │   │   ├── InterestSubscribedEvent
 │   │   │   └── InterestUnsubscribedEvent
-│   │   ├── provided/                               # UseCase (밖에서 부르는 기능)
-│   │   │   ├── InterestUseCase
-│   │   │   ├── UserDeletionSubscriptionCleaner
-│   │   │   └── dto/                                # Query · Result DTO
-│   │   │       ├── InterestKeywordResult
-│   │   │       ├── InterestQuery
-│   │   │       ├── InterestResult
-│   │   │       └── SubscriptionResult
+│   │   ├── provided/                               # 밖에 제공 (UseCase · Service)
+│   │   │   ├── service/                            # 도메인 내부 Service 인터페이스
+│   │   │   │   ├── ISubscriptionService
+│   │   │   │   └── InterestService
+│   │   │   └── usecase/                            # UseCase (밖에서 부르는 기능)
+│   │   │       ├── InterestUseCase
+│   │   │       ├── UserDeletionSubscriptionCleaner
+│   │   │       └── dto/                            # Query · Result DTO
+│   │   │           ├── InterestKeywordResult
+│   │   │           ├── InterestQuery
+│   │   │           ├── InterestResult
+│   │   │           └── SubscriptionResult
 │   │   └── required/                               # 저장소 · 이벤트 발행 Port
 │   │       ├── InterestEventPublisherPort
 │   │       ├── InterestRepository
 │   │       └── SubscriptionRepository
 │   ├── log/                                        # 로그 S3 적재 (박수민)
 │   │   ├── LogBackupApplication
-│   │   ├── provided/                               # UseCase (밖에서 부르는 기능)
-│   │   │   ├── LogBackupUseCase
-│   │   │   └── dto/                                # Query · Result DTO
-│   │   │       ├── LogBackupResult
-│   │   │       └── LogResult
+│   │   ├── provided/                               # 밖에 제공 (UseCase · Service)
+│   │   │   └── usecase/                            # UseCase (밖에서 부르는 기능)
+│   │   │       ├── LogBackupUseCase
+│   │   │       └── dto/                            # Query · Result DTO
+│   │   │           ├── LogBackupResult
+│   │   │           └── LogResult
 │   │   └── required/                               # 저장소 · 이벤트 발행 Port
 │   │       └── LogStoragePort
 │   ├── notification/                               # 알림 (이수찬)
 │   │   ├── NotificationApplication
-│   │   ├── NotificationService
 │   │   ├── NotificationServiceImpl
-│   │   ├── provided/                               # UseCase (밖에서 부르는 기능)
-│   │   │   ├── NotificationUseCase
-│   │   │   └── dto/                                # Query · Result DTO
-│   │   │       ├── NotificationQuery
-│   │   │       └── NotificationResult
+│   │   ├── provided/                               # 밖에 제공 (UseCase · Service)
+│   │   │   ├── service/                            # 도메인 내부 Service 인터페이스
+│   │   │   │   └── NotificationService
+│   │   │   └── usecase/                            # UseCase (밖에서 부르는 기능)
+│   │   │       ├── NotificationUseCase
+│   │   │       └── dto/                            # Query · Result DTO
+│   │   │           ├── NotificationQuery
+│   │   │           └── NotificationResult
 │   │   └── required/                               # 저장소 · 이벤트 발행 Port
 │   │       └── NotificationRepositoryPort
 │   ├── user/                                       # 사용자 (이승현)
-│   │   ├── IUserService
 │   │   ├── UserApplication
 │   │   ├── UserService
 │   │   ├── event/                                  # 이벤트
 │   │   │   ├── UserHardDeletingEvent
 │   │   │   ├── UserNicknameUpdatedEvent
 │   │   │   └── UserRegisteredEvent
-│   │   ├── provided/                               # UseCase (밖에서 부르는 기능)
-│   │   │   ├── UserUseCase
-│   │   │   └── dto/                                # Query · Result DTO
-│   │   │       └── UserResult
+│   │   ├── provided/                               # 밖에 제공 (UseCase · Service)
+│   │   │   ├── service/                            # 도메인 내부 Service 인터페이스
+│   │   │   │   └── IUserService
+│   │   │   └── usecase/                            # UseCase (밖에서 부르는 기능)
+│   │   │       ├── UserUseCase
+│   │   │       └── dto/                            # Query · Result DTO
+│   │   │           └── UserResult
 │   │   └── required/                               # 저장소 · 이벤트 발행 Port
 │   │       ├── UserEventPublisherPort
 │   │       └── UserRepositoryPort
 │   └── useractivity/                               # 사용자 활동 내역 (이수찬)
 │       ├── UserActivityApplication
-│       ├── provided/                               # UseCase (밖에서 부르는 기능)
-│       │   ├── UserActivityUseCase
-│       │   └── dto/                                # Query · Result DTO
-│       │       ├── ArticleViewActivityResult
-│       │       ├── CommentActivityResult
-│       │       ├── CommentLikeActivityResult
-│       │       ├── SubscriptionActivityResult
-│       │       └── UserActivityResult
+│       ├── provided/                               # 밖에 제공 (UseCase · Service)
+│       │   └── usecase/                            # UseCase (밖에서 부르는 기능)
+│       │       ├── UserActivityUseCase
+│       │       └── dto/                            # Query · Result DTO
+│       │           ├── ArticleViewActivityResult
+│       │           ├── CommentActivityResult
+│       │           ├── CommentLikeActivityResult
+│       │           ├── SubscriptionActivityResult
+│       │           └── UserActivityResult
 │       └── required/                               # 저장소 · 이벤트 발행 Port
 │           ├── ArticleStatReader
 │           ├── UserActivityReader
