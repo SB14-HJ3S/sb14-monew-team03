@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.sprint.monew.application.article.provided.usecase.ArticleCollectionUseCase;
+import com.sprint.monew.application.article.provided.usecase.dto.CollectedArticle;
 import com.sprint.monew.application.interest.provided.usecase.dto.InterestKeywordResult;
 import com.sprint.monew.domain.interest.entity.Interest;
 import com.sprint.monew.global.exception.MonewException;
@@ -13,12 +14,14 @@ import com.sprint.monew.global.exception.errortype.ExternalErrorType;
 import com.sprint.monew.global.type.ArticleSourceType;
 import com.sprint.monew.support.IntegrationTest;
 import io.micrometer.core.instrument.MeterRegistry;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.Job;
@@ -112,6 +115,37 @@ class ArticleCollectionMetricsIntegrationTest {
 
         assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
         assertThat(savedArticles()).isEqualTo(previous + 5);
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, 1})
+    @DisplayName("입력 기사 수와 무관하게 실제 신규 저장 건수만 집계한다")
+    void countOnlyNewArticles(int savedCount) throws Exception {
+        Interest interest = Interest.create("기술", List.of("AI"));
+        givenTargets(interest);
+        List<CollectedArticle> articles =
+                List.of(
+                        new CollectedArticle(
+                                ArticleSourceType.NAVER,
+                                "https://example.com/first",
+                                "AI 뉴스 1",
+                                LocalDateTime.of(2026, 11, 3, 12, 0),
+                                "AI 뉴스 요약"),
+                        new CollectedArticle(
+                                ArticleSourceType.NAVER,
+                                "https://example.com/second",
+                                "AI 뉴스 2",
+                                LocalDateTime.of(2026, 11, 3, 12, 0),
+                                "AI 뉴스 요약"));
+        when(useCase.collectNaverArticles("AI")).thenReturn(articles);
+        when(useCase.saveArticles(interest, articles)).thenReturn(savedCount);
+        double previous = savedArticles();
+
+        JobExecution execution = runJob();
+
+        assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+        assertThat(savedArticles()).isEqualTo(previous + savedCount);
+        verify(useCase).saveArticles(interest, articles);
     }
 
     @Test

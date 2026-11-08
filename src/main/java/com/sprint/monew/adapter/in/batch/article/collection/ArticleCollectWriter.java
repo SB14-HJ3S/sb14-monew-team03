@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class ArticleCollectWriter implements ItemWriter<InterestCollectedArticles> {
 
     private final ArticleCollectionUseCase useCase;
-    private final ArticleCollectionChunkListener listener;
     private final ArticleCollectionTiming timing;
 
     @Override
@@ -26,18 +25,15 @@ public class ArticleCollectWriter implements ItemWriter<InterestCollectedArticle
             timing.startStorage();
         }
         for (InterestCollectedArticles collected : chunk) {
-            Interest interest = collected.interest();
-            int inputCount = collected.articles().size();
-
-            int newArticleCount = useCase.saveArticles(interest, collected.articles());
-
-            listener.addSavedCount(newArticleCount);
-
+            Interest interest = collected.getInterest();
+            int inputCount = collected.articleSize();
+            int newArticleCount = useCase.saveArticles(interest, collected.getArticles());
             log.info(
                     "기사 저장 처리: 관심사={}, 입력={}건, 신규 저장={}건",
                     interest.getName(),
                     inputCount,
                     newArticleCount);
+            collected.recordSavedCount(newArticleCount);
         }
     }
 }

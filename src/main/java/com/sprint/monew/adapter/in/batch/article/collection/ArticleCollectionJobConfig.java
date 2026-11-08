@@ -2,6 +2,7 @@ package com.sprint.monew.adapter.in.batch.article.collection;
 
 import com.sprint.monew.adapter.in.batch.article.collection.dto.InterestCollectedArticles;
 import com.sprint.monew.application.interest.provided.usecase.dto.InterestKeywordResult;
+import org.springframework.batch.core.ChunkListener;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.job.builder.JobBuilder;
@@ -21,14 +22,14 @@ public class ArticleCollectionJobConfig {
             ArticleCollectReader reader,
             ArticleCollectProcessor processor,
             ArticleCollectWriter writer,
-            ArticleCollectionChunkListener chunkListener,
+            ArticleCollectionListener chunkListener,
             ArticleCollectionStepListener stepListener) {
         return new StepBuilder("articleCollectionStep", jobRepository)
                 .<InterestKeywordResult, InterestCollectedArticles>chunk(1, transactionManager)
                 .reader(reader)
                 .processor(processor)
                 .writer(writer)
-                .listener(chunkListener)
+                .listener((ChunkListener) chunkListener)
                 .listener(stepListener)
                 .build();
     }
