@@ -25,13 +25,15 @@ class ArticleCollectionTimingBoundaryTest {
         try {
             var timing = mock(ArticleCollectionTiming.class);
             var useCase = mock(ArticleCollectionUseCase.class);
-            var listener = new ArticleCollectionChunkListener(registry, timing);
-            var writer = new ArticleCollectWriter(useCase, listener, timing);
+            var listener = new ArticleCollectionListener(registry, timing);
+            var writer = new ArticleCollectWriter(useCase, timing);
             var interest = Interest.create("기술", List.of("AI"));
             when(useCase.saveArticles(interest, List.of())).thenReturn(2);
             listener.beforeChunk(null);
 
-            writer.write(new Chunk<>(List.of(InterestCollectedArticles.of(interest, List.of()))));
+            var chunk = new Chunk<>(List.of(InterestCollectedArticles.of(interest, List.of())));
+            writer.write(chunk);
+            listener.afterWrite(chunk);
 
             var order = inOrder(timing, useCase);
             order.verify(timing).startStorage();

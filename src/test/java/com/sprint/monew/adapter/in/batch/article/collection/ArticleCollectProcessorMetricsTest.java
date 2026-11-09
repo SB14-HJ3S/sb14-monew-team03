@@ -62,9 +62,9 @@ class ArticleCollectProcessorMetricsTest {
         when(useCase.collectRssArticles(ArticleSourceType.HANKYUNG)).thenReturn(List.of(article));
         when(useCase.matchesInterest(any(), any())).thenReturn(true);
 
-        assertThat(processor.process(InterestKeywordResult.from(first)).articles())
+        assertThat(processor.process(InterestKeywordResult.from(first)).getArticles())
                 .containsExactly(article);
-        assertThat(processor.process(InterestKeywordResult.from(second)).articles())
+        assertThat(processor.process(InterestKeywordResult.from(second)).getArticles())
                 .containsExactly(article);
 
         for (ArticleSourceType source : ArticleSourceType.values()) {
