@@ -1,0 +1,30 @@
+# ==========================================================
+# 배포 환경 (AWS)
+# 실제 접속 정보는 서버 환경변수로 주입 (여기엔 값을 직접 적지 않음)
+# ==========================================================
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  data:
+    mongodb:
+      uri: ${MONGODB_URI}
+
+  jpa:
+    show-sql: false
+
+logging:
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 15
+      total-size-cap: 300MB
+
+monew:
+  cloudwatch:
+    namespace: Monew
+    # 배치 걸린 시간은 spring.batch.job:Job이름 형식
+    metrics: ${CLOUDWATCH_METRICS:batch.notification.cleanup.deleted,spring.batch.job:notificationCleanupJob}

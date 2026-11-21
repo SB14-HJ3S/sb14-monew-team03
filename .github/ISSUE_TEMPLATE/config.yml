@@ -1,0 +1,10 @@
+contact_links:
+  - name: 📋 모뉴 요구사항 (노션)
+    url: https://app.notion.com/p/MongoDB-PostgreSQL-v2-3276fd228e8d81c89265f6b5469efbb0
+    about: 기능·API·배치·심화 요구사항 원문
+  - name: 📘 Swagger (API 명세)
+    url: http://sprint-project-1196140422.ap-northeast-2.elb.amazonaws.com/sb/monew/api/swagger-ui/index.html
+    about: 요청·응답 필드와 상태 코드 기준
+  - name: 🖥️ 프로토타입
+    url: http://sprint-project-1196140422.ap-northeast-2.elb.amazonaws.com/sb/monew/
+    about: 화면 흐름과 동작 확인

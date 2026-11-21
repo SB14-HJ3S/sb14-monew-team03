@@ -1,0 +1,39 @@
+package com.sprint.monew.adapter.in.batch.article.collection;
+
+import com.sprint.monew.adapter.in.batch.article.collection.dto.InterestCollectedArticles;
+import com.sprint.monew.application.article.provided.usecase.ArticleCollectionUseCase;
+import com.sprint.monew.domain.interest.entity.Interest;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.item.Chunk;
+import org.springframework.batch.item.ItemWriter;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class ArticleCollectWriter implements ItemWriter<InterestCollectedArticles> {
+
+    private final ArticleCollectionUseCase useCase;
+    private final ArticleCollectionTiming timing;
+
+    @Override
+    @Transactional
+    public void write(Chunk<? extends InterestCollectedArticles> chunk) {
+        if (!chunk.isEmpty()) {
+            timing.startStorage();
+        }
+        for (InterestCollectedArticles collected : chunk) {
+            Interest interest = collected.getInterest();
+            int inputCount = collected.articleSize();
+            int newArticleCount = useCase.saveArticles(interest, collected.getArticles());
+            log.info(
+                    "기사 저장 처리: 관심사={}, 입력={}건, 신규 저장={}건",
+                    interest.getName(),
+                    inputCount,
+                    newArticleCount);
+            collected.recordSavedCount(newArticleCount);
+        }
+    }
+}

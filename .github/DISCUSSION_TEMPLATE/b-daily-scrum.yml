@@ -1,0 +1,126 @@
+# 제목을 그대로 두면 "[26.10.19(월)] 데일리 스크럼"처럼 자동 제목으로 바뀐다
+# ⚠️ 아래 title 문구를 바꾸면 워크플로의 PLACEHOLDER_TITLE도 같이 바꿀 것
+title: "제목을 수정하지 않으면 자동 제목으로 채워집니다"
+labels: ["scrum:데일리스크럼"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 회의록
+        작성하면 노션 "회의록" DB에 자동으로 동기화됩니다. 작성자는 자동으로 기록되니 따로 안 적어도 됩니다.
+        수정 후 다시 반영하려면 이 디스커션에 `resync:재연동` 라벨을 붙여주세요.
+  - type: dropdown
+    id: notion_category
+    attributes:
+      label: 🗂️ 노션 카테고리
+      description: 노션 "회의록" DB의 카테고리에 들어갑니다. 정해지지 않았으면 [미정] 그대로 두세요.
+      options:
+        - "[미정]"
+        - "[1차] 팀 미팅"
+        - "[2차] 팀 미팅"
+        - "[3차] 팀 미팅"
+        - "[4차] 팀 미팅"
+      default: 0
+    validations:
+      required: false
+  - type: dropdown
+    id: meeting_type
+    attributes:
+      label: 📌 회의 종류
+      description: 올리면 제목이 "[날짜(요일)] 회의 종류"로 바뀌고, 회의 종류 라벨이 붙습니다. 기본값은 데일리 스크럼입니다.
+      options:
+        - 데일리 스크럼
+        - 정기 회의
+        - 비정기 회의
+      default: 0
+    validations:
+      required: false
+  - type: input
+    id: date
+    attributes:
+      label: 📆 회의 날짜(요일) · 회의 시간
+      description: 비워두면 이 글을 올린 날짜·시간이 자동으로 채워집니다. 다른 날짜로 기록하려면 26.10.07처럼 적어주세요.
+    validations:
+      required: false
+  - type: dropdown
+    id: participants
+    attributes:
+      label: 😄 참여자 목록
+      description: 여러 명 고를 수 있어요.
+      multiple: true
+      options:
+        - 이승현
+        - 이수찬
+        - 정수환
+        - 박수민
+        - 김민재
+    validations:
+      required: false
+  - type: textarea
+    id: notes
+    attributes:
+      label: ⚠️ 특이사항
+      description: 불참자, 다음 일정 조정 등. 없으면 비워두세요. (노션 "특이사항" 속성에 자동으로 들어갑니다)
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ### 각자 진행 상황
+        현재 진행 중인 것 / 앞으로 할 것 / 막히거나 도움이 필요한 점을 적어주세요.
+  - type: textarea
+    id: person_mjdevkim
+    attributes:
+      label: 📝 김민재
+    validations:
+      required: false
+  - type: textarea
+    id: person_hannalog
+    attributes:
+      label: 📝 이승현
+    validations:
+      required: false
+  - type: textarea
+    id: person_ssoomni52
+    attributes:
+      label: 📝 박수민
+    validations:
+      required: false
+  - type: textarea
+    id: person_swanhw
+    attributes:
+      label: 📝 정수환
+    validations:
+      required: false
+  - type: textarea
+    id: person_lsc0869
+    attributes:
+      label: 📝 이수찬
+    validations:
+      required: false
+  - type: textarea
+    id: etc
+    attributes:
+      label: 📑 기타
+      description: 팀 회의 메모 / 멘토링 / 강사님 피드백 등
+    validations:
+      required: false
+  - type: textarea
+    id: comment_template
+    attributes:
+      label: 📝 댓글 양식 (복사해서 쓰세요)
+      description: 위 칸에 못 적은 사람은 글이 올라간 뒤 이 양식을 복사해서 댓글로 남겨 주세요. 그대로 두면 됩니다.
+      value: |
+        ```markdown
+        **1. 한 것**
+        -
+
+        **2. 할 것**
+        -
+
+        **3. 기타 사항** (막히는 점, 도움이 필요한 점, 팀에 공유할 점 등)
+        -
+        ```
+    validations:
+      required: false

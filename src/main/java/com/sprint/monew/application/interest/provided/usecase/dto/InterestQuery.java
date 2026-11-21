@@ -1,0 +1,45 @@
+package com.sprint.monew.application.interest.provided.usecase.dto;
+
+import com.sprint.monew.domain.interest.entity.Interest;
+import com.sprint.monew.global.pagination.SortDirection;
+import com.sprint.monew.global.pagination.SortedPageQuery;
+import jakarta.validation.constraints.NotNull;
+import java.time.Instant;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+
+public record InterestQuery(
+        String keyword,
+        @NotNull InterestQuery.SortOrder orderBy,
+        @NotNull SortDirection direction,
+        String cursor,
+        Instant after,
+        @NotNull int limit)
+        implements SortedPageQuery<Interest> {
+    public static InterestQuery of(
+            String keyword,
+            InterestQuery.SortOrder orderBy,
+            SortDirection direction,
+            String cursor,
+            Instant after,
+            int limit) {
+        return new InterestQuery(keyword, orderBy, direction, cursor, after, limit);
+    }
+
+    @Getter
+    @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+    @RequiredArgsConstructor
+    public enum SortOrder implements com.sprint.monew.global.pagination.SortOrder<Interest> {
+        NAME("name"),
+        SUBSCRIBER_COUNT("subscriberCount"),
+        ;
+        String value;
+
+        @Override
+        public String extractNextCursorFromLastEntity(Interest lastEntity) {
+            return lastEntity.getId().toString();
+        }
+    }
+}

@@ -1,0 +1,38 @@
+package com.sprint.monew.application.article;
+
+import com.sprint.monew.application.article.provided.service.ArticleBackupStorageService;
+import com.sprint.monew.application.article.provided.service.dto.ArticleBackupFile;
+import com.sprint.monew.application.article.provided.service.dto.ArticleBackupItem;
+import com.sprint.monew.application.article.provided.usecase.dto.ArticleBackupResult;
+import com.sprint.monew.application.article.required.ArticleBackupStoragePort;
+import java.time.LocalDate;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class ArticleBackupStorageServiceImpl implements ArticleBackupStorageService {
+
+    private final ArticleBackupStoragePort articleBackupStoragePort;
+
+    @Override
+    public ArticleBackupResult save(ArticleBackupFile backupFile) {
+        return articleBackupStoragePort.save(backupFile);
+    }
+
+    @Override
+    public List<String> findKeys(LocalDate date) {
+        return articleBackupStoragePort.findKeys(date);
+    }
+
+    @Override
+    public List<ArticleBackupItem> readFile(String key) {
+        return articleBackupStoragePort.readFile(key);
+    }
+
+    @Override
+    public List<ArticleBackupItem> readAll(LocalDate date) {
+        return articleBackupStoragePort.readAll(date);
+    }
+}

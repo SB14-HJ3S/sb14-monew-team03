@@ -1,0 +1,124 @@
+name: Review Discord Notification
+
+on:
+  workflow_run:
+    workflows: ["Collect Review Data"]
+    types: [completed]
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  notify:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download review data
+        id: download-review-data
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: review-data
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Send review embed
+        env:
+          DISCORD_WEBHOOK_URL_REVIEW: ${{ secrets.DISCORD_WEBHOOK_URL_REVIEW }}
+          DISCORD_WEBHOOK_URL_ALL: ${{ secrets.DISCORD_WEBHOOK_URL_ALL }}
+        run: |
+          STATE=$(jq -r '.review_state' review-data.json)
+          COUNT=$(jq -r '.comment_count' review-data.json)
+          REVIEWER=$(jq -r '.reviewer' review-data.json)
+          PR_NUM=$(jq -r '.pr_number' review-data.json)
+          PR_TITLE=$(jq -r '.pr_title' review-data.json)
+          REVIEW_URL=$(jq -r '.review_html_url' review-data.json)
+          HEAD_REF=$(jq -r '.pr_head_ref' review-data.json)
+          BASE_REF=$(jq -r '.pr_base_ref' review-data.json)
+
+          case "$STATE" in
+            approved)           STATE_LABEL="✅ 승인" ;;
+            changes_requested)  STATE_LABEL="🔄 수정 요청" ;;
+            commented)          STATE_LABEL="💬 코멘트" ;;
+            dismissed)          STATE_LABEL="❌ 기각" ;;
+            *)                  STATE_LABEL="$STATE" ;;
+          esac
+
+          PAYLOAD=$(jq -n \
+            --arg title "💬 리뷰 등록 | PR #${PR_NUM}" \
+            --arg url "$REVIEW_URL" \
+            --arg desc "$PR_TITLE" \
+            --arg reviewer "$REVIEWER" \
+            --arg state_label "$STATE_LABEL" \
+            --argjson count "$COUNT" \
+            --arg branch "\`${HEAD_REF}\` → \`${BASE_REF}\`" \
+            '{
+              embeds: [{
+                title: $title,
+                url: $url,
+                description: $desc,
+                color: 15105570,
+                fields: [
+                  {"name": "👤 리뷰어", "value": $reviewer, "inline": true},
+                  {"name": "📊 상태", "value": $state_label, "inline": true},
+                  {"name": "💬 코멘트", "value": ($count | tostring), "inline": true},
+                  {"name": "🌿 브랜치", "value": $branch, "inline": false}
+                ],
+                footer: {"text": "MoNew Bot"}
+              }]
+            }')
+
+          FAILED=0
+          for WEBHOOK_URL in "$DISCORD_WEBHOOK_URL_REVIEW" "$DISCORD_WEBHOOK_URL_ALL"; do
+            echo "$PAYLOAD" | curl -sS --fail --retry 3 --retry-delay 2 --max-time 15 -H "Content-Type: application/json" -d @- "$WEBHOOK_URL" || FAILED=1
+          done
+          exit $FAILED
+
+      - name: Delete artifact
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api \
+            "repos/${{ github.repository }}/actions/artifacts" \
+            --jq ".artifacts[] | select(.workflow_run.id == ${{ github.event.workflow_run.id }}) | .id" \
+          | xargs -I{} gh api -X DELETE "repos/${{ github.repository }}/actions/artifacts/{}"
+
+      - name: Send merge-ready embed (현재 커밋 첫 승인)
+        if: ${{ always() && steps.download-review-data.conclusion == 'success' }}
+        env:
+          DISCORD_WEBHOOK_URL_REVIEW: ${{ secrets.DISCORD_WEBHOOK_URL_REVIEW }}
+          DISCORD_WEBHOOK_URL_ALL: ${{ secrets.DISCORD_WEBHOOK_URL_ALL }}
+        run: |
+          MERGE_READY=$(jq -r '.merge_ready' review-data.json)
+          PR_NUM=$(jq -r '.pr_number' review-data.json)
+          PR_TITLE=$(jq -r '.pr_title' review-data.json)
+          PR_URL=$(jq -r '.pr_html_url' review-data.json)
+
+          # 승인 수만 보고 CI 결과는 확인하지 않으므로 "머지 가능"이라고 단정하지 않는다
+          # merge_ready는 review-collect.yml이 "지금 커밋 기준 첫 승인"일 때만 true로 넣는다
+          if [[ "$MERGE_READY" == "true" ]]; then
+            PAYLOAD=$(jq -n \
+              --arg title "✅ 리뷰 승인 완료 | CI 확인 후 머지" \
+              --arg url "$PR_URL" \
+              --arg desc "$PR_TITLE" \
+              --arg pr_num "#${PR_NUM}" \
+              '{
+                embeds: [{
+                  title: $title,
+                  url: $url,
+                  description: $desc,
+                  color: 5763719,
+                  fields: [
+                    {name: "🔢 PR", value: $pr_num, inline: true}
+                  ],
+                  footer: {text: "MoNew Bot"}
+                }]
+              }')
+
+            FAILED=0
+            for WEBHOOK_URL in "$DISCORD_WEBHOOK_URL_REVIEW" "$DISCORD_WEBHOOK_URL_ALL"; do
+              echo "$PAYLOAD" | curl -sS --fail --retry 3 --retry-delay 2 --max-time 15 -H "Content-Type: application/json" -d @- "$WEBHOOK_URL" || FAILED=1
+            done
+            exit $FAILED
+          fi

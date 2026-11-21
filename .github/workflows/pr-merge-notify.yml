@@ -1,0 +1,58 @@
+name: PR Merge Notification (Channel)
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [dev, develop, main]
+
+permissions: {}
+
+jobs:
+  notify:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: 채널 알림 전송
+        env:
+          DISCORD_WEBHOOK_URL_MERGE: ${{ secrets.DISCORD_WEBHOOK_URL_MERGE }}
+          DISCORD_WEBHOOK_URL_ALL: ${{ secrets.DISCORD_WEBHOOK_URL_ALL }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          MERGED_BY: ${{ github.event.pull_request.merged_by.login }}
+          BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
+          HEAD_BRANCH: ${{ github.event.pull_request.head.ref }}
+          CHANGED_FILES: ${{ github.event.pull_request.changed_files }}
+          ADDITIONS: ${{ github.event.pull_request.additions }}
+          DELETIONS: ${{ github.event.pull_request.deletions }}
+          MERGED_AT: ${{ github.event.pull_request.merged_at }}
+        run: |
+          PAYLOAD=$(jq -n \
+            --arg title "✅ ${PR_TITLE}" \
+            --arg url "$PR_URL" \
+            --arg author "$PR_AUTHOR" \
+            --arg merged_by "$MERGED_BY" \
+            --arg branch "\`${HEAD_BRANCH}\` → \`${BASE_BRANCH}\`" \
+            --arg files "\`${CHANGED_FILES}\`개 파일 | +${ADDITIONS} -${DELETIONS}" \
+            --arg merged_at "$MERGED_AT" \
+            '{
+              embeds: [{
+                title: $title,
+                url: $url,
+                color: 5763719,
+                fields: [
+                  {name: "👤 작성자", value: $author, inline: true},
+                  {name: "🔀 머지한 사람", value: $merged_by, inline: true},
+                  {name: "🌿 브랜치", value: $branch, inline: false},
+                  {name: "📊 변경 사항", value: $files, inline: false}
+                ],
+                footer: {text: "MoNew Bot"},
+                timestamp: $merged_at
+              }]
+            }')
+
+          FAILED=0
+          for WEBHOOK_URL in "$DISCORD_WEBHOOK_URL_MERGE" "$DISCORD_WEBHOOK_URL_ALL"; do
+            echo "$PAYLOAD" | curl -sS --fail --retry 3 --retry-delay 2 --max-time 15 -H "Content-Type: application/json" -d @- "$WEBHOOK_URL" || FAILED=1
+          done
+          exit $FAILED
